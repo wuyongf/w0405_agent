@@ -82,7 +82,7 @@ if __name__ == "__main__":
     configs = Properties()
     robotId = "664e0340-6f46-4872-b392-8b1a25dc324d"
     try:
-        with open('../conf/rm/root-config.properties', 'rb') as config_file:
+        with open('../../conf/rm/root-config.properties', 'rb') as config_file:
             configs.load(config_file)
             robotId = configs.get('robotId').data
     except:
