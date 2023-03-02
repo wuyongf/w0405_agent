@@ -80,7 +80,16 @@ def test(config_addr):
 
 if __name__ == '__main__':
 
-    test('config.properties')
+    configs = Properties()
+
+    try:
+        with open('./config.properties', 'rb') as config_file:
+            configs.load(config_file)
+    except:
+        print("Error loading properties file, check the correct directory")
+
+
+    # test('.\config.properties')
 
     # api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2',config_addr='config.properties', model = enums.Model.RM)
 
