@@ -42,7 +42,7 @@ class RVAPI:
 
         url = prefixed_url + 'api/battery/v1/state'
 
-        response = session.get(url, headers=headers, verify=False)
+        response = session.get(url=url, headers=headers, verify=False)
 
         if (response.ok):
             # print(response.text)  # returns string
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     print(rvapi.getBatteryState().percentage)   # yf_test: get rv battery
     print(rvapi.getPose().angle)                # yf_test: get rv pose
     # rvapi.postMission('12W238-TEST01')          # yf_test: post rv mission
-    rvapi.putLEDON(1);
+    rvapi.putLEDON(1)
 
     # # yf_test: post rv mqtt/joystick
     # obj_joystick = rv_models.MQTTObjJoyStick(0, 1, False)
