@@ -33,7 +33,7 @@ if __name__ == "__main__":
         """  Job update parameters (Example of robot going to Point A) """ 
         job_name = "GOTO Point A"
         task_type = "RM-GOTO"
-        map_id = "a41c914e-9097-41cb-9b4b-60fc8da8d66a"  # Replace it with actual value   
+        map_id = "d7355d44-df67-4d26-8d25-36928746b7ee"  # Replace it with actual value   
         position_name = "Point A"
         x = 1.0
         y = 1.0
@@ -56,10 +56,10 @@ if __name__ == "__main__":
         }
 
         job_update_json1 = {
-            "id": str('7856edc4-b5bc-11ed-8cfb-f426796b3c00'),
+            "id": str('7856edc4-b5bc-11ed-8cfb-f426796b3c01'),
             "name": "GOTO Point A",
             "tasks": [{
-                "taskId": str('7856edc5-b5bc-11ed-926c-f426796b3c00'),
+                "taskId": str('7856edc5-b5bc-11ed-926c-f426796b3c01'),
                 "taskType": task_type,
                 "parameters": {
                     "mapId": map_id,
@@ -82,26 +82,26 @@ if __name__ == "__main__":
             client.publish(job_update_topic, job_update)
             time.sleep(0.02)
 
-        # """ This section is to simulate robot executing the job in job update """
-        # """ Publish the Executing task status """
-        # """ TODO: Reuse the `fleet_task.py` logic """
-        task_id = '7856edc4-b5bc-11ed-8cfb-f426796b3c00'
-        task_status_json = {
-            'taskId': task_id,
-            'taskType': task_type,
-        }
-        task_status_json['taskStatusType'] = 1
-        task_status = json.dumps(task_status_json)
-        logging.info("Publish Task Status Message {}".format(task_status))
-        client.publish(task_status_topic, task_status ,qos)
-        time.sleep(5)
-        #
-        # """ Publish the Completed task status """
-        task_status_json['taskStatusType'] = 2
-        task_status = json.dumps(task_status_json)
-        logging.info("Publish Task Status Message {}".format(task_status))
-        client.publish(task_status_topic, task_status ,qos)
-        time.sleep(2)
+        # # """ This section is to simulate robot executing the job in job update """
+        # # """ Publish the Executing task status """
+        # # """ TODO: Reuse the `fleet_task.py` logic """
+        # task_id = '7856edc4-b5bc-11ed-8cfb-f426796b3c00'
+        # task_status_json = {
+        #     'taskId': task_id,
+        #     'taskType': task_type,
+        # }
+        # task_status_json['taskStatusType'] = 1
+        # task_status = json.dumps(task_status_json)
+        # logging.info("Publish Task Status Message {}".format(task_status))
+        # client.publish(task_status_topic, task_status ,qos)
+        # time.sleep(5)
+        # #
+        # # """ Publish the Completed task status """
+        # task_status_json['taskStatusType'] = 2
+        # task_status = json.dumps(task_status_json)
+        # logging.info("Publish Task Status Message {}".format(task_status))
+        # client.publish(task_status_topic, task_status ,qos)
+        # time.sleep(2)
 
     except KeyboardInterrupt:
         logging.info("KeyboardInterrupt: ending MQTT client")
