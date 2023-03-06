@@ -65,40 +65,31 @@ class AuthenticatedAPI:
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
+base_url = 'https://prod.robotmanager.com/api/v2'
+def login():
+    endpoint = "/login"
+    payload = {}
+    payload["username"] = "yongfeng@willsonic.com"
+    payload["password"] = "NWcadcam2018!"
+    payload["companyId"] = "16b6d42f-b802-4c0a-a015-ec77fc8a2108"
 
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(url=base_url + endpoint, headers=headers, data=json.dumps(payload))
 
-def test(config_addr):
-        # Load config file
-        configs = Properties()
-        try:
-            with open(config_addr, 'rb') as config_file:
-                configs.load(config_file)
-        except:
-            print("Error loading properties file, check the correct directory")
-
-        return configs
+    return json.loads(response.text)["token"]
 
 if __name__ == '__main__':
+    # token = login()
+    # print(token)
 
-    configs = Properties()
+    rm_api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2',config_addr='config.properties', model = enums.Model.RM)
 
-    try:
-        with open('./config.properties', 'rb') as config_file:
-            configs.load(config_file)
-    except:
-        print("Error loading properties file, check the correct directory")
+    payload = {}
+    payload["pageNo"] = 1
+    payload["pageSize"] = 5
+    payload["filter"] = []
+    payload["order"] = [{"column":"created_at", "type":"desc"}]
+    data=json.dumps(payload)
 
-
-    # test('.\config.properties')
-
-    # api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2',config_addr='config.properties', model = enums.Model.RM)
-
-    # payload = {}
-    # payload["pageNo"] = 1
-    # payload["pageSize"] = 5
-    # payload["filter"] = []
-    # payload["order"] = [{"column":"created_at", "type":"desc"}]
-    # data=json.dumps(payload)
-
-    # res = api.post('/robot/list', data)
-    # print(res)
+    res = rm_api.post('/robot/list', data)
+    print(res)
