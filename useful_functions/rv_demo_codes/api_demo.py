@@ -46,5 +46,7 @@ def list_map(token, pageNo = 1, pageSize = 10):
 
 if __name__ == '__main__':
     token = login()
-    # robot_list(token)
-    list_map(token)
+    # print("token")
+    # print(token)
+    robot_list(token)
+    # list_map(token)

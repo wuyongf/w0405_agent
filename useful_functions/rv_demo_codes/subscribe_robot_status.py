@@ -10,7 +10,7 @@
 
 # Python 3.9.15
 # RestfulClient.py
-
+import os
 import requests
 from requests.auth import HTTPDigestAuth
 import json
@@ -19,7 +19,7 @@ from jproperties import Properties  # config file
 # Load config file
 rv_configs = Properties()
 try:
-    with open('../conf/rv/rv-config.properties', 'rb') as config_file:
+    with open('../../conf/nw/rv-config.properties', 'rb') as config_file:
         rv_configs.load(config_file)
         # rv_ip_addr = rm_configs.get('ip_address').data  # to access the properties.
 except:
@@ -46,7 +46,6 @@ def get_RVBattery(rv_configs):
         return -1
 
 if __name__ == "__main__":
-
     battery = get_RVBattery(rv_configs)
     print(battery)
 

@@ -39,11 +39,14 @@ if __name__ == "__main__":
         y = 1.0
         heading = 360
 
+        job_guid =  '7856edc4-b5bc-11ed-8cfb-f426796b3c11'
+        task_guid = '7856edc5-b5bc-11ed-926c-f426796b3c11'
+
         job_update_json = {
-            "id": str(uuid.uuid1()), 
+            "id": job_guid,
             "name": "GOTO Point A",
             "tasks": [{
-                "taskId": str(uuid.uuid1()),
+                "taskId": task_guid,
                 "taskType": task_type,
                 "parameters": {
                     "mapId": map_id,
@@ -55,32 +58,42 @@ if __name__ == "__main__":
             }]
         }
 
-        """  Publish the job update to fleet agent """ 
-        if map_id == "": 
+        """  Publish the job update to fleet agent """
+        if map_id == "":
             logging.fatal('Unable to run the script')
             logging.fatal('Please replace map_id with actual value')
-        else: 
+        else:
             job_update = json.dumps(job_update_json)
             logging.info("Publish Job Update Message, topic: {}, msg: {}".format(job_update_topic, job_update_json))
-            client.publish(job_update_topic, job_update)   
-            time.sleep(0.02)   
+            client.publish(job_update_topic, job_update)
+            time.sleep(0.02)
 
-        """ This section is to simulate robot executing the job in job update """
-        """ Publish the Executing task status """
-        """ TODO: Reuse the `fleet_task.py` logic """
-        task_id = job_update_json["tasks"][0]["taskId"]
+        # """ This section is to simulate robot executing the job in job update """
+        task_id = task_guid
         task_status_json = {
             'taskId': task_id,
             'taskType': task_type,
+            "errMsg": ''
         }
-        task_status_json['taskStatusType'] = 1
-        task_status = json.dumps(task_status_json)
-        logging.info("Publish Task Status Message {}".format(task_status))
-        client.publish(task_status_topic, task_status ,qos)
-        time.sleep(5)
 
-        """ Publish the Completed task status """
-        task_status_json['taskStatusType'] = 2
+        # """ Publish the Executing task status """
+        # task_status_json['taskStatusType'] = 1
+        # task_status = json.dumps(task_status_json)
+        # logging.info("Publish Task Status Message {}".format(task_status))
+        # client.publish(task_status_topic, task_status ,qos)
+        # time.sleep(5)
+        
+        # # """ Publish the Completed task status """
+        # task_status_json['taskStatusType'] = 2
+        # task_status = json.dumps(task_status_json)
+        # logging.info("Publish Task Status Message {}".format(task_status))
+        # client.publish(task_status_topic, task_status ,qos)
+        # time.sleep(2)
+
+        # """ Publish the Failed task status """
+        time.sleep(2)
+        task_status_json['taskStatusType'] = 3
+        task_status_json['errMsg'] = "Motors failure"
         task_status = json.dumps(task_status_json)
         logging.info("Publish Task Status Message {}".format(task_status))
         client.publish(task_status_topic, task_status ,qos)
@@ -90,3 +103,13 @@ if __name__ == "__main__":
         logging.info("KeyboardInterrupt: ending MQTT client")
         client.loop_stop()
         client.disconnect()
+
+
+# workflow
+# 1. post a new job. status --> scheduled
+# 2. update job status. -> activate(1) or complete(2)
+# 3. update job status2.-> fail(3) or abort(4)
+
+# rv
+# 1. post a mission
+# 2. get mission status.
