@@ -1,47 +1,12 @@
 import requests
-import enums
+# import useful_functions.module.enums_sys as enums_sys
 from jproperties import Properties  # config file
 import json
 
 class AuthenticatedAPI:
-    def __init__(self, base_url, config_addr = None, model = enums.Model):
+    def __init__(self, base_url, headers):
         self.base_url = base_url
-        # load config file and then consume
-        if(config_addr is not None):
-            self.configs = self._load_configs(config_addr)
-        # init for different model
-        if model == enums.Model.RM:
-            self.headers = {
-            "Authorization": self._rm_login(),
-            "Content-Type": "application/json"
-            }
-        elif model == enums.Model.RV:
-            self.headers = {"X-API-Key": self.configs.get('X-API-Key').data}
-        elif model == '':
-            print('please select a model')
-
-    def _load_configs(self, config_addr):
-        # Load config file
-        configs = Properties()
-        try:
-            with open(config_addr, 'rb') as config_file:
-                configs.load(config_file)
-        except:
-            print("Error loading properties file, check the correct directory")
-
-        return configs
-
-    def _rm_login(self):
-        base_url = "https://prod.robotmanager.com/api/v2"
-        endpoint = "/login"
-        payload = {}
-        payload["username"] = "yongfeng@willsonic.com"
-        payload["password"] = "NWcadcam2018!"
-        payload["companyId"] = "16b6d42f-b802-4c0a-a015-ec77fc8a2108"
-
-        headers = {"Content-Type":"application/json"}
-        response = requests.post(url=base_url + endpoint, headers=headers, data=json.dumps(payload))
-        return json.loads(response.text)["token"]
+        self.headers = headers
 
     def get(self, endpoint):
         url = self.base_url + endpoint
@@ -83,7 +48,7 @@ if __name__ == '__main__':
     # token = login()
     # print(token)
 
-    rm_api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2', model = enums.Model.RM)
+    rm_api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2', model = enums_sys.Model.RM)
 
     payload = {}
     payload["pageNo"] = 1
@@ -97,7 +62,7 @@ if __name__ == '__main__':
     res = rm_api.get('/auth/loginInfo')
     print(res)
 
-    rv_api = AuthenticatedAPI('http://rv-dev.eastasia.cloudapp.azure.com:8081/api', config_addr= '../../conf/nw/rv-config.properties',model = enums.Model.RV)
+    rv_api = AuthenticatedAPI('http://rv-dev.eastasia.cloudapp.azure.com:8081/api', config_addr= '../../conf/nw/rv-config.properties',model = enums_sys.Model.RV)
 
     res = rv_api.get('/battery/v1/state')
     print(res)

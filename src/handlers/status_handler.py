@@ -1,8 +1,6 @@
 import threading
 import time
 import paho.mqtt.client as mqtt
-import src.integration.models.rm.definition as rm_models
-import src.integration.models.rv.definition as rv_models
 from datetime import datetime
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError
@@ -11,6 +9,8 @@ from requests.exceptions import HTTPError
 import requests
 import logging
 import json
+import src.models.rm.definition as rm_models
+import integration.models.rv.schema_rv as rv_models
 import src.integration.models.rv.api as rv_api
 
 class StatusHandler:
@@ -22,7 +22,8 @@ class StatusHandler:
     
     def publish_status(self): 
         threading.Thread(target=self.__update_status).start()   # from RV API
-        threading.Thread(target=self.__publish_status).start()  # to NCS
+        threading.Thread(target=self.__publish_status_rm).start()  # to NCS
+        # to nwdb
 
     def __update_status(self): # update thread
         # setup requests
@@ -54,7 +55,7 @@ class StatusHandler:
                 
             time.sleep(1.0)
 
-    def __publish_status(self): # publish thread
+    def __publish_status_rm(self): # publish thread
         while True:  
             time.sleep(1)
             if self.rm_status.batteryPct == 0:
@@ -62,6 +63,16 @@ class StatusHandler:
             json_status_str = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
             print(json_status_str)
             self.mq_client.publish(self.topic_name, json_status_str)
+    
+    def __publish_status_nwdb(self): # publish thread
+        while True:  
+            time.sleep(1)
+            if self.rm_status.batteryPct == 0:
+                continue
+            json_status_str = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
+            print(json_status_str)
+            self.mq_client.publish(self.topic_name, json_status_str)
+
 
 
 # todo: 1. map coordinate transformation
