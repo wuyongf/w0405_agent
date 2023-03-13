@@ -33,13 +33,13 @@ class robotDBHandler(db.AzureDB):
         # print(statement)
         return self.Select(statement)
 
-    def UpdateRobotBattery(self, RVSchema_BatteryState):
-        statement = f'UPDATE {self.database}.`robot.status` SET battery = {RVSchema_BatteryState.percentage} WHERE ID = {self.robot_id};'
+    def UpdateRobotBattery(self, battery):
+        statement = f'UPDATE {self.database}.`robot.status` SET battery = {battery} WHERE ID = {self.robot_id};'
         # print(statement)
         self.Update(statement)
 
-    def UpdateRobotPosition(self, RVSchema_pos):
-        statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {RVSchema_pos.x}, pos_y = {RVSchema_pos.y}, pos_theta = {RVSchema_pos.angle} WHERE ID = {self.robot_id};'
+    def UpdateRobotPosition(self, x, y, theta):
+        statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta} WHERE ID = {self.robot_id};'
         # print(statement)
         self.Update(statement)
 

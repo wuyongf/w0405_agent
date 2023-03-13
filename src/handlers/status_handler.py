@@ -33,7 +33,7 @@ class StatusHandler:
             rv_mapName = self.rvapi.get_current_pose().mapName
             self.rv_battery = self.rvapi.get_battery_state()
             self.rv_pos = self.rvapi.get_current_pose()
-            rm_mapPose = RMSchema.MapPose()
+            rm_mapPose = RMSchema.mapPose()
             self.rm_status  = RMSchema.Status(0.0, 0, rm_mapPose)
             try:
                 # # rm status <--- rv status
@@ -41,7 +41,7 @@ class StatusHandler:
                 self.rm_status.state = 1
                 rm_mapPose.x = self.rv_pos.x
                 rm_mapPose.y = self.rv_pos.y
-                rm_mapPose.heading = self.rv_pos.angle
+                rm_mapPose.heading = abs(self.rv_pos.angle)
                 rm_mapPose.mapId = rv_mapName       # mapPose
                 # rm_mapPose.x = round(self.rvapi.getPose().x,3)
                 # rm_mapPose.y = round(self.rvapi.getPose().y,3)
@@ -60,13 +60,14 @@ class StatusHandler:
     def __publish_status(self): # publish thread
         while True:  
             time.sleep(1)
+            print(self.rm_status.batteryPct)
             # if self.rm_status.batteryPct == 0:
             #     continue
             json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
             # print(json_data)
             self.mq_client.publish(self.topic_name, json_data)       # to rm
-            self.nwdb.UpdateRobotPosition(self.rv_pos)     # to nwdb
-            self.nwdb.UpdateRobotBattery(self.rv_battery)  # to nwdb
+            self.nwdb.UpdateRobotPosition(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)     # to nwdb
+            self.nwdb.UpdateRobotBattery(self.rm_status.batteryPct)  # to nwdb
 
 # todo: 1. map coordinate transformation
 #       2. rv amr status and ncs state

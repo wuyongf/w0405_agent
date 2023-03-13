@@ -66,15 +66,17 @@ class RMAPI(api.AuthenticatedAPI):
             "layoutId": "d3b4f645-023d-45e8-95df-3ef6465497e6",
             "order": 1,
             "layoutMakerId": 1
-        }
-    ]
+        }]
         return self.post('/mission', json.dumps(payload))
+    
+    def delete_mission(self, mission_id):
+        return self.delete(f'/mission/{mission_id}')
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    json_data = rmapi.create_mission()
+    json_data = rmapi.delete_mission('c15f09c9-8086-4794-aa98-538722f1fac4')
     print(json_data)
 
     # # list missions and parse json

@@ -17,11 +17,17 @@ class RVAPI(api.AuthenticatedAPI):
         json = self.get('/localization/v1/pose')
         # logging.debug(json)
         return RVSchema.Pose(json)
+    
+    def set_led_status(self, on):
+
+        if on:
+            return self.put('/led/v1/ON')
+        return self.put('/led/v1/OFF')
 
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
-    res = rvapi.get_current_pose()
+    res = rvapi.set_led_status(on = 1)
     print(res)

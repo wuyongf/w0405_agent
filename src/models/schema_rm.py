@@ -18,7 +18,7 @@ class Status:
         self.state = state
         self.mapPose = mapPose
 
-class MapPose:
+class mapPose:
     def __init__(self, mapId = '', x = 0.0, y = 0.0, heading = 0.0):
         self.mapId = mapId
         self.x = x
