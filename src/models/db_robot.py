@@ -1,7 +1,7 @@
 import mysql.connector
 import src.models.db_azure as db
-from jproperties import Properties  # config file
-import useful_functions.methods as um
+import src.utils.methods as umethods
+import src.models.schema_rv as RVSchema
 
 class robotDBHandler(db.AzureDB):
     # init and connect to NWDB
@@ -14,8 +14,9 @@ class robotDBHandler(db.AzureDB):
             'client_flags': [mysql.connector.ClientFlag.SSL],
             'ssl_ca':config.get('NWDB','ssl_ca')}
         super().__init__(self.cfg)
-        self.robot_guid = config.get('NWDB','robot_guid')
         self.database = config.get('NWDB','database')
+        self.robot_guid = config.get('NWDB','robot_guid')
+        self.robot_id = self.GetRobotId()
 
     def __load_config(self, config_addr):
         # Load config file
@@ -29,23 +30,30 @@ class robotDBHandler(db.AzureDB):
     
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
-        print(statement)
-        res = self.FetchOne(statement)
+        # print(statement)
+        return self.Select(statement)
 
-    def UpdateRobotBattery(self, robot_id, battery):
+    def UpdateRobotBattery(self, RVSchema_BatteryState):
+        statement = f'UPDATE {self.database}.`robot.status` SET battery = {RVSchema_BatteryState.percentage} WHERE ID = {self.robot_id};'
+        # print(statement)
+        self.Update(statement)
+
+    def UpdateRobotPosition(self, RVSchema_pos):
+        statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {RVSchema_pos.x}, pos_y = {RVSchema_pos.y}, pos_theta = {RVSchema_pos.angle} WHERE ID = {self.robot_id};'
+        # print(statement)
+        self.Update(statement)
+
+    def UpdateRobotMissionStatus(self, mission_status):
         pass
-    def UpdateRobotPosition(self, robot_id, pos):
-        pass
-    def UpdateRobotMissionStatus(self, robot_id, mission_status):
-        pass
-    def UpdateDemo(self):
-        quantity = 333
-        id = 8
-        statement3 = f'UPDATE inventory SET quantity = {quantity} WHERE id = {id};'
-        self.Query(statement3)
 
 if __name__ == '__main__':
-    config = um.load_config('../../conf/config.properties')
+    config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
-    nwdb.GetRobotId()
+
+    # # position
+    # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}
+    # nwdb.UpdateRobotPosition(RVSchema.Pose(json))
+
+    # # battery
+    # nwdb.UpdateRobotBattery(12.22)
     pass

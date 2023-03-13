@@ -9,38 +9,40 @@ from requests.exceptions import HTTPError
 import requests
 import logging
 import json
-import src.models.rm.definition as rm_models
-import integration.models.rv.schema_rv as rv_models
-import src.integration.models.rv.api as rv_api
+# yf
+import src.models.api_rv as RVAPI
+import src.models.db_robot as NWDB
+import src.models.schema_rm as RMSchema
+import src.models.schema_rv as RVSchema
 
 class StatusHandler:
-    def __init__(self, config_addr, mq_host, mq_topic):
+    def __init__(self, config, mq_host, mq_topic):
         self.mq_client = mqtt.Client("status_publisher")
         self.topic_name = mq_topic        
         self.mq_client.connect(mq_host)
-        self.rvapi = rv_api.RVAPI(config_addr)
+        # yf config
+        self.rvapi = RVAPI.RVAPI(config)
+        self.nwdb = NWDB.robotDBHandler(config)
     
     def publish_status(self): 
         threading.Thread(target=self.__update_status).start()   # from RV API
-        threading.Thread(target=self.__publish_status_rm).start()  # to NCS
-        # to nwdb
+        threading.Thread(target=self.__publish_status).start()  # to rm and nwdb
 
     def __update_status(self): # update thread
-        # setup requests
-        rm_mapPose = rm_models.MapPose('', 0, 0, 0)
-        self.rm_status = rm_models.Status(0, 1, rm_mapPose)
-
         while True:
+            rv_mapName = self.rvapi.get_current_pose().mapName
+            self.rv_battery = self.rvapi.get_battery_state()
+            self.rv_pos = self.rvapi.get_current_pose()
+            rm_mapPose = RMSchema.MapPose()
+            self.rm_status  = RMSchema.Status(0.0, 0, rm_mapPose)
             try:
                 # # rm status <--- rv status
-                self.rm_status.batteryPct = round(self.rvapi.getBatteryState().percentage * 100, 3)  # battery
+                self.rm_status.batteryPct = round(self.rv_battery.percentage * 100, 3)  # battery
                 self.rm_status.state = 1
-
-                rm_mapPose.x = 0
-                rm_mapPose.y = 0
-                rm_mapPose.heading = 0
-
-                rm_mapPose.mapId = self.rvapi.getPose().mapName        # mapPose
+                rm_mapPose.x = self.rv_pos.x
+                rm_mapPose.y = self.rv_pos.y
+                rm_mapPose.heading = self.rv_pos.angle
+                rm_mapPose.mapId = rv_mapName       # mapPose
                 # rm_mapPose.x = round(self.rvapi.getPose().x,3)
                 # rm_mapPose.y = round(self.rvapi.getPose().y,3)
                 # rm_mapPose.heading = abs(self.rvapi.getPose().angle)
@@ -55,25 +57,16 @@ class StatusHandler:
                 
             time.sleep(1.0)
 
-    def __publish_status_rm(self): # publish thread
+    def __publish_status(self): # publish thread
         while True:  
             time.sleep(1)
-            if self.rm_status.batteryPct == 0:
-                continue
-            json_status_str = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
-            print(json_status_str)
-            self.mq_client.publish(self.topic_name, json_status_str)
-    
-    def __publish_status_nwdb(self): # publish thread
-        while True:  
-            time.sleep(1)
-            if self.rm_status.batteryPct == 0:
-                continue
-            json_status_str = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
-            print(json_status_str)
-            self.mq_client.publish(self.topic_name, json_status_str)
-
-
+            # if self.rm_status.batteryPct == 0:
+            #     continue
+            json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
+            # print(json_data)
+            self.mq_client.publish(self.topic_name, json_data)       # to rm
+            self.nwdb.UpdateRobotPosition(self.rv_pos)     # to nwdb
+            self.nwdb.UpdateRobotBattery(self.rv_battery)  # to nwdb
 
 # todo: 1. map coordinate transformation
 #       2. rv amr status and ncs state

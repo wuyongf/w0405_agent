@@ -34,14 +34,39 @@ class AzureDB():
             self.cursor.execute(statement)
             self.conn.commit()
         except mysql.connector.Error as err:
-            print("[AzureDBHandler] Error Code: {}".format(err))
+            print("[AzureDBHandler.Query] Error Code: {}".format(err))
 
-    def FetchOne(self, statement):
-        # Read data
-        self.cursor.execute(statement)
-        rows = self.cursor.fetchone()
-        for i in range(len(rows)):
-            print(rows[i])
+    def Select(self, statement):
+        try:
+            self.cursor.execute(statement)
+            row = self.cursor.fetchone()
+            return row[0]
+            # rows = self.cursor.fetchone()
+            # for i in range(len(rows)):
+            #     print(rows[i])
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Select] Error Code: {}".format(err))
+
+    def Update(self, statement):
+        try:
+            self.cursor.execute(statement)
+            self.conn.commit()
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Update] Error Code: {}".format(err))
+
+    def Insert(self, statement):
+        try:
+            self.cursor.execute(statement)
+            self.conn.commit()
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Insert] Error Code: {}".format(err))
+
+    def Delete(self, statement):
+        try:
+            self.cursor.execute(statement)
+            self.conn.commit()
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Insert] Error Code: {}".format(err))
         
 if __name__ == '__main__':
 

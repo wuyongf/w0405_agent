@@ -19,7 +19,7 @@ class Status:
         self.mapPose = mapPose
 
 class MapPose:
-    def __init__(self, mapId, x, y, heading):
+    def __init__(self, mapId = '', x = 0.0, y = 0.0, heading = 0.0):
         self.mapId = mapId
         self.x = x
         self.y = y
@@ -31,7 +31,7 @@ class Task1:
         self.taskType = task_type
         self.parameters = parameters
 
-class Task2:
+class Task:
     def __init__(self, taskId, scheduleType, priority, task_type, parameters):
         self.taskId = taskId
         self.scheduleType = scheduleType
@@ -51,6 +51,13 @@ class JobUpdate:
         self.id = id
         self.name = name
         self.tasks = tasks
+
+# To create Job/Task
+class TaskParams:
+    def __init__(self, dct):
+        self.mapId = dct['robotId']
+        self.positionName = dct['percentage']
+        self.parameters = dct['powerSupplyStatus']
 
 # Built-In-Parameters: RM-GOTO/RM-LOCALIZE
 class RMGOTO:

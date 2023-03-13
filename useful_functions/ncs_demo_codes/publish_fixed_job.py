@@ -39,8 +39,9 @@ if __name__ == "__main__":
         y = 1.0
         heading = 360
 
-        job_guid =  '7856edc4-b5bc-11ed-8cfb-f426796b3c11'
-        task_guid = '7856edc5-b5bc-11ed-926c-f426796b3c11'
+        job_guid =  '7856edc4-b5bc-11ed-8cfb-f426796b3c13'
+        # task_guid = '7856edc5-b5bc-11ed-926c-f426796b3c13'
+        task_guid = '4dd67a4c-f5da-4b51-938e-33e8a60d92d6'
 
         job_update_json = {
             "id": job_guid,
@@ -58,15 +59,15 @@ if __name__ == "__main__":
             }]
         }
 
-        """  Publish the job update to fleet agent """
-        if map_id == "":
-            logging.fatal('Unable to run the script')
-            logging.fatal('Please replace map_id with actual value')
-        else:
-            job_update = json.dumps(job_update_json)
-            logging.info("Publish Job Update Message, topic: {}, msg: {}".format(job_update_topic, job_update_json))
-            client.publish(job_update_topic, job_update)
-            time.sleep(0.02)
+        # """  Publish the job update to fleet agent """
+        # if map_id == "":
+        #     logging.fatal('Unable to run the script')
+        #     logging.fatal('Please replace map_id with actual value')
+        # else:
+        #     job_update = json.dumps(job_update_json)
+        #     logging.info("Publish Job Update Message, topic: {}, msg: {}".format(job_update_topic, job_update_json))
+        #     client.publish(job_update_topic, job_update)
+        #     time.sleep(0.1)
 
         # """ This section is to simulate robot executing the job in job update """
         task_id = task_guid
@@ -81,7 +82,7 @@ if __name__ == "__main__":
         # task_status = json.dumps(task_status_json)
         # logging.info("Publish Task Status Message {}".format(task_status))
         # client.publish(task_status_topic, task_status ,qos)
-        # time.sleep(5)
+        # time.sleep(5)   
         
         # # """ Publish the Completed task status """
         # task_status_json['taskStatusType'] = 2

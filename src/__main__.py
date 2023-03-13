@@ -1,11 +1,11 @@
-import src.integration.handlers.status_handler as status_handler
-# import rm.integration.mir200.handlers.task_handler as task_handler
 import logging
 import logging.handlers as handlers
 import os
 import time
 import sys
-from jproperties import Properties
+# yf
+import src.utils.methods as umethods
+import handlers.status_handler as status_handler
 
 if __name__ == '__main__':
     # Sleep for 30 seconds for Pi to connect to MiR network...
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
 
     # # Loading config files
-    rv_config_addr = '../../conf/rv/rv-config.properties'
+    config = umethods.load_config('../conf/config.properties')
 
     # Status handler updates robot status every second
-    sh = status_handler.StatusHandler(rv_config_addr, "localhost", "/robot/status")
+    sh = status_handler.StatusHandler(config, "localhost", "/robot/status")
     sh.publish_status()
     # # Task handler subscribes and execute task, also report task status to robotmanager
     # th = task_handler.TaskHandler("localhost", 1883, "/robot/task", "/robot/task/status")
