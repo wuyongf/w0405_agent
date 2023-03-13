@@ -24,10 +24,8 @@ class RVAPI(api.AuthenticatedAPI):
         return self.put('/led/v1/OFF')
     
     def get_map_metadata(self, map_name):
-        # /5W516_20230313/mapMetadata
         json = self.get(f'/map/v1/{map_name}/mapMetadata')
-        return json
-        # return RVSchema.Pose(json)
+        return RVSchema.MapMetadata(json)
         
 
 if __name__ == '__main__':

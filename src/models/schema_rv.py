@@ -25,6 +25,15 @@ class Pose:
         self.y = dct['y']
         self.angle = dct['angle']
 
+class MapMetadata:
+    def __init__(self, dct):
+        self.resolution = dct['resolution']
+        self.width = dct['width']
+        self.height = dct['height']
+        self.x = dct['x']
+        self.y = dct['y']
+        self.angle = dct['angle']
+
 class MQTTJoyStick:
     def __init__(self, object):
         self.id = "joystick"
