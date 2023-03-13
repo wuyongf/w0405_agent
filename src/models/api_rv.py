@@ -19,15 +19,21 @@ class RVAPI(api.AuthenticatedAPI):
         return RVSchema.Pose(json)
     
     def set_led_status(self, on):
-
         if on:
             return self.put('/led/v1/ON')
         return self.put('/led/v1/OFF')
+    
+    def get_map_metadata(self, map_name):
+        # /5W516_20230313/mapMetadata
+        json = self.get(f'/{map_name}/mapMetadata')
+        return json
+        # return RVSchema.Pose(json)
+        
 
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
-    res = rvapi.set_led_status(on = 1)
+    res = rvapi.get_map_metadata('5W516_20230313')
     print(res)
