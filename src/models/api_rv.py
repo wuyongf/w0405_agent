@@ -25,7 +25,7 @@ class RVAPI(api.AuthenticatedAPI):
     
     def get_map_metadata(self, map_name):
         # /5W516_20230313/mapMetadata
-        json = self.get(f'/{map_name}/mapMetadata')
+        json = self.get(f'/map/v1/{map_name}/mapMetadata')
         return json
         # return RVSchema.Pose(json)
         
