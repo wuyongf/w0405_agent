@@ -35,7 +35,7 @@ publisher = mqtt.Client("publisher_rm")
 subscriber = mqtt.Client("subscriber_rm")
 
 
-def publishTExecuting(task_id, task_type):
+def publish_task_executing(task_id, task_type):
     task_status_json = {
         "taskId": task_id,
         "taskType": task_type,
@@ -44,7 +44,7 @@ def publishTExecuting(task_id, task_type):
     task_status_msg = json.dumps(task_status_json)
     publisher.publish("/robot/task/status", task_status_msg)
 
-def publishTComplete(task_id, task_type):
+def publish_task_complete(task_id, task_type):
     task_status_json = {
         "taskId": task_id,
         "taskType": task_type,
@@ -57,7 +57,7 @@ def publishTComplete(task_id, task_type):
 def executeTask(task):
     global robotStatusJson
     task_json_object = json.loads(task)
-    publishTExecuting(task_json_object["taskId"], task_json_object["taskType"])
+    publish_task_executing(task_json_object["taskId"], task_json_object["taskType"])
     if task_json_object["taskType"] == 'RM-GOTO':        
         robotStatusJson['mapPose']['mapId'] = task_json_object["parameters"]['mapId']
         robotStatusJson['mapPose']['x'] = task_json_object["parameters"]['x']
@@ -68,7 +68,7 @@ def executeTask(task):
         rvapi.set_led_status(on = 0)
     if task_json_object["taskType"] == 'NW-BAISC-SLEEP1S':
         time.sleep(1)
-    publishTComplete(task_json_object["taskId"], task_json_object["taskType"])
+    publish_task_complete(task_json_object["taskId"], task_json_object["taskType"])
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):

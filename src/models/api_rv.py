@@ -67,17 +67,18 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
-    print(rvapi.get_battery_state().percentage)
-    # res = rvapi.get_active_map()
-    # print(res.name)
+    # print(rvapi.get_battery_state().percentage)
+    res = rvapi.get_active_map()
+    print(res.name)
 
-    # rvapi.change_mode_navigation()
-    # res = rvapi.get_mode()
-    # print(res.state)
+    rvapi.change_mode_navigation()
+    res = rvapi.get_mode()
+    print(res.state)
 
-    # rvapi.change_map('5W516_20230313', 'WAYPOINT1') # 5W_20230308_2 WP01    5W516_20230313 WAYPOINT1
-    # res = rvapi.get_active_map()
-    # print(res.name)
+    # rvapi.change_map('5W_20230308_2', 'WP01') 
+    rvapi.change_map('5W516_20230313', 'WAYPOINT1')
+    res = rvapi.get_active_map()
+    print(res.name)
 
 
     
