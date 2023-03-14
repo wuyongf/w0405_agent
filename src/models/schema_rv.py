@@ -25,6 +25,12 @@ class Pose:
         self.y = dct['y']
         self.angle = dct['angle']
 
+class ActiveMap:
+    def __init__(self, dct):
+        self.robotId = dct['robotId']
+        self.id = dct['id']
+        self.name = dct['name']
+
 class MapMetadata:
     def __init__(self, dct):
         self.resolution = dct['resolution']
