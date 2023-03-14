@@ -55,5 +55,5 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotPosition(RVSchema.Pose(json))
 
     # # battery
-    # nwdb.UpdateRobotBattery(12.22)
+    nwdb.UpdateRobotBattery(12.22)
     pass
