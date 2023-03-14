@@ -26,12 +26,22 @@ class RVAPI(api.AuthenticatedAPI):
     def get_map_metadata(self, map_name):
         json = self.get(f'/map/v1/{map_name}/mapMetadata')
         return RVSchema.MapMetadata(json)
+    
+    def get_mode(self):
+        json = self.get('/mode/v1')
+        return RVSchema.Mode(json)
         
+    def change_mode_navigation(self):
+        return self.post('/mode/v1/navigation')
+    
+    def change_mode_undefined(self):
+        return self.post('/mode/v1/undefined')
 
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
-    res = rvapi.get_map_metadata('5W516_20230313')
+    
+    res = rvapi.change_mode_navigation()
     print(res)

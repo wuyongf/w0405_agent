@@ -28,6 +28,10 @@ class Transform:
         else: heading = (180.0 - abs(rv_angle) * 180.0 / math.pi) + 180.0
         # print(f'rm pixel(x,y,theta) is ({pixel_x},{pixel_y},{heading})')    
 
+    def pos_rm2bim(self):
+        pass
+
+
 if __name__ == '__main__':
     
     trans  = Transform()

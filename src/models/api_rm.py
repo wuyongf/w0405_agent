@@ -76,7 +76,7 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    json_data = rmapi.delete_mission('c15f09c9-8086-4794-aa98-538722f1fac4')
+    json_data = rmapi.list_maps()
     print(json_data)
 
     # # list missions and parse json

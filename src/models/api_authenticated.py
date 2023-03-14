@@ -16,12 +16,15 @@ class AuthenticatedAPI:
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
-        
-    def post(self, endpoint, json):
+
+    def post(self, endpoint, json = None):
         url = self.base_url + endpoint
         try:
-            response = requests.post(url, headers=self.headers, data=json)
+            response = requests.post(url, headers=self.headers, data= json)
             response.raise_for_status()
+            if response.headers['Content-Length'] == '0': 
+                print("[AuthenticatedAPI]: Empty JSON response received.") 
+                return None
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")

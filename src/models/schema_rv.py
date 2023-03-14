@@ -34,6 +34,13 @@ class MapMetadata:
         self.y = dct['y']
         self.angle = dct['angle']
 
+class Mode:
+    def __init__(self, dct):
+        self.robotId = dct['robotId']
+        self.state = dct['state']
+        self.followMeStandalone = dct['followMeStandalone']
+        self.manual = dct['manual']
+
 class MQTTJoyStick:
     def __init__(self, object):
         self.id = "joystick"
