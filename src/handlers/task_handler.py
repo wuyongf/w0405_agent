@@ -6,6 +6,8 @@ import sys
 # yf
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
+import src.models.transform as trans
+import src.models.schema_rm as RMSchema
 
 simPath = [
     {'x': 438, 'y': 398.0},  # P1
@@ -57,7 +59,17 @@ def publish_task_complete(task_id, task_type):
 def executeTask(task):
     global robotStatusJson
     task_json_object = json.loads(task)
-    publish_task_executing(task_json_object["taskId"], task_json_object["taskType"])
+    task = RMSchema.Task(json.loads(task))
+    publish_task_executing(task.taskId, task.taskType)
+    if  task_json_object["taskType"] == 'RM-LOCALIZE':
+        # [x] retrieve map_id from robot-agent
+        # [ ] retrieve rv_map_name from nwdb via map_ids
+        # [ ] transform. pos_rm2rv. post init points.
+        # [ ] rv: change to navigation status
+        # [ ] rv: change map with init point.
+        # [ ] rv: verify the active map. return status to rm
+        print(task_json_object)
+        pass
     if task_json_object["taskType"] == 'RM-GOTO':        
         robotStatusJson['mapPose']['mapId'] = task_json_object["parameters"]['mapId']
         robotStatusJson['mapPose']['x'] = task_json_object["parameters"]['x']
@@ -66,7 +78,7 @@ def executeTask(task):
         rvapi.set_led_status(on = 1)
     if task_json_object["taskType"] == 'RV-LEDOFF':
         rvapi.set_led_status(on = 0)
-    if task_json_object["taskType"] == 'NW-BAISC-SLEEP1S':
+    if task_json_object["taskType"] == 'NW-BASIC-SLEEP1S':
         time.sleep(1)
     publish_task_complete(task_json_object["taskId"], task_json_object["taskType"])
 
