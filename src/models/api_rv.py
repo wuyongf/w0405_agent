@@ -29,7 +29,7 @@ class RVAPI(api.AuthenticatedAPI):
     def change_map(self, map_name, point_name):
         payload = {}
         payload["mapName"] = map_name
-        payload["useInitialPose"] = true
+        payload["useInitialPose"] = True
         payload["waypointName"] = point_name
         return self.post('/map/v1/change', json.dumps(payload))
 
