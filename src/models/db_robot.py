@@ -46,6 +46,11 @@ class robotDBHandler(db.AzureDB):
     def UpdateRobotMissionStatus(self, mission_status):
         pass
 
+    def get_amr_guid(self, rm_guid):
+        statement = f'SELECT amr_guid FROM {self.database}.`robot.map` WHERE rm_guid = "{rm_guid}";'
+        # print(statement)
+        return self.Select(statement)
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
@@ -55,5 +60,7 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotPosition(RVSchema.Pose(json))
 
     # # battery
-    nwdb.UpdateRobotBattery(12.22)
+    # nwdb.UpdateRobotBattery(12.22)
+    res = nwdb.get_amr_guid('56ded5f9-79a3-458e-8458-8a76e818048e')
+    print(res)
     pass

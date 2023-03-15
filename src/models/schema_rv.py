@@ -25,6 +25,15 @@ class Pose:
         self.y = dct['y']
         self.angle = dct['angle']
 
+class Waypoint:
+    def __init__(self):
+        self.id = 0
+        self.name = ''
+        self.mapName = ''
+        self.x = 0.0
+        self.y = 0.0
+        self.angle = 0.0
+
 class ActiveMap:
     def __init__(self, dct):
         self.robotId = dct['robotId']
