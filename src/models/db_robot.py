@@ -17,16 +17,6 @@ class robotDBHandler(db.AzureDB):
         self.database = config.get('NWDB','database')
         self.robot_guid = config.get('NWDB','robot_guid')
         self.robot_id = self.GetRobotId()
-
-    def __load_config(self, config_addr):
-        # Load config file
-        configs = Properties()
-        try:
-            with open(config_addr, 'rb') as config_file:
-                configs.load(config_file)
-        except:
-            print("[robotDBHandler]: Error loading properties file, check the correct directory")
-        return configs
     
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
