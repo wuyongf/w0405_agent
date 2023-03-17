@@ -3,14 +3,12 @@ import time
 import sys
 import logging
 import os
-import src.models.db_robot as NWDB
+import datetime
+import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 
 # 把当前文件所在文件夹的父文件夹路径加入到PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# from database.nwdb import nwazuredb
 
 def print_data(check_f, time_string_f, co2_f, tvoc_f, ch2o_f,
                pm25_f, temp_f, humi_f, pm10_f, pm01_f, lux_f, mcu_temp_f, db_f, count_f, gg_f):
@@ -32,7 +30,6 @@ def print_data(check_f, time_string_f, co2_f, tvoc_f, ch2o_f,
         time.sleep(1)
     else:
         gg_f += 1
-
 
 class IaqSensor():
     def __init__(self, config, COM, Ti):
@@ -77,7 +74,7 @@ class IaqSensor():
 
     def collect_data(self):
         ser = serial.Serial(self.port, self.bandwidth)  # Select Serial Port and bandwidth
-        # nwdb = nwazuredb()
+
         while True:
             try:
                 named_tuple = time.localtime()  # get struct_time
@@ -120,10 +117,9 @@ class IaqSensor():
                 self.GG += 1
                 continue
 
-
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    iaq = IaqSensor(config, "COM5", 5)
+    iaq = IaqSensor(config, "COM7", 2)
     iaq.set_task_mode(True)
     iaq.run()
     print(iaq.get_data())

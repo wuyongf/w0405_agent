@@ -12,7 +12,7 @@ class RVAPI(api.AuthenticatedAPI):
     def get_battery_state(self):
         json = self.get('/battery/v1/state')
         return RVSchema.BatteryState(json)
-    
+
     def get_current_pose(self):
         json = self.get('/localization/v1/pose')
         # logging.debug(json)
