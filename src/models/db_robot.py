@@ -46,6 +46,16 @@ class robotDBHandler(db.AzureDB):
     def UpdateRobotMissionStatus(self, mission_status):
         pass
 
+    # Aaron Mod
+    def InsertIaqData(self, table, column, value):
+        # map_name
+        # posX,Y
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, column))}) VALUES ({", ".join(map(str, value))});'
+        print(statement)
+        self.Insert(statement)
+
+
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
@@ -55,5 +65,6 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotPosition(RVSchema.Pose(json))
 
     # # battery
-    # nwdb.UpdateRobotBattery(12.22)
+    # nwdb.UpdateRobotBattery(30.22)
+    # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
     pass
