@@ -7,6 +7,7 @@ import datetime
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 
+
 class IaqSensor():
     def __init__(self, config, COM, Ti):
         self.port = COM
