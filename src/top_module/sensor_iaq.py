@@ -7,30 +7,6 @@ import datetime
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 
-# 把当前文件所在文件夹的父文件夹路径加入到PYTHONPATH
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-def print_data(check_f, time_string_f, co2_f, tvoc_f, ch2o_f,
-               pm25_f, temp_f, humi_f, pm10_f, pm01_f, lux_f, mcu_temp_f, db_f, count_f, gg_f):
-    if check_f < 30000:
-        print(time_string_f, end=' ')
-        print('co2 : ' + str(co2_f), end=' ')
-        print('tvoc : ' + str(tvoc_f), end=' ')
-        print('ch2o : ' + str(ch2o_f), end=' ')
-        print('pm2.5 : ' + str(pm25_f), end=' ')
-        print('temp : ' + str(temp_f), end=' ')
-        print('humi : ' + str(humi_f), end=' ')
-        print('pm10 : ' + str(pm10_f), end=' ')
-        print('pm1.0 : ' + str(pm01_f), end=' ')
-        print('lux : ' + str(lux_f), end=' ')
-        print('mcu_temp : ' + str(mcu_temp_f), end=' ')
-        print('dB : ' + str(db_f), end=' ')
-        print('count : ' + str(count_f), end=' ')
-        print('GG : ' + str(gg_f))
-        time.sleep(1)
-    else:
-        gg_f += 1
-
 class IaqSensor():
     def __init__(self, config, COM, Ti):
         self.port = COM
