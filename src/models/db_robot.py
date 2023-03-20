@@ -16,24 +16,24 @@ class robotDBHandler(db.AzureDB):
         super().__init__(self.cfg)
         self.database = config.get('NWDB','database')
         self.robot_guid = config.get('NWDB','robot_guid')
-        self.robot_id = self.GetRobotId()
+        self.robot_id = self.get_robot_id()
     
-    def GetRobotId(self):
+    def get_robot_id(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
         # print(statement)
         return self.Select(statement)
 
-    def UpdateRobotBattery(self, battery):
+    def update_robot_battery(self, battery):
         statement = f'UPDATE {self.database}.`robot.status` SET battery = {battery} WHERE ID = {self.robot_id};'
         # print(statement)
         self.Update(statement)
 
-    def UpdateRobotPosition(self, x, y, theta):
+    def update_robot_position(self, x, y, theta):
         statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta} WHERE ID = {self.robot_id};'
         # print(statement)
         self.Update(statement)
 
-    def UpdateRobotMissionStatus(self, mission_status):
+    def update_robot_mission_status(self, mission_status):
         pass
 
     def get_amr_guid(self, rm_guid):

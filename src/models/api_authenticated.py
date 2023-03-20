@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # token = login()
     # print(token)
 
-    rm_api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2', model = enums_sys.Model.RM)
+    rm_api = AuthenticatedAPI('https://prod.robotmanager.com/api/v2')
 
     payload = {}
     payload["pageNo"] = 1
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     res = rm_api.get('/auth/loginInfo')
     print(res)
 
-    rv_api = AuthenticatedAPI('http://rv-dev.eastasia.cloudapp.azure.com:8081/api', config_addr= '../../conf/nw/rv-config.properties',model = enums_sys.Model.RV)
+    rv_api = AuthenticatedAPI('http://rv-dev.eastasia.cloudapp.azure.com:8081/api')
 
     res = rv_api.get('/battery/v1/state')
     print(res)

@@ -101,8 +101,8 @@ def execute_task(task):
             print('[RM-LOCALIZE] Error: Please check the workflow.')
             publish_task_failed(task.taskId, task.taskType)
         
-
     if task.taskType == 'RM-GOTO':
+
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
@@ -133,12 +133,16 @@ def execute_task(task):
         # robotStatusJson['mapPose']['mapId'] = task_json_object["parameters"]['mapId']
         # robotStatusJson['mapPose']['x'] = task_json_object["parameters"]['x']
         # robotStatusJson['mapPose']['y'] = task_json_object["parameters"]['y']
+    
     if task.taskType == 'RV-LEDON':
         rvapi.set_led_status(on = 1)
+    
     if task.taskType == 'RV-LEDOFF':
         rvapi.set_led_status(on = 0)
-    if task_json_object["taskType"] == 'NW-BASIC-SLEEP1S':
+    
+    if task.taskType == 'NW-BASIC-SLEEP1S':
         time.sleep(1)
+
     publish_task_complete(task_json_object["taskId"], task_json_object["taskType"])
 
 # The callback for when a PUBLISH message is received from the server.

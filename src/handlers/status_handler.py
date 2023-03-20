@@ -66,8 +66,8 @@ class StatusHandler:
             json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
             # print(json_data)
             self.mq_client.publish(self.topic_name, json_data)       # to rm
-            self.nwdb.UpdateRobotPosition(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)     # to nwdb
-            self.nwdb.UpdateRobotBattery(self.rm_status.batteryPct)  # to nwdb
+            self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)     # to nwdb
+            self.nwdb.update_robot_battery(self.rm_status.batteryPct)  # to nwdb
 
 # todo: 1. map coordinate transformation
 #       2. rv amr status and ncs state
