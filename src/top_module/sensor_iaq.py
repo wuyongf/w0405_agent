@@ -6,7 +6,7 @@ import os
 import datetime
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
-
+import src.top_module.rules as rule
 
 class IaqSensor():
     def __init__(self, config, COM, Ti):
@@ -19,6 +19,8 @@ class IaqSensor():
         self.task_mode = 0
         self.column_items = ["CO2", "TVOC", "HCHO", "pm25", "RH", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.robotDBHandler(config)
+        self.rules = rule.user_rules("lux", 300, "lower")
+        self.data_stack = []
 
     def get_data(self, datahex):
         co2 = (datahex[0] << 8 | datahex[1])
@@ -48,6 +50,30 @@ class IaqSensor():
 
     def run(self):
         self.collect_data()
+
+    def data_store(self, dataset):
+        self.data_stack.append(dataset)
+        # print(self.data_stack[0])
+        if len(self.data_stack) >= 5:
+            self.check_stack(self.data_stack)
+            self.data_stack.clear()
+
+    def get_rules(self, field_name):
+
+
+    def check_stack(self, data_stack):
+        # mySQL get (type, threshold, limit_type) as list
+        for dataset in data_stack:
+            print("check : ", dataset)
+            for i, u in enumerate(self.column_items):
+                if u == self.rules.type:
+                    # print(dataset[i])
+                    if self.rules.limit_type == "higher" and dataset[i] > self.rules.threshold:
+                        print("high")
+                    elif self.rules.limit_type == "lower" and dataset[i] < self.rules.threshold:
+                        print("low")
+
+
 
     def collect_data(self):
         ser = serial.Serial(self.port, self.bandwidth)  # Select Serial Port and bandwidth
@@ -83,7 +109,9 @@ class IaqSensor():
 
                             if self.task_mode:
                                 # Insert to mySQL
-                                self.data_insert(result)
+                                self.data_store(result)
+                                # self.check_stack(result)
+                                # self.data_insert(result)
 
                             # Stream to mySQL
                             self.data_stream()
@@ -96,7 +124,7 @@ class IaqSensor():
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    iaq = IaqSensor(config, "COM7", 2)
+    iaq = IaqSensor(config, "COM6", 2)
     iaq.set_task_mode(True)
     iaq.run()
     print(iaq.get_data())

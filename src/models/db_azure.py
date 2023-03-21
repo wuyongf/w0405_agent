@@ -20,7 +20,7 @@ class AzureDB():
             else:
                 print(err)
         else:
-            self.cursor = self.conn.cursor()
+            self.cursor = self.conn.cursor(buffered=True) # should add buffered=True
             print('cursor connect')
 
     def Disconnect(self):
@@ -44,6 +44,26 @@ class AzureDB():
             # rows = self.cursor.fetchone()
             # for i in range(len(rows)):
             #     print(rows[i])
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Select] Error Code: {}".format(err))
+
+    def GetColumn(self, statement):
+        try:
+            self.cursor.execute(statement)
+            num_fields = len(self.cursor.description)
+            field_names = [i[0] for i in self.cursor.description]
+            return field_names
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Select] Error Code: {}".format(err))
+
+    def SelectAll(self, statement):
+        try:
+            self.cursor.execute(statement)
+            num_fields = len(self.cursor.description)
+            field_names = [i[0] for i in self.cursor.description]
+            row = self.cursor.fetchall()
+            # print(field_names)
+            return row
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Select] Error Code: {}".format(err))
 

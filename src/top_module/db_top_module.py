@@ -1,3 +1,5 @@
+import time
+
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
@@ -41,10 +43,19 @@ class robotDBHandler(db.AzureDB):
         print(statement)
         self.Insert(statement)
 
+    def GetUserRules_Column(self):
+        statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
+        return self.GetColumn(statement)
+
+    def GetUserRules(self):
+        statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
+        return self.SelectAll(statement)
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
+    print(nwdb.GetUserRules_Column())
+    print(nwdb.GetUserRules())
 
     # # position
     # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}

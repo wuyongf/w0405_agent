@@ -1,5 +1,5 @@
 import time
-import src.top_module.io_module.io_controller as io_controller
+import src.top_module.io_module.io_controller_backup as io_controller
 
 
 # TBC: sleep listener
@@ -25,7 +25,7 @@ class linear_actuator():
         # y0 on
         self.io.y_control(self.io.y0_on)
         # start a thread to monitor x0 and time limit
-        while True:
+        while self.stop_flag == 0:
             time.sleep(0.1)
             i += 1
             # if x0 = High,
@@ -49,7 +49,7 @@ class linear_actuator():
         # y1 on
         self.io.y_control(self.io.y1_on)
         # start a thread to monitor x1 and time limit
-        while True:
+        while self.stop_flag == 0:
             time.sleep(0.1)
             i += 1
             # if x1 = High,

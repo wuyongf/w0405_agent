@@ -7,9 +7,9 @@ from datetime import datetime
 
 class ioController():
     def __init__(self):
-        self.port = "COM3"
-        self.baudrate = '38400'
-        self.ser = serial.Serial(self.port, self.baudrate)
+        # self.port = "COM3"
+        # self.baudrate = '38400'
+        # self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.1
         print("SerialController initialized")
 
@@ -56,6 +56,9 @@ class ioController():
         self.ser.write(send_data)
         time.sleep(self.time_interval)
 
+    def x_get(self, x):
+        return int(self.get_inputStatus(x))
+
     def y_init(self, ):
         self.y_control(self.y0_off)
         self.y_control(self.y1_off)
@@ -80,35 +83,45 @@ class ioController():
             ioport = 7 - int(x)
         return int(status[ioport])
 
-    def x_get(self, x):
-        return int(self.get_inputStatus(x))
-
     def linear_actuator(self, action):
         # Extension Motion
         if action == 1:
             self.y_control(self.y0_on)                 # y0 on
             while True:                                             # start a thread to monitor x0
-                if self.x_get(0) == 1:                  # if x0 = High,
-                    self.y_control(self.y0_off)
+                if int(self.get_inputStatus(0)) == 1:                  # if x0 = High,
+                    send_data = serial.to_bytes(self.y0_off)        # y0 off
+                    self.ser.write(send_data)
+                    time.sleep(self.time_interval)
                     break
         # Retraction Motion
         if action == 0:
-            self.y_control(self.y1_on)
+            send_data = serial.to_bytes(self.y1_on)                 # y1 on
+            self.ser.write(send_data)
+            time.sleep(self.time_interval)
             while True:                                             # start monitoring x0
-                if self.x_get(1) == 1:
-                    self.y_control(self.y1_off) # if x0 = High,
+                if int(self.get_inputStatus(1)) == 1:               # if x0 = High,
+                    send_data = serial.to_bytes(self.y1_off)        # y0 off
+                    self.ser.write(send_data)
+                    time.sleep(self.time_interval)
                     break
 
     def phone_servo(self, duration):
         # 0 degree
-        self.y_control(self.y2_on)     # y2 on
-        self.y_control(self.y2_off)    # y2 off
+        send_data = serial.to_bytes(self.y2_on)     # y2 on
+        self.ser.write(send_data)
+        time.sleep(self.time_interval)
+        send_data = serial.to_bytes(self.y2_off)    # y2 off
+        self.ser.write(send_data)
+        time.sleep(self.time_interval)
         # wait for finish
         time.sleep(duration)
         # 90 degree
-        self.y_control(self.y3_on)     # y3 on
-        self.y_control(self.y3_off)    # y3 off
-
+        send_data = serial.to_bytes(self.y3_on)     # y3 on
+        self.ser.write(send_data)
+        time.sleep(self.time_interval)
+        send_data = serial.to_bytes(self.y3_off)    # y3 off
+        self.ser.write(send_data)
+        time.sleep(self.time_interval)
 
     def surfacepro_angle(self, angle):
         duration = 3
@@ -156,9 +169,8 @@ class ioController():
 if __name__ == '__main__':
     # example usage
     io = ioController()
-    # io.y_control(io.y1_on)
-    # io.y_control(io.y2_on)
-    io.phone_servo(0.5)
+    io.open_com()
+    io.y_control(io.y1_on)
     io.y_init()
 
     # io.y_control(io.y7_on)

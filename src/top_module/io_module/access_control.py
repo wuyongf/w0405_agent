@@ -1,12 +1,12 @@
 import time
-import src.top_module.io_module.io_controller as io_controller
+import src.top_module.io_module.io_controller_backup as io_controller
 
 # TBC: sleep listener
 
 class access_control():
     def __init__(self):
         self.io = io_controller.ioController()
-        self.duration = 0.6
+        self.duration = 0.4
         self.time_limit = 2.0
         self.stop_flag = 0
 
