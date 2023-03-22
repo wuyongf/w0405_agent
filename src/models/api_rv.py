@@ -46,7 +46,11 @@ class RVAPI(api.AuthenticatedAPI):
 
     def get_active_map(self):
         json_data = self.get(f'/map/v1/activeMap')
+        if json_data is None: return json_data
         return RVSchema.ActiveMap(json_data)
+    
+    def get_active_map_json(self):
+        return self.get(f'/map/v1/activeMap')
 
     def get_map_metadata(self, map_name):
         json_data = self.get(f'/map/v1/{map_name}/mapMetadata')

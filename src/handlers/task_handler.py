@@ -6,7 +6,7 @@ import sys
 # yf
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
-import src.models.transform as Trans
+import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
 import src.models.db_robot as RobotDB
 
@@ -32,7 +32,7 @@ robotStatusJson = {
 config = umethods.load_config('../../conf/config.properties')
 rvapi = RVAPI.RVAPI(config)
 nwdb = RobotDB.robotDBHandler(config)
-trans = Trans.Transform()
+trans = Trans.RVRMTransform()
 
 robotStatus = json.dumps(robotStatusJson)
 
@@ -74,16 +74,16 @@ def execute_task(task):
     task_json_object = json.loads(task)
     task = RMSchema.Task(json.loads(task))
     publish_task_executing(task.taskId, task.taskType)
-    if  task.taskType == 'RM-LOCALIZE':
+    if task.taskType == 'RM-LOCALIZE':
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
             rv_map_name = nwdb.get_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
-            trans.init_for_rv(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
+            trans.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = trans.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
-            # step3. rv. create point base on rm. localization.
+            # step 3. rv. create point base on rm. localization.
             rvapi.delete_all_waypoints(rv_map_name)
             rvapi.post_new_waypoint(rv_waypoint.mapName, rv_waypoint.name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             rvapi.change_mode_navigation()
@@ -102,14 +102,13 @@ def execute_task(task):
             publish_task_failed(task.taskId, task.taskType)
         
     if task.taskType == 'RM-GOTO':
-
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
             rv_map_name = nwdb.get_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
-            trans.init_for_rv(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
+            trans.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = trans.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
             # step3. rv. create point base on rm. localization.
             rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
@@ -143,7 +142,7 @@ def execute_task(task):
     if task.taskType == 'NW-BASIC-SLEEP1S':
         time.sleep(1)
 
-    publish_task_complete(task_json_object["taskId"], task_json_object["taskType"])
+    publish_task_complete(task.taskId, task.taskType)
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):

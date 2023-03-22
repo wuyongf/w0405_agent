@@ -1,20 +1,28 @@
 import math
 import src.models.schema_rv as RVSchema
 
-class Transform:
+class RVRMTransform:
     def __init__(self):
         self.map_resolution = 0.05
         self.map_width = 0
         self.map_height = 0
         self.rv_origin_x = self.rv_origin_y = self.rv_origin_angle = 0.0
 
-    def init_for_rv(self, map_width, map_height, rv_origin_x, rv_origin_y, rv_origin_angle):
+    def update_rv_map_info(self, map_width, map_height, rv_origin_x, rv_origin_y, rv_origin_angle):
         self.map_resolution = 0.05
         self.map_width = map_width
         self.map_height = map_height
         self.rv_origin_x = rv_origin_x
         self.rv_origin_y = rv_origin_y
         self.rv_origin_angle = rv_origin_angle
+
+    def clear_rv_map_info(self):
+        self.map_resolution = 0.05
+        self.map_width = 0.0
+        self.map_height = 0.0
+        self.rv_origin_x = 0.0
+        self.rv_origin_y = 0.0
+        self.rv_origin_angle = 0.0
 
     def origin_rv2rm(self, width, height, x, y, angle):
         origin_rm_x = abs(x)/self.map_resolution
@@ -59,14 +67,15 @@ class Transform:
         if rv_angle >= 0.0:
             heading = rv_angle * 180.0 / math.pi
         else: heading = (180.0 - abs(rv_angle) * 180.0 / math.pi) + 180.0
-        print(f'rm pixel(x,y,theta) is ({pixel_x},{pixel_y},{heading})')    
+        # print(f'rm pixel(x,y,theta) is ({pixel_x},{pixel_y},{heading})')
+        return  pixel_x, pixel_y, heading
 
     def pos_rm2bim(self):
         pass
 
 if __name__ == '__main__':
     
-    trans  = Transform()
+    trans  = RVRMTransform()
     # define rv origin
     trans.rv_origin_x = -3.249993
     trans.rv_origin_y = -2.75

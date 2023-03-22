@@ -13,6 +13,10 @@ class AuthenticatedAPI:
         try:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()
+            if 'Content-Length' in response.headers:
+                if response.headers['Content-Length'] == '0': 
+                    print("[AuthenticatedAPI]: Empty JSON response received.") 
+                    return None
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")

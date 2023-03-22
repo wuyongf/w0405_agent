@@ -46,6 +46,26 @@ class AzureDB():
             #     print(rows[i])
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Select] Error Code: {}".format(err))
+            
+    def GetColumn(self, statement):
+        try:
+            self.cursor.execute(statement)
+            num_fields = len(self.cursor.description)
+            field_names = [i[0] for i in self.cursor.description]
+            return field_names
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Select] Error Code: {}".format(err))
+
+    def SelectAll(self, statement):
+        try:
+            self.cursor.execute(statement)
+            num_fields = len(self.cursor.description)
+            field_names = [i[0] for i in self.cursor.description]
+            row = self.cursor.fetchall()
+            # print(field_names)
+            return row
+        except mysql.connector.Error as err:
+            print("[AzureDBHandler.Select] Error Code: {}".format(err))
 
     def Update(self, statement):
         try:

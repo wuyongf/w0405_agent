@@ -25,19 +25,19 @@ class mapPose:
         self.y = y
         self.heading = heading
 
-class Task1:
-    def __init__(self, taskId, task_type, parameters):
-        self.taskId = taskId
-        self.taskType = task_type
-        self.parameters = parameters
+# class Task1:
+#     def __init__(self, taskId, task_type, parameters):
+#         self.taskId = taskId
+#         self.taskType = task_type
+#         self.parameters = parameters
 
-class Task:
-    def __init__(self, taskId, scheduleType, priority, task_type, parameters):
-        self.taskId = taskId
-        self.scheduleType = scheduleType
-        self.priority = priority
-        self.taskType = task_type
-        self.parameters = parameters
+# class Task:
+#     def __init__(self, taskId, scheduleType, priority, task_type, parameters):
+#         self.taskId = taskId
+#         self.scheduleType = scheduleType
+#         self.priority = priority
+#         self.taskType = task_type
+#         self.parameters = parameters
 
 class TaskStatus:
     def __init__(self, taskId, taskType, taskStatusType, errMsg = ''):
