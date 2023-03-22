@@ -4,7 +4,7 @@
 1. Start robot-agent-server (developed by ncs)
     1. download the latest repository. 
     `git clone https://bitbucket.org/robotmanager-src/robot-agent-v2.0/src/master/ robot-agent-v2.0`
-    2. edit the `.properties` file in folder `conf/`
+    2. edit the `root-config.properties` file in folder `conf/`
     3. start robot-agent.
        1. `cd D:\Dev\robot-agent-v2.0` or
        2. `cd C:\dev\robot-agent-v2.0`

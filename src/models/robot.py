@@ -71,8 +71,15 @@ class Robot:
         pos = self.rvapi.get_current_pose()
         return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
     
+    def get_status(self):
+        pass
+
+    def get_battery_state(self):
+        battery = self.rvapi.get_battery_state().percentage
+        return round(battery * 100, 3)
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
-    print(robot.get_current_pose())
+    print(robot.get_battery_state())
