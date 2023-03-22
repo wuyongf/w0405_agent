@@ -43,19 +43,23 @@ class robotDBHandler(db.AzureDB):
         print(statement)
         self.Insert(statement)
 
-    def GetUserRules_Column(self):
-        statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
-        return self.GetColumn(statement)
+    # def GetUserRules_Column(self):
+    #     statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
+    #     return self.GetColumn(statement)
 
     def GetUserRules(self):
         statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
+        print("Get user rules")
         return self.SelectAll(statement)
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
-    print(nwdb.GetUserRules_Column())
+    # print(nwdb.GetUserRules_Column())
     print(nwdb.GetUserRules())
+    print((nwdb.GetUserRules()[2]).get('type'))
+    test = [i.get('type') for i in nwdb.GetUserRules()]
+    print(test)
 
     # # position
     # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}

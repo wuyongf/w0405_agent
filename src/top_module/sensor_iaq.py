@@ -19,7 +19,7 @@ class IaqSensor():
         self.task_mode = 0
         self.column_items = ["CO2", "TVOC", "HCHO", "pm25", "RH", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.robotDBHandler(config)
-        self.rules = rule.user_rules("lux", 300, "lower")
+        self.rules = rule.user_rules("none", 300, "l")
         self.data_stack = []
 
     def get_data(self, datahex):
@@ -53,25 +53,42 @@ class IaqSensor():
 
     def data_store(self, dataset):
         self.data_stack.append(dataset)
-        # print(self.data_stack[0])
         if len(self.data_stack) >= 5:
             self.check_stack(self.data_stack)
+            # clear the stack
             self.data_stack.clear()
 
-    def get_rules(self, field_name):
+    def get_rules_column(self, dataset, column):
+        return [i.get(column) for i in dataset]
 
+    def higher_then(self, threshold):
+        pass
+
+    def lower_then(self, threshold):
+        pass
 
     def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list
-        for dataset in data_stack:
-            print("check : ", dataset)
-            for i, u in enumerate(self.column_items):
-                if u == self.rules.type:
-                    # print(dataset[i])
-                    if self.rules.limit_type == "higher" and dataset[i] > self.rules.threshold:
-                        print("high")
-                    elif self.rules.limit_type == "lower" and dataset[i] < self.rules.threshold:
-                        print("low")
+        rules_list = self.nwdb.GetUserRules()
+        rules_type_list = self.get_rules_column(rules_list, "type")
+        rules_threshold_list = self.get_rules_column(rules_list, "threshold")
+        rules_limit_type_list = self.get_rules_column(rules_list, "limit_type")
+
+        for data in data_stack:
+            for row_num, row_value in enumerate(rules_type_list):
+                try:
+                    # Compare with rules_type_list, find the index of data
+                    col = self.column_items.index(row_value)
+                    print("check : ", data, " Type : ", row_value, " | col : ", col, " Limit Type : ", rules_limit_type_list[row_num], " Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
+                    if rules_limit_type_list[row_num] == "h" and data[col] > rules_threshold_list[row_num]: # TODO: change to threshold in each row
+                        print("*** Higher then threshold, Type : ", row_value," Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
+
+                    elif rules_limit_type_list[row_num] == "l" and data[col] < rules_threshold_list[row_num]:
+                        print("*** Lower then threshold, Type : ", row_value," Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
+
+                except:
+                    print("Except: No matched data type.", self.rules.type)
+
 
 
 
@@ -105,11 +122,12 @@ class IaqSensor():
                         result = self.get_data(rawdata)
                         print(result)
 
-                        if sum(result) < 300000:
+                        if sum(result) < 30000:
 
                             if self.task_mode:
                                 # Insert to mySQL
                                 self.data_store(result)
+                                pass
                                 # self.check_stack(result)
                                 # self.data_insert(result)
 
