@@ -80,7 +80,7 @@ class Robot:
         # 3. if yes, get rm_guid. if no, return default idle_guid
         if(map_is_exist):
             return self.nwdb.get_map_rm_guid(rv_map_name)
-        else: return '2658a873-0000-0000-0000-d179c4073272'
+        else: return '00000000-0000-0000-0000-000000000000'
 
     def get_current_map_id(self):
         # 1. get rv_current map
