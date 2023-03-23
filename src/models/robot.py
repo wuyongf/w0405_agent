@@ -16,7 +16,7 @@ class Robot:
     def localize(self, task: RMSchema.Task):
         try:
             rm_map_metadata = task.parameters
-            rv_map_name = self.nwdb.get_amr_guid(rm_map_metadata.mapId)
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
@@ -39,7 +39,7 @@ class Robot:
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
-            rv_map_name = self.nwdb.get_amr_guid(rm_map_metadata.mapId)
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
@@ -59,17 +59,38 @@ class Robot:
     def get_current_pose(self):
         ## 1. get rv current map/ get rv activated map
         map_json= self.rvapi.get_active_map_json()
-        map_json = None
+        # map_json = None # FOR DEBUG/TESTING
         ## 2. update T params
         if (map_json is not None):
             print(map_json['name'])
             rv_map_metadata = self.rvapi.get_map_metadata(map_json['name'])
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
         else:
+            print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
             self.T.clear_rv_map_info()
         ## 3. transfrom
         pos = self.rvapi.get_current_pose()
         return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
+    
+    def get_current_map_rm_guid(self):
+        # 1. get rv_current map
+        rv_map_name = self.rvapi.get_active_map().name
+        # 2. check nwdb. check if there is any map related to rv_current map
+        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
+        # 3. if yes, get rm_guid. if no, return default idle_guid
+        if(map_is_exist):
+            return self.nwdb.get_map_rm_guid(rv_map_name)
+        else: return '2658a873-0000-0000-0000-d179c4073272'
+
+    def get_current_map_id(self):
+        # 1. get rv_current map
+        rv_map_name = self.rvapi.get_active_map().name
+        # 2. check nwdb. check if there is any map related to rv_current map
+        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
+        # 3. if yes, get rm_guid. if no, return default idle_guid
+        if(map_is_exist):
+            return self.nwdb.get_map_id(rv_map_name)
+        else: return None
     
     def get_status(self):
         pass
@@ -82,4 +103,6 @@ class Robot:
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
-    print(robot.get_battery_state())
+    while(True):
+        time.sleep(1)
+        print(robot.get_current_map_rm_guid())

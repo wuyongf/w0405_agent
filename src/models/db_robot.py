@@ -33,12 +33,35 @@ class robotDBHandler(db.AzureDB):
         # print(statement)
         self.Update(statement)
 
+    def update_robot_map_id(self, map_id):
+        if map_id is not None:
+            statement = f'UPDATE {self.database}.`robot.status` SET map_id = {map_id} WHERE ID = {self.robot_id};'
+        else:
+            statement = f'UPDATE {self.database}.`robot.status` SET map_id = NULL WHERE ID = {self.robot_id};'
+        # print(statement)
+        self.Update(statement)
+
     def update_robot_mission_status(self, mission_status):
         pass
 
-    def get_amr_guid(self, rm_guid):
+    # map (rv and rm)
+    def get_map_amr_guid(self, rm_guid):
         statement = f'SELECT amr_guid FROM {self.database}.`robot.map` WHERE rm_guid = "{rm_guid}";'
         # print(statement)
+        return self.Select(statement)
+    
+    def get_map_rm_guid(self, amr_guid):
+        statement = f'SELECT rm_guid FROM {self.database}.`robot.map` WHERE amr_guid = "{amr_guid}";'
+        # print(statement)
+        return self.Select(statement)
+    
+    def get_map_id(self, amr_guid):
+        statement = f'SELECT ID FROM {self.database}.`robot.map` WHERE amr_guid = "{amr_guid}";'
+        # print(statement)
+        return self.Select(statement)
+    
+    def check_map_exist(self, amr_guid):
+        statement = f'SELECT EXISTS(SELECT * from {self.database}.`robot.map` WHERE amr_guid="{amr_guid}")'
         return self.Select(statement)
 
 if __name__ == '__main__':
@@ -51,6 +74,10 @@ if __name__ == '__main__':
 
     # # battery
     # nwdb.UpdateRobotBattery(12.22)
-    res = nwdb.get_amr_guid('56ded5f9-79a3-458e-8458-8a76e818048e')
+
+    # # map
+    # res = nwdb.get_map_amr_guid('56ded5f9-79a3-458e-8458-8a76e818048e')
+    # print(res)
+
+    res = nwdb.check_map_exist('')
     print(res)
-    pass

@@ -26,30 +26,31 @@ class StatusHandler:
         self.robot = Robot.Robot(config)
         self.rvapi = RVAPI.RVAPI(config)
         self.nwdb = NWDB.robotDBHandler(config)
+        # rm status
+        self.rm_mapPose = RMSchema.mapPose()
+        self.rm_status  = RMSchema.Status(0.0, 0, self.rm_mapPose)
     
     def publish_status(self): 
         threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb
 
     def __update_status(self): # update thread
-        while True:
-            rv_mapName = self.rvapi.get_current_pose().mapName
-            self.rv_battery = self.rvapi.get_battery_state()
-            pixel_x, pixel_y, heading = self.robot.get_current_pose()
-            rm_mapPose = RMSchema.mapPose()
-            self.rm_status  = RMSchema.Status(0.0, 0, rm_mapPose)
+        while True:  
             try:
-                # # rm status <--- rv status
-                self.rm_status.batteryPct = self.robot.get_battery_state()  # battery
-                self.rm_status.state = 1
-                rm_mapPose.x = pixel_x
-                rm_mapPose.y = pixel_y
-                rm_mapPose.heading = heading
-                rm_mapPose.mapId = rv_mapName       # mapPose
-                # rm_mapPose.x = round(self.rvapi.getPose().x,3)
-                # rm_mapPose.y = round(self.rvapi.getPose().y,3)
-                # rm_mapPose.heading = abs(self.rvapi.getPose().angle)
-                self.rm_status.mapPose = rm_mapPose
+                # # rm status <--- rv statu
+                self.rm_status.state = 1 # todo: robot status
+
+                self.rm_mapPose.mapId = self.robot.get_current_map_rm_guid()    # map
+                
+                self.rm_status.batteryPct = self.robot.get_battery_state()      # battery
+                pixel_x, pixel_y, heading = self.robot.get_current_pose()   # current pose
+                # print(pixel_x, pixel_y, heading)
+                self.rm_mapPose.x = pixel_x
+                self.rm_mapPose.y = pixel_y
+                self.rm_mapPose.heading = heading
+
+                ## TO NWDB
+                self.map_id = self.robot.get_current_map_id()
 
             except HTTPError as http_err:
                 logging.getLogger('').exception(http_err)
@@ -69,7 +70,9 @@ class StatusHandler:
             json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
             # print(json_data)
             self.mq_client.publish(self.topic_name, json_data)       # to rm
+
             self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)     # to nwdb
+            self.nwdb.update_robot_map_id(self.map_id)
             self.nwdb.update_robot_battery(self.rm_status.batteryPct)  # to nwdb
 
 if __name__ == '__main__':

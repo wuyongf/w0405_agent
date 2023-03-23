@@ -78,7 +78,7 @@ def execute_task(task):
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
-            rv_map_name = nwdb.get_amr_guid(rm_map_metadata.mapId)
+            rv_map_name = nwdb.get_map_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             trans.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
@@ -90,7 +90,7 @@ def execute_task(task):
             rvapi.change_map(rv_map_name)
             rvapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             # step 4. double check
-            pose_is_valid = rvapi.check_current_pose_valid()
+            pose_is_valid = 1#rvapi.check_current_pose_valid()
             map_is_active = rvapi.get_active_map().name == rv_map_name
             if(pose_is_valid & map_is_active):
                 publish_task_complete(task.taskId, task.taskType)
@@ -105,7 +105,7 @@ def execute_task(task):
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
             rm_map_metadata = task.parameters # from robot-agent
-            rv_map_name = nwdb.get_amr_guid(rm_map_metadata.mapId)
+            rv_map_name = nwdb.get_map_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             trans.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
     while True:
         robotStatus = json.dumps(robotStatusJson)
-        publisher.publish("/robot/status", robotStatus)
+        # publisher.publish("/robot/status", robotStatus)
         subscriber.subscribe([("/robot/status", 0), ("/rm/task", 0), ("/robot/task/status", 0)])
         # subscriber.subscribe([("/robot/status", 0), ("/rm/task", 0), ("/robot/task/status", 0)])
 

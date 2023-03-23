@@ -53,20 +53,21 @@ class RVRMTransform:
         # print(f'rv pose(x,y,theta) is ({rv_x},{rv_y},{rv_angle})')
         return waypoint
     
-    def waypoint_rm2rv2(self, pixel_x, pixel_y, heading):
-        rv_x =  (pixel_x * self.map_resolution + self.rv_origin_x )
-        rv_y =  ((self.map_height - pixel_y) * self.map_resolution + self.rv_origin_y)
-        if heading <= 180.0:
-            rv_angle = heading * math.pi / 180.0
-        else: rv_angle = -(360.0 - heading) * math.pi/180.0
-        print(f'rv pose(x,y,theta) is ({rv_x},{rv_y},{rv_angle})')
+    # def waypoint_rm2rv2(self, pixel_x, pixel_y, heading):
+    #     rv_x =  (pixel_x * self.map_resolution + self.rv_origin_x )
+    #     rv_y =  ((self.map_height - pixel_y) * self.map_resolution + self.rv_origin_y)
+    #     if heading <= 180.0:
+    #         rv_angle = heading * math.pi / 180.0
+    #     else: rv_angle = -(360.0 - heading) * math.pi/180.0
+    #     print(f'rv pose(x,y,theta) is ({rv_x},{rv_y},{rv_angle})')
 
     def waypoint_rv2rm(self, rv_x, rv_y, rv_angle):
         pixel_x = (rv_x - self.rv_origin_x)/self.map_resolution
         pixel_y = self.map_height - (rv_y - self.rv_origin_y)/self.map_resolution
-        if rv_angle >= 0.0:
-            heading = rv_angle * 180.0 / math.pi
-        else: heading = (180.0 - abs(rv_angle) * 180.0 / math.pi) + 180.0
+        if math.pi >= rv_angle >= -2*math.pi:
+            heading =  - rv_angle * 180.0 / math.pi + 90.0
+        if 2*math.pi >= rv_angle > math.pi:
+            heading = - rv_angle * 180.0 / math.pi + 270.0
         # print(f'rm pixel(x,y,theta) is ({pixel_x},{pixel_y},{heading})')
         return  pixel_x, pixel_y, heading
 
@@ -100,12 +101,21 @@ if __name__ == '__main__':
     # rv "x": -0.4325826933855703, "y": -0.48471240135094806
 
 
-    rv_x = 0.4325570000000001
-    rv_y = 0.484715
-    rv_heading = -.0001 
-    trans.waypoint_rv2rm(rv_x, rv_y, rv_heading)
+    # rv_x = 0.4325570000000001
+    # rv_y = 0.484715
+    # rv_heading = -.0001 
+    # trans.waypoint_rv2rm(rv_x, rv_y, rv_heading)
 
-    pixel_x = 71.152 
-    pixel_y = 89.096
-    heading = 359
-    trans.waypoint_rm2rv2(pixel_x, pixel_y, heading)
+    # pixel_x = 71.152 
+    # pixel_y = 89.096
+    # heading = 359
+    # # trans.waypoint_rm2rv2(pixel_x, pixel_y, heading)
+
+    heading = 360
+    # res = - (heading - 90.0) * math.pi / 180.0
+    res = (- (heading - 360.0) + 90 ) * math.pi / 180.0
+    print(res)
+
+    # 1.57 -> -3.14
+
+    # 3.14 -> 1.57
