@@ -121,7 +121,8 @@ class Robot:
         pass
 
     def get_battery_state(self):
-        battery = self.rvapi.get_battery_state().percentage
+        battery = self.rvmqtt.get_battery_percentage()
+        # battery = self.rvapi.get_battery_state().percentage
         return round(battery * 100, 3)
 
 

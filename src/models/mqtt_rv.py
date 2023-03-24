@@ -13,9 +13,16 @@ class RVMQTT():
         self.mq_subscriber.connect(localhost)
         self.mq_subscriber.on_message = self.__on_message
 
-        # init
-        self.a = RVSchema.Pose
-        self.rv_x = self.rv_y = self.rv_angle = 0.0
+        # init-pos
+        self.robotId = self.mapName = None
+        self.x = self.y = self.angle = 0.0
+        # init-battery
+        self.percentage = 0.0
+        self.powerSupplyStatus = None
+        # init-map
+        self.resolution = 0.05
+        self.originX = self.originY = 0.0
+        self.imageWidth = self.imageHeight = 0
 
     def start(self):
         self.mq_subscriber.loop_start()
@@ -24,30 +31,54 @@ class RVMQTT():
 
     def __on_message(self, client, userdata, msg):
         # # print(msg.topic+" "+str(msg.payload))
-        print("*******************************************************************************************************")
-        print("message received ", str(msg.payload.decode("utf-8")))
-        print("message topic=", msg.topic)
-        print("*******************************************************************************************************")
+        # print("*******************************************************************************************************")
+        # print("message received ", str(msg.payload.decode("utf-8")))
+        # print("message topic=", msg.topic)
+        # print("*******************************************************************************************************")
         self.__parse_message(msg)
 
     def __parse_message(self, msg):
         topic = msg.topic
         data = json.loads(str(msg.payload.decode("utf-8")))
         if topic == 'rvautotech/fobo/pose':
-            self.rv_x = data['x']
-            self.rv_y = data['y']
-            self.rv_angle = data['angle']
+            self.robotId = data['robotId']
+            self.mapName = data['mapName']
+            self.x = data['x']
+            self.y = data['y']
+            self.angle = data['angle']
+        if topic == 'rvautotech/fobo/battery':
+            self.percentage = data['percentage']
+            self.powerSupplyStatus = data['powerSupplyStatus']
+        if topic == 'rvautotech/fobo/map/active':
+            pass
+            # self.resolution = data['resolution']
+            # self.originX = data['originX']
+            # self.originY = data['originY']
+            # self.imageWidth = data['imageWidth']
+            # self.imageHeight = data['imageHeight']
 
     def __subscribe_task(self):
+        topics = []
+        topics.append(['rvautotech/fobo/pose',2])
+        topics.append(['rvautotech/fobo/battery',2])
+        topics.append(['rvautotech/fobo/map/active',2])
         while True:
             # publisher.publish("/robot/status", robotStatus)
-            topic = 'rvautotech/fobo/pose'
-            self.mq_subscriber.subscribe(topic, 2)
-            # self.mq_subscriber.subscribe(self.mq_subs_topic, 2)
+            self.mq_subscriber.subscribe(topics)
             time.sleep(1)
     
+    ## Get Methods
+    def get_powerSupplyStatus(self):
+        return self.powerSupplyStatus
+
+    def get_battery_percentage(self):
+        return self.percentage
+    
+    def get_current_map_name(self):
+        return self.mapName
+    
     def get_current_pose(self):
-        return self.rv_x, self.rv_y, self.rv_angle
+        return self.x, self.y, self.angle
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

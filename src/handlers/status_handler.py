@@ -71,16 +71,19 @@ class StatusHandler:
             print(f'[status_handler]: robot map rm_guid: {self.rm_status.mapPose.mapId}')
             print(f'[status_handler]: robot position: ({self.rm_status.mapPose.x}, {self.rm_status.mapPose.y}, {self.rm_status.mapPose.heading})')
             
-            json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
-            # print(json_data)
+            try:
+                json_data = json.dumps(self.rm_status.__dict__, default=lambda o: o.__dict__)
+                # print(json_data)
+                
+                ## to rm
+                self.mq_publisher.publish(self.mq_topic_name, json_data)
+                ## to nwdb
+                self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)
+                self.nwdb.update_robot_map_id(self.map_id)
+                self.nwdb.update_robot_battery(self.rm_status.batteryPct)
+            except:
+                print('[status_handler.__publish_status] Error. Plese Check')
             
-            ## to rm
-            self.mq_publisher.publish(self.mq_topic_name, json_data)
-            ## to nwdb
-            self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)
-            self.nwdb.update_robot_map_id(self.map_id)
-            self.nwdb.update_robot_battery(self.rm_status.batteryPct)
-
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     status_handler = StatusHandler(config, "localhost", "/robot/status")
