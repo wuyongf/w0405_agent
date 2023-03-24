@@ -1,6 +1,7 @@
 import serial
 import time
 from datetime import datetime
+# Voltage = 5V
 
 # todo:
 #   function:
@@ -12,7 +13,6 @@ from datetime import datetime
 #       6. get_rules
 #       7. check_stack
 
-# voltage = 5V
 
 class gryo():
     def __init__(self):
@@ -116,37 +116,28 @@ class gryo():
                 if len_return_data:
                     return_data = self.ser.read(len_return_data)
                     return_data_arr = bytearray(return_data)
-                    # print(return_data_arr)
-
+                    # empty arrays for temporally data transition
                     self.acc = []
                     self.gyro = []
                     self.angle = []
                     self.temp = []
                     self.pnh = []
-                    count = 1
 
+                    count = 1
                     for data in return_data_arr:
-                        # print(str(count) + ":" + str(data), end=" ")
-                        # get acc data
-                        if 18 <= count <= 23:
+                        if 18 <= count <= 23:           # get acc data
                             self.acc.append(data)
-                        # get gyro data
-                        if 24 <= count <= 29:
+                        if 24 <= count <= 29:           # get gyro data
                             self.gyro.append(data)
-                        # get angle data
-                        if 36 <= count <= 41:
+                        if 36 <= count <= 41:           # get angle data
                             self.angle.append(data)
-                        # get temperature data
-                        if 42 <= count <= 43:
+                        if 42 <= count <= 43:           # get temperature data
                             self.temp.append(data)
-                        # get pnh data
-                        if 52 <= count <= 59:
+                        if 52 <= count <= 59:           # get pnh data
                             self.pnh.append(data)
                         count += 1
 
-                    # self.print_data()
                     result = self.get_motion_data()
-                    # print(result[0][2])
                     print(result)
 
     def print_data(self):
@@ -166,8 +157,6 @@ class gryo():
         return self.get_acc(self.acc), self.get_gyro(self.gyro), self.get_angle(self.angle)
 
 if __name__ == '__main__':
+    # Example usage:
     gryo = gryo()
     gryo.collect_data()
-    #
-    # sql = """insert into `sensor.gyro` (`Datetime`, `acc_z`) values ('{}', {});""".format(datetime.now(), round(gryo.get_acc()[2],2))
-    # print(sql)
