@@ -54,7 +54,12 @@ class RVAPI(api.AuthenticatedAPI):
 
     def get_map_metadata(self, map_name):
         json_data = self.get(f'/map/v1/{map_name}/mapMetadata')
-        return RVSchema.MapMetadata(json_data)
+        if json_data is None: return json_data
+        try:
+            return RVSchema.MapMetadata(json_data)
+        except:
+            print(f'[RVAPI]: "get_map_metadata()" error')
+            return None
     
     # mode
     def get_mode(self):

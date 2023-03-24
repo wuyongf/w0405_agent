@@ -31,8 +31,8 @@ if __name__ == '__main__':
     config = umethods.load_config('../conf/config.properties')
 
     # Status handler updates robot status every second
-    sh = status_handler.StatusHandler(config, "localhost", "/robot/status")
-    sh.publish_status()
+    status_handler = status_handler.StatusHandler(config, "localhost", "/robot/status")
+    status_handler.start()
     # # Task handler subscribes and execute task, also report task status to robotmanager
     # th = task_handler.TaskHandler("localhost", 1883, "/robot/task", "/robot/task/status")
 

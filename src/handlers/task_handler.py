@@ -10,31 +10,10 @@ import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
 import src.models.db_robot as RobotDB
 
-simPath = [
-    {'x': 438, 'y': 398.0},  # P1
-    {'x': 456.0, 'y': 364.0}, # P2
-    {'x': 493.0, 'y': 382.0}, # P3
-    {'x': 475.0, 'y': 419.0},  # P4
-]
-
-robotStatusJson = {
-    "batteryPct": 100.0,
-    "mapPose": {
-        "mapId": "d7355d44-df67-4d26-8d25-36928746b7ee",
-        "x": simPath[0]["x"],
-        "y": simPath[0]["y"],
-        "z": 0.0,
-        "heading": 0.0
-    },
-    "state": 2
-}
-
 config = umethods.load_config('../../conf/config.properties')
 rvapi = RVAPI.RVAPI(config)
 nwdb = RobotDB.robotDBHandler(config)
 trans = Trans.RVRMTransform()
-
-robotStatus = json.dumps(robotStatusJson)
 
 publisher = mqtt.Client("publisher_rm")
 subscriber = mqtt.Client("subscriber_rm")
@@ -158,9 +137,6 @@ def on_message(client, userdata, msg):
         execute_task(str(msg.payload.decode("utf-8")))
         
 if __name__ == "__main__":
-    # abspath = os.path.abspath(sys.argv[0])
-    # dname = os.path.dirname(abspath)
-    # os.chdir(dname)
 
     publisher.connect("localhost")
     subscriber.connect("localhost")
@@ -171,9 +147,7 @@ if __name__ == "__main__":
     subscriber.loop_start()
 
     while True:
-        robotStatus = json.dumps(robotStatusJson)
+
         # publisher.publish("/robot/status", robotStatus)
         subscriber.subscribe([("/robot/status", 0), ("/rm/task", 0), ("/robot/task/status", 0)])
-        # subscriber.subscribe([("/robot/status", 0), ("/rm/task", 0), ("/robot/task/status", 0)])
-
         time.sleep(1)

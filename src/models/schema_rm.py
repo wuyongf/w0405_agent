@@ -54,21 +54,24 @@ class JobUpdate:
 
 # To create Job/Task
 class TaskParams:
-    def __init__(self, dct):
-        self.mapId = dct['mapId']
-        self.positionName = dct['positionName']
-        self.x = dct['x']
-        self.y = dct['y']
-        self.heading = dct['heading']
+    def __init__(self, dct = None):
+        if dct is None: return None
+        else:
+            self.mapId = dct['mapId']
+            self.positionName = dct['positionName']
+            self.x = dct['x']
+            self.y = dct['y']
+            self.heading = dct['heading']
 
 # to receive mtqq task json
 class Task:
-    def __init__(self, dct):
-        self.taskId = dct['taskId']
-        self.scheduleType = dct['scheduleType']
-        self.priority = dct['priority']
-        self.taskType = dct['taskType']
-        self.parameters = TaskParams(dct['parameters'])
+    def __init__(self, dct = None):
+        if dct is None: return None
+        else:
+            self.taskId = dct['taskId']
+            self.scheduleType = dct['scheduleType']
+            self.priority = dct['priority']
+            self.taskType = dct['taskType']
 
 # Built-In-Parameters: RM-GOTO/RM-LOCALIZE
 class RMGOTO:
