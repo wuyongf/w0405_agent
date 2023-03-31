@@ -93,18 +93,6 @@ class RMLIGHT:
 
 
 # Event
-class Event:
-    def __init__(self, title, severity, description, mapPose_json, medias_json = [], metadata = {}):
-        self.eventId = str(uuid.uuid1())
-        self.title = title
-        self.description = description
-        self.metadata = metadata
-        self.severity = severity # 1: critical 2: normal
-        self.medias = medias_json
-        self.mapPose = mapPose_json
-    def to_json(self):
-        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
-
 class Meida:
     def __init__(self, filePath, type, title, view360 = False):
         self.filePath = filePath
@@ -120,7 +108,19 @@ class Medias:
         self.medias.append(media)
 
     def to_json(self):
-        return json.dumps(self.medias, default=lambda o: o.__dict__)
+        return json.dumps(self, default=lambda o: o.__dict__)
+    
+class Event:
+    def __init__(self, title, severity, description, mapPose = mapPose, medias = Medias, metadata = {}):
+        self.eventId = str(uuid.uuid1())
+        self.title = title
+        self.severity = severity # 1: critical 2: normal
+        self.description = description
+        self.medias = medias
+        self.mapPose = mapPose
+        self.metadata = metadata
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
 
 if __name__ == '__main__':
     # media_info_list = []
@@ -143,13 +143,16 @@ if __name__ == '__main__':
     description = 'This is an event test'
 
     # 4.
-    mapPose_json = mapPose().to_json()
+    map_pose = mapPose()
+    mapPose_json = map_pose.to_json()
     # mapPose_json = robot.get_current_mapPose().to_json()
 
     # 5.
     medias = Medias()
     medias.append(Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
     medias_json = medias.to_json()
+    print(medias_json)
+    print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
-    event1_json = Event(title, severity , description, mapPose_json, medias_json).to_json()
+    event1_json = Event(title, severity , description, map_pose, medias).to_json()
     print(event1_json)

@@ -53,8 +53,8 @@ class EventHandler:
     def add_description(self, description):
         self.description = description
     def add_mapPose(self):
-        # self.mapPose = RMSchema.mapPose().to_json()
-        self.mapPose = self.robot.get_current_mapPose().to_json()
+        # self.mapPose = RMSchema.mapPose()
+        self.mapPose = self.robot.get_current_mapPose()
     def add_medias(self, medias):
         self.medias = medias
         
@@ -74,12 +74,11 @@ if __name__ == "__main__":
 
     medias = RMSchema.Medias()
     medias.append(RMSchema.Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
-    medias_json = medias.to_json()
 
     event_handler.add_title('event_test_rev01')
     event_handler.add_severity(1)
     event_handler.add_description('This is an event test')
     event_handler.add_mapPose()
-    event_handler.add_medias(medias_json)
+    event_handler.add_medias(medias)
 
     event_handler.publish()
