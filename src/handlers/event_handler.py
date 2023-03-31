@@ -75,7 +75,7 @@ if __name__ == "__main__":
     medias = []
     medias.append(RMSchema.Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
 
-    event_handler.add_title('event_test_rev01')
+    event_handler.add_title('event_test_rev03')
     event_handler.add_severity(1)
     event_handler.add_description('This is an event test')
     event_handler.add_mapPose()

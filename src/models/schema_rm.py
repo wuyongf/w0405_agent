@@ -98,8 +98,7 @@ class Meida:
         self.filePath = filePath
         self.type = type # 1: image 2: video
         self.title = title
-        self.__dict__['360view'] = view360
-    
+        self.__dict__['360View'] = view360
 class Event:
     def __init__(self, title, severity, description, mapPose = mapPose, medias = [], metadata = {}):
         self.eventId = str(uuid.uuid1())

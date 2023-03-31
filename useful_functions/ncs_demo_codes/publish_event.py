@@ -61,6 +61,7 @@ if __name__ == "__main__":
             logging.fatal('Unable to run the script')
             logging.fatal('Please replace map_id with actual value')
         else: 
+            event_json = {"eventId": "583063f4-cfad-11ed-bde3-2c8db1a964f5", "title": "event_test_rev01", "severity": 1, "description": "This is an event test", "medias": [{"filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", "type": 1, "title": "Front Right"}], "mapPose": {"mapId": "e672cbec-9bd5-4e57-baeb-091784003481", "x": 54.0, "y": 60.0, "heading": 90.0}, "metadata": {}}
             event = json.dumps(event_json)
             logging.info("Publish Event Message, topic: {}, msg: {}".format(event_topic, event_json))
             client.publish(event_topic, event)   
