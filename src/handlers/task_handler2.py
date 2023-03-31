@@ -11,7 +11,7 @@ import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
 import src.models.schema_rm as RMSchema
 import src.models.schema_rv as RVSchema
-import src.models.enums_sys as NWEnum
+import src.models.enums_rm as RMEnum
 class TaskHandler:
     def __init__(self, config, mq_host, subs_topic, pub_topic):
         # rm - mqtt
@@ -60,7 +60,7 @@ class TaskHandler:
             self.__execute_task(str(msg.payload.decode("utf-8")))
 
     # Task status handler
-    def task_status_callback(self, task_id, task_type, status = NWEnum.RMTaskStatusType):
+    def task_status_callback(self, task_id, task_type, status = RMEnum.TaskStatusType):
         task_status_json = {
             "taskId": task_id,
             "taskType": task_type,
@@ -100,7 +100,7 @@ class TaskHandler:
 
     def task_handler(self, task):
         if task.scheduleType == 4: # Start
-            self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Executing)
+            self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
             return
         if task.scheduleType == 3: # Resume
             self.robot.resume_current_task()

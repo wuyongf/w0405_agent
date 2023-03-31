@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys
 import time
 import json
 import paho.mqtt.client as mqtt
@@ -7,11 +6,10 @@ import threading
 # yf
 import src.utils.methods as umethods
 import src.models.robot as Robot
-import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
 import src.models.schema_rm as RMSchema
-import src.models.schema_rv as RVSchema
-import src.models.enums_sys as NWEnum
+import src.models.enums_rm as RMEnum
+
 class TaskHandler:
     def __init__(self, config, mq_host):
         # rm - mqtt
@@ -56,7 +54,7 @@ class TaskHandler:
             self.task_handler(str(msg.payload.decode("utf-8")))
 
     # Task status handler
-    def task_status_callback(self, task_id, task_type, status = NWEnum.RMTaskStatusType):
+    def task_status_callback(self, task_id, task_type, status = RMEnum.TaskStatusType):
         task_status_json = {
             "taskId": task_id,
             "taskType": task_type,
@@ -84,35 +82,35 @@ class TaskHandler:
         task = RMSchema.Task(json.loads(task))
         if task is None: return print('[execute_task] Error: RM task is not assign correctly')
 
-        self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Executing)
+        self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
 
         if task.taskType == 'RM-LOCALIZE':
             res = self.robot.localize(task_json)
-            if(res): return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Complete)
-            else: return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Fail)
+            if(res): return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else: return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
         if task.taskType == 'RM-GOTO':
             res = self.robot.goto(task_json, self.task_status_callback)
             if(res): return
-            else: return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Fail)
+            else: return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
         
         if task.taskType == 'RV-LEDON':
             res = self.robot.led_on(task)
-            if(res): return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Complete)
-            else: return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Fail)
+            if(res): return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else: return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
         
         if task.taskType == 'RV-LEDOFF':
             res = self.robot.led_off(task)
-            if(res): return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Complete)
-            else: return self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Fail)
+            if(res): return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else: return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
         
         if task.taskType == 'NW-BASIC-SLEEP1S':
             try:
                 time.sleep(1)
-                self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Complete)
+                self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             except:
                 print('[NW-BASIC-SLEEP1S] Error: Please check the workflow.')
-                self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Fail)
+                self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
 
         
 if __name__ == "__main__":

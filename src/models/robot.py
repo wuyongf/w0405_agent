@@ -7,7 +7,7 @@ import src.models.api_rm as RMAPI
 import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
-import src.models.enums_sys as NWEnum
+import src.models.enums_rm as RMEnum
 
 class Robot:
     def __init__(self, config):
@@ -107,11 +107,11 @@ class Robot:
                 # check if arrive, callback
                 if(self.check_goto_has_arrived()): 
                     print('flag arrive')
-                    status_callback(rm_task_data.taskId, rm_task_data.taskType, NWEnum.RMTaskStatusType.Complete)
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
                 # if error
                 if(self.check_goto_has_error): 
                     print('flag error') # throw error log
-                    status_callback(rm_task_data.taskId, rm_task_data.taskType, NWEnum.RMTaskStatusType.Fail)
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
                 # if cancelled
                 if(self.check_goto_is_cancelled()): 
                     print('flag cancelled')
