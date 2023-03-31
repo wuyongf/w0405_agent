@@ -46,15 +46,18 @@ class EventHandler:
         
 if __name__ == "__main__":
 
-    config = umethods.load_config('../../conf/config.properties')
-    event_handler = EventHandler(config, "localhost")
-    event_handler.start()
+    # config = umethods.load_config('../../conf/config.properties')
+    # event_handler = EventHandler(config, "localhost")
+    # event_handler.start()
 
     root_path = os.path.abspath('../')
     event_path = os.path.join(root_path, "data/event_images")
     task_id = '20230331_145659_0001'
     img_name = 'front_right.png'
     event_img_path = os.path.join(event_path, task_id, img_name)
+    event_img_path = event_img_path.replace("\\", "/") # for window
+
+    print(event_img_path)
 
     # to publish an event
     # 1. event title.   (str)
@@ -64,13 +67,13 @@ if __name__ == "__main__":
     # 5. medias_json    (str) (optional)
     # 6. metadata       (str) (optional)
 
-    medias = []
-    medias.append(RMSchema.Meida(event_img_path, 1, "Front Right"))
+    # medias = []
+    # medias.append(RMSchema.Meida(event_img_path, 1, "Front Right"))
 
-    event_handler.add_title('event_test_rev04')
-    event_handler.add_severity(1)
-    event_handler.add_description('This is an event test')
-    event_handler.add_mapPose()
-    event_handler.add_medias(medias)
+    # event_handler.add_title('event_test_rev04')
+    # event_handler.add_severity(1)
+    # event_handler.add_description('This is an event test')
+    # event_handler.add_mapPose()
+    # event_handler.add_medias(medias)
 
-    event_handler.publish()
+    # event_handler.publish()

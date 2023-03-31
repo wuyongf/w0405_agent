@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
     # 5.
     medias = []
-    medias.append(Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
+    medias.append(Meida("D:/Dev/w0405_agent/src/data/event_images/20230331_145659_0001/front_right.png", 1, "Front Right"))
     
     print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
