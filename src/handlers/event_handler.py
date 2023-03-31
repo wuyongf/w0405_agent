@@ -21,26 +21,12 @@ class EventHandler:
         # yf config
         self.robot = Robot.Robot(config)
         self.nwdb = NWDB.robotDBHandler(config)
-        # rm status
-        self.rm_mapPose = RMSchema.mapPose()
-        self.rm_status  = RMSchema.Status(0.0, 0, self.rm_mapPose)
-        # nwdb
-        self.map_id = 0
 
     def start(self):
         self.mq_publisher.loop_start()
         print(f'[event_handler]: Start...')
 
-    # Event handler
-    def publish1(self, task_id, task_type, status = RMEnum.TaskStatusType):
-        task_status_json = {
-            "taskId": task_id,
-            "taskType": task_type,
-            "taskStatusType": status.value # 1. executing, 2. complete 3. failed
-        }
-        task_status_msg = json.dumps(task_status_json)
-        self.mq_publisher.publish('/robot/event' , task_status_msg)
-    
+    # Event handler    
     def publish(self):
         self.event = RMSchema.Event(self.title, self.severity , self.description, self.mapPose, self.medias).to_json()
         self.mq_publisher.publish('/robot/event' , self.event)
@@ -64,6 +50,12 @@ if __name__ == "__main__":
     event_handler = EventHandler(config, "localhost")
     event_handler.start()
 
+    root_path = os.path.abspath('../')
+    event_path = os.path.join(root_path, "data/event_images")
+    task_id = '20230331_145659_0001'
+    img_name = 'front_right.png'
+    event_img_path = os.path.join(event_path, task_id, img_name)
+
     # to publish an event
     # 1. event title.   (str)
     # 2. severity.      (int) (1: critical 2: normal)
@@ -73,9 +65,9 @@ if __name__ == "__main__":
     # 6. metadata       (str) (optional)
 
     medias = []
-    medias.append(RMSchema.Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
+    medias.append(RMSchema.Meida(event_img_path, 1, "Front Right"))
 
-    event_handler.add_title('event_test_rev03')
+    event_handler.add_title('event_test_rev04')
     event_handler.add_severity(1)
     event_handler.add_description('This is an event test')
     event_handler.add_mapPose()
