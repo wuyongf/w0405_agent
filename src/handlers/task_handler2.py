@@ -11,7 +11,7 @@ import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
 import src.models.schema_rm as RMSchema
 import src.models.schema_rv as RVSchema
-
+import src.models.enums_sys as NWEnum
 class TaskHandler:
     def __init__(self, config, mq_host, subs_topic, pub_topic):
         # rm - mqtt
@@ -60,6 +60,15 @@ class TaskHandler:
             self.__execute_task(str(msg.payload.decode("utf-8")))
 
     # Task status handler
+    def task_status_callback(self, task_id, task_type, status = NWEnum.RMTaskStatusType):
+        task_status_json = {
+            "taskId": task_id,
+            "taskType": task_type,
+            "taskStatusType": status.value # 1. executing, 2. complete 3. failed
+        }
+        task_status_msg = json.dumps(task_status_json)
+        self.mq_publisher.publish(self.mq_pub_topic, task_status_msg)
+
     def __publish_task_executing(self, task_id, task_type):
         task_status_json = {
             "taskId": task_id,
@@ -89,21 +98,35 @@ class TaskHandler:
         task_status_msg = json.dumps(task_status_json)
         self.mq_publisher.publish(self.mq_pub_topic, task_status_msg)
 
+    def task_handler(self, task):
+        if task.scheduleType == 4: # Start
+            self.task_status_callback(task.taskId, task.taskType, NWEnum.RMTaskStatusType.Executing)
+            return
+        if task.scheduleType == 3: # Resume
+            self.robot.resume_current_task()
+            return
+        if task.scheduleType == 2: # Pause
+            self.robot.pause_current_task()
+            return
+        if task.scheduleType == 1: # Abort
+            self.robot.cancel_current_task()
+            return
+
     def __execute_task(self, task):
         task_json = json.loads(task)
         task = RMSchema.Task(json.loads(task))
         if task is None: return print('[__execute_task] Error: RM task is not assign correctly')
-             
+
         self.__publish_task_executing(task.taskId, task.taskType)
-        
+
         if task.taskType == 'RM-LOCALIZE':
             res = self.robot.localize(task_json)
             if(res): return self.__publish_task_complete(task.taskId, task.taskType)
             else: return self.__publish_task_failed(task.taskId, task.taskType)
             
         if task.taskType == 'RM-GOTO':
-            res = self.robot.goto(task_json)
-            if(res): return self.__publish_task_complete(task.taskId, task.taskType)
+            res = self.robot.goto(task_json, self.task_status_callback)
+            if(res): return
             else: return self.__publish_task_failed(task.taskId, task.taskType)
         
         if task.taskType == 'RV-LEDON':
@@ -125,6 +148,27 @@ class TaskHandler:
                 self.__publish_task_failed(task.taskId, task.taskType)
 
         # self.__publish_task_complete(task.taskId, task.taskType)
+
+    def __execute_task2(self, task):
+        task_json = json.loads(task)
+        task = RMSchema.Task(json.loads(task))
+        
+        if task.scheduleType == 4:  # scheduled
+            # robot.goto()
+            # start listening scheduleType...
+            pass
+        if task.scheduleType == 3:  # start
+            # robot.goto_pause()
+            pass
+        if task.scheduleType == 2:  # pause
+            # robot.goto_resume()
+            pass
+        if task.scheduleType == 1:  # abort
+            # robot.goto_abort()
+            pass
+
+        # check if robot is arrive
+        # create another thread to listening
         
 if __name__ == "__main__":
 

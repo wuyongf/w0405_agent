@@ -1,4 +1,5 @@
 import time
+import threading 
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
@@ -6,6 +7,7 @@ import src.models.api_rm as RMAPI
 import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
+import src.models.enums_sys as NWEnum
 
 class Robot:
     def __init__(self, config):
@@ -14,9 +16,28 @@ class Robot:
         self.rmapi = RMAPI.RMAPI(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
-
         self.rvmqtt.start()
 
+        ## robot baisc info
+        self.connection_status = 0
+        self.mission_status = 0
+
+    # robot status
+
+    # basic robot control
+    def cancel_current_task(self):
+        self.rvapi.delete_current_task() # rv
+        return
+    
+    def pause_current_task(self):
+        self.rvapi.pause_robot_task() # rv
+        return
+    
+    def resume_current_task(self):
+        self.rvapi.resume_robot_task() #rv
+        pass
+
+    # robot skills
     def localize(self, task_json):
         try:
             # step 1. parse task json
@@ -45,27 +66,66 @@ class Robot:
         except:
             return False
         
-    def goto(self, task_json):
+    def goto(self, task_json, status_callback):
         try:
             # step 1. get rm_map_id, rv_map_name, map_metadata
+            # print('step1')
             rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
             rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
             rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
+            # print('step2')
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
             # step3. rv. create point base on rm. localization.
-            self.rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
-            # check if it has arrived
-            while(self.rvapi.get_navigation_result() is None): time.sleep(1)
-            # step 4. double check
-            navigation_is_succeeded = self.rvapi.get_navigation_result()['status'] == 'SUCCEEDED'
-            pose_is_valid = self.rvapi.check_current_pose_valid()
-            map_is_active = self.rvapi.get_active_map().name == rv_map_name
-            if(navigation_is_succeeded & pose_is_valid & map_is_active): return True
-            else: return False
+            # method 1: navigation
+            # self.rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            # while(self.rvapi.get_navigation_result() is None): time.sleep(1) # check if it has arrived
+            # # method 2: single task contains a point 'temp'
+            # print('step3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            pose_name = 'temp'
+            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=True)
+            threading.Thread(target=self.thread_check_mission_status(task_json, status_callback)).start()
+            return True
         except: return False
 
+    def thread_check_mission_status(self, task_json, status_callback):
+        print('thread start')
+        rm_task_data = RMSchema.Task(task_json)
+        continue_flag = True
+        while(continue_flag):
+            time.sleep(2)
+            if(self.rvapi.get_robot_is_moving()):
+                print('is moving...')
+                time.sleep(1)
+                continue
+            else:
+                continue_flag = False
+                time.sleep(1)
+                # check if arrive, callback
+                if(self.check_goto_has_arrived()): 
+                    print('flag arrive')
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, NWEnum.RMTaskStatusType.Complete)
+                # if error
+                if(self.check_goto_has_error): 
+                    print('flag error') # throw error log
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, NWEnum.RMTaskStatusType.Fail)
+                # if cancelled
+                if(self.check_goto_is_cancelled()): 
+                    print('flag cancelled')
+        print('thread finished')
+
+    def check_goto_has_arrived(self):
+        return self.rvapi.get_task_is_completed()
+    
+    def check_goto_is_cancelled(self):
+        return self.rvapi.get_task_is_cancelled()
+    
+    def check_goto_has_error(self):
+        return self.rvapi.get_task_has_exception()
+    
     def led_on(self, task: RMSchema.Task):
         try: 
             self.rvapi.set_led_status(on = 1)
@@ -129,6 +189,11 @@ class Robot:
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
-    while(True):
-        time.sleep(1)
-        print(robot.get_current_map_rm_guid())
+
+    def status_callback(): pass
+
+    robot.thread_check_mission_status(status_callback)
+
+    # while(True):
+    #     time.sleep(1)
+    #     print(robot.get_current_map_rm_guid())
