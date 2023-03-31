@@ -34,7 +34,7 @@ class AuthenticatedAPI:
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
         
-    def put(self, endpoint, json = {}):
+    def put(self, endpoint, json = None):
         url = self.base_url + endpoint
         try:
             response = requests.put(url, headers=self.headers, data=json)

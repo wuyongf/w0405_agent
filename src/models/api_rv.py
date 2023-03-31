@@ -1,5 +1,7 @@
+import time
 import logging, sys
 import json
+import uuid
 # yf
 import src.models.api_authenticated as api
 import src.models.schema_rv as RVSchema
@@ -128,10 +130,60 @@ class RVAPI(api.AuthenticatedAPI):
         if json_data is None: return json_data
         return json_data["goalStatus"]["status"]
     
-    # base control
-    def check_is_moving(self):
+    # task
+    def delete_current_task(self):
+        return self.delete('/task/v1/move')
+
+    def post_new_navigation_task(self, waypoint_name, orientationIgnored):
+        movement_payload = {}
+        actionList = {}
+        taskItemList_payload = {}
+        payload = {}
+                
+        movement_payload['waypointName'] = waypoint_name
+        movement_payload['navigationMode'] = 'AUTONOMY'
+        movement_payload['orientationIgnored'] = orientationIgnored
+
+        actionList['alias'] = 'NIL'
+
+        taskItemList_payload['actionList'] = [actionList]
+        taskItemList_payload['movement'] = movement_payload
+
+        payload["taskId"] = str(uuid.uuid1())
+        payload["taskItemList"] = [taskItemList_payload]
+        data = json.dumps(payload)
+        print(data)
+        return self.post('/task/v1/move', json.dumps(payload))
+
+
+    def get_task_is_completed(self):
+        json_data = self.get('/task/v1/status')
+        if json_data is None: return json_data
+        if(json_data["taskCompletionDTO"] is None): return False
+        return json_data["taskCompletionDTO"]["completed"]
+    def get_task_is_cancelled(self):
+        json_data = self.get('/task/v1/status')
+        if json_data is None: return json_data
+        if(json_data["taskCompletionDTO"] is None): return False
+        return json_data["taskCompletionDTO"]["cancelled"]
+    def get_task_has_exception(self):
+        json_data = self.get('/task/v1/status')
+        if json_data is None: return json_data
+        if(json_data["taskCompletionDTO"] is None): return False
+        return json_data["taskCompletionDTO"]["exception"]
+
+    # baseControl
+    def get_robot_is_moving(self):
         json_data = self.get('/baseControl/v1/move')
-        return json_data['moving']
+        # json_data = self.get('/task/v1/status')
+        if json_data is None: return json_data
+        return json_data["moving"]
+    
+    def pause_robot_task(self):
+        return self.put('/baseControl/v1/pause')
+
+    def resume_robot_task(self):
+        return self.put('/baseControl/v1/resume')
 
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -139,8 +191,13 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
-    res = rvapi.post_navigation_pose(0.3076,0.295,0)
-    print(res)
+    res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
+
+    # while(True):
+    #     time.sleep(1)
+    #     res = rvapi.get_robot_is_moving()
+    #     print(res)
+
     ####################################################################################################
 
     # # # post 2 predefined position

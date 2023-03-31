@@ -23,6 +23,9 @@ class RVMQTT():
         self.resolution = 0.05
         self.originX = self.originY = 0.0
         self.imageWidth = self.imageHeight = 0
+        # init-mission/task
+        self.moving = True
+        self.task_is_executing = False
 
     def start(self):
         self.mq_subscriber.loop_start()
@@ -49,6 +52,9 @@ class RVMQTT():
         if topic == 'rvautotech/fobo/battery':
             self.percentage = data['percentage']
             self.powerSupplyStatus = data['powerSupplyStatus']
+        if topic == 'rvautotech/fobo/baseController/move':
+            self.moving = data['moving']
+            pass
         if topic == 'rvautotech/fobo/map/active':
             pass
             # self.resolution = data['resolution']
@@ -62,6 +68,7 @@ class RVMQTT():
         topics.append(['rvautotech/fobo/pose',2])
         topics.append(['rvautotech/fobo/battery',2])
         topics.append(['rvautotech/fobo/map/active',2])
+        topics.append(['rvautotech/fobo/baseController/move',2])
         while True:
             # publisher.publish("/robot/status", robotStatus)
             self.mq_subscriber.subscribe(topics)
@@ -79,6 +86,9 @@ class RVMQTT():
     
     def get_current_pose(self):
         return self.x, self.y, self.angle
+    
+    def get_robot_is_moving(self):
+        return self.moving
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -88,6 +98,6 @@ if __name__ == '__main__':
     rvmqtt.start()
 
     while(True):
-        print(rvmqtt.get_current_pose())
+        print(rvmqtt.get_robot_is_moving())
         time.sleep(1)
         

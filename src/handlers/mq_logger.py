@@ -21,7 +21,7 @@ class MQLOGGER:
 
     def start(self):
         self.mq_subscriber.loop_start()
-        threading.Thread(target=self.__subscribe_task).start()   # from RV API
+        threading.Thread(target=self.__subscribe_task).start()   
 
     def __subscribe_task(self):
         while True:
