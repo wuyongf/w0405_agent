@@ -99,19 +99,9 @@ class Meida:
         self.type = type # 1: image 2: video
         self.title = title
         self.__dict__['360view'] = view360
-
-class Medias:
-    def __init__(self):
-        self.medias = []
-
-    def append(self, media = Meida):
-        self.medias.append(media)
-
-    def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
     
 class Event:
-    def __init__(self, title, severity, description, mapPose = mapPose, medias = Medias, metadata = {}):
+    def __init__(self, title, severity, description, mapPose = mapPose, medias = [], metadata = {}):
         self.eventId = str(uuid.uuid1())
         self.title = title
         self.severity = severity # 1: critical 2: normal
@@ -148,10 +138,9 @@ if __name__ == '__main__':
     # mapPose_json = robot.get_current_mapPose().to_json()
 
     # 5.
-    medias = Medias()
+    medias = []
     medias.append(Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
-    medias_json = medias.to_json()
-    print(medias_json)
+    
     print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
     event1_json = Event(title, severity , description, map_pose, medias).to_json()

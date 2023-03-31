@@ -72,7 +72,7 @@ if __name__ == "__main__":
     # 5. medias_json    (str) (optional)
     # 6. metadata       (str) (optional)
 
-    medias = RMSchema.Medias()
+    medias = []
     medias.append(RMSchema.Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
 
     event_handler.add_title('event_test_rev01')
