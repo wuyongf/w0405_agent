@@ -23,7 +23,55 @@ class Robot:
         self.mission_status = 0
 
     # robot status
+    def get_battery_state(self):
+        battery = self.rvmqtt.get_battery_percentage()
+        # battery = self.rvapi.get_battery_state().percentage
+        return round(battery * 100, 3)
 
+    def get_current_pose(self):
+        ## 1. get rv current map/ get rv activated map
+        map_json= self.rvapi.get_active_map_json()
+        rv_map_metadata = self.rvapi.get_map_metadata(map_json['name'])
+        # map_json = None # FOR DEBUG/TESTING
+        ## 2. update T params
+        if (rv_map_metadata is not None):
+            # print(map_json['name'])
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
+        else:
+            self.T.clear_rv_map_info()
+            print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
+            return 0.0, 0.0, 0.0
+        ## 3. transfrom
+        # pos = self.rvapi.get_current_pose()
+        # return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
+        pos = self.rvmqtt.get_current_pose()
+        return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
+
+    def get_current_map_rm_guid(self):
+        # 1. get rv_current map
+        rv_map_name = self.rvapi.get_active_map().name
+        # 2. check nwdb. check if there is any map related to rv_current map
+        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
+        # 3. if yes, get rm_guid. if no, return default idle_guid
+        if(map_is_exist):
+            return self.nwdb.get_map_rm_guid(rv_map_name)
+        else: return '00000000-0000-0000-0000-000000000000'
+
+    def get_current_mapPose(self):
+        pixel_x, pixel_y, heading = self.get_current_pose()
+        mapId = self.get_current_map_rm_guid()
+        return RMSchema.mapPose(mapId, pixel_x, pixel_y, heading)
+        
+    def get_current_map_id(self):
+        # 1. get rv_current map
+        rv_map_name = self.rvapi.get_active_map().name
+        # 2. check nwdb. check if there is any map related to rv_current map
+        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
+        # 3. if yes, get rm_guid. if no, return default idle_guid
+        if(map_is_exist):
+            return self.nwdb.get_map_id(rv_map_name)
+        else: return None
+    
     # basic robot control
     def cancel_current_task(self):
         self.rvapi.delete_current_task() # rv
@@ -137,54 +185,9 @@ class Robot:
             self.rvapi.set_led_status(on = 0)
             return True
         except: return False
-
-    def get_current_pose(self):
-        ## 1. get rv current map/ get rv activated map
-        map_json= self.rvapi.get_active_map_json()
-        rv_map_metadata = self.rvapi.get_map_metadata(map_json['name'])
-        # map_json = None # FOR DEBUG/TESTING
-        ## 2. update T params
-        if (rv_map_metadata is not None):
-            # print(map_json['name'])
-            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
-        else:
-            self.T.clear_rv_map_info()
-            print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
-            return 0.0, 0.0, 0.0
-        ## 3. transfrom
-        # pos = self.rvapi.get_current_pose()
-        # return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
-        pos = self.rvmqtt.get_current_pose()
-        return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
-    
-    def get_current_map_rm_guid(self):
-        # 1. get rv_current map
-        rv_map_name = self.rvapi.get_active_map().name
-        # 2. check nwdb. check if there is any map related to rv_current map
-        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
-        # 3. if yes, get rm_guid. if no, return default idle_guid
-        if(map_is_exist):
-            return self.nwdb.get_map_rm_guid(rv_map_name)
-        else: return '00000000-0000-0000-0000-000000000000'
-
-    def get_current_map_id(self):
-        # 1. get rv_current map
-        rv_map_name = self.rvapi.get_active_map().name
-        # 2. check nwdb. check if there is any map related to rv_current map
-        map_is_exist = self.nwdb.check_map_exist(rv_map_name)
-        # 3. if yes, get rm_guid. if no, return default idle_guid
-        if(map_is_exist):
-            return self.nwdb.get_map_id(rv_map_name)
-        else: return None
-    
-    def get_status(self):
-        pass
-
-    def get_battery_state(self):
-        battery = self.rvmqtt.get_battery_percentage()
-        # battery = self.rvapi.get_battery_state().percentage
-        return round(battery * 100, 3)
-
+   
+    def get_mission_status(self):
+        pass 
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

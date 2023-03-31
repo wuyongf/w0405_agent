@@ -6,17 +6,16 @@
 
 # Python 3.9.15
 # definition.py
-
-# class RMStatus:
-#     def __init__(self, batteryPct, state, mapPose):
-#         self.batteryPct = batteryPct
-#         self.state = state
+import json
+import uuid
 
 class Status:
     def __init__(self, batteryPct, state, mapPose):
         self.batteryPct = batteryPct
         self.state = state
         self.mapPose = mapPose
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
 
 class mapPose:
     def __init__(self, mapId = '', x = 0.0, y = 0.0, heading = 0.0):
@@ -24,6 +23,8 @@ class mapPose:
         self.x = x
         self.y = y
         self.heading = heading
+    def to_json(self):
+        return json.dumps(self.__dict__)
 
 # class Task1:
 #     def __init__(self, taskId, task_type, parameters):
@@ -89,3 +90,66 @@ class RMREMOTEESTOP:
 class RMLIGHT:
     def __init__(self, light=False):
         self.light = light
+
+
+# Event
+class Event:
+    def __init__(self, title, severity, description, mapPose_json, medias_json = [], metadata = {}):
+        self.eventId = str(uuid.uuid1())
+        self.title = title
+        self.description = description
+        self.metadata = metadata
+        self.severity = severity # 1: critical 2: normal
+        self.medias = medias_json
+        self.mapPose = mapPose_json
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+
+class Meida:
+    def __init__(self, filePath, type, title, view360 = False):
+        self.filePath = filePath
+        self.type = type # 1: image 2: video
+        self.title = title
+        self.__dict__['360view'] = view360
+
+class Medias:
+    def __init__(self):
+        self.medias = []
+
+    def append(self, media = Meida):
+        self.medias.append(media)
+
+    def to_json(self):
+        return json.dumps(self.medias, default=lambda o: o.__dict__)
+
+if __name__ == '__main__':
+    # media_info_list = []
+    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right", False))
+    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right", False))
+    # media_json = json.dumps(media_info_list, default=lambda o: o.__dict__)
+    # print(media_json)
+
+    # to publish an event
+    # 1. event title.   (str)
+    # 2. severity.      (int) (1: critical 2: normal)
+    # 3. description    (str) 
+    # 4. mapPose_json   (str)
+    # 5. medias_json    (str) (optional)
+    # 6. metadata       (str) (optional)
+
+    # 1, 2 and 3
+    title = 'event_test_rev01'
+    severity = 1
+    description = 'This is an event test'
+
+    # 4.
+    mapPose_json = mapPose().to_json()
+    # mapPose_json = robot.get_current_mapPose().to_json()
+
+    # 5.
+    medias = Medias()
+    medias.append(Meida("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right"))
+    medias_json = medias.to_json()
+
+    event1_json = Event(title, severity , description, mapPose_json, medias_json).to_json()
+    print(event1_json)
