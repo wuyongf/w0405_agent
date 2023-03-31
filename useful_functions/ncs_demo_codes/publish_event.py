@@ -38,65 +38,20 @@ if __name__ == "__main__":
 
         event_json = {
             "eventId": str(uuid.uuid1()), 
-            "title": "Example Event",
+            "title": "Example Event1",
             "description": "Example of how to send event to Robot Agent",
-            "metadata": {
-                "name": "John",
-                "match": 80,
-                "gender": "Male",
-                "ageGroup": "Young",
-                "glasses": "Yes"
-            },
+            "metadata": {},
             "severity": 1,
             "medias": [{
                 "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_left.png",
                 "type": 1,
                 "title": "Front Left",
                 "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png",
-                "type": 1,
-                "title": "Front Right",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front.png",
-                "type": 1,
-                "title": "Front",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/main_cam.png",
-                "type": 1,
-                "title": "Main",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/paranomic.png",
-                "type": 1,
-                "360View": True 
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/rear_left.png",
-                "type": 1,
-                "title": "Rear Left",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/rear_right.png",
-                "type": 1,
-                "title": "Rear Right",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/rear.png",
-                "type": 1,
-                "title": "Rear",
-                "360View": False
-            },{
-                "filePath": "C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/poi.png",
-                "type": 1,
-                "title": "POI details"
             }],
             "mapPose" : {
                 "mapId": map_id,
                 "x": x,
                 "y": y,
-                "z": z,
                 "heading": heading
             }
         }
@@ -115,3 +70,7 @@ if __name__ == "__main__":
         logging.info("KeyboardInterrupt: ending MQTT client")
         client.loop_stop()
         client.disconnect()
+
+
+# {"eventId": "a6bb5565-cfa9-11ed-af92-2c8db1a964f5", "title": "event_test_rev01", "description": "This is an event test", "metadata": {}, "severity": 1, "medias": "[{\"filePath\": \"C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png\", \"type\": 1, \"title\": \"Front Right\", \"360view\": false}]", "mapPose": "{\"mapId\": \"e672cbec-9bd5-4e57-baeb-091784003481\", \"x\": 54.0, \"y\": 60.0, \"heading\": 90.0}"}
+# {'eventId': '66fe33df-cfaa-11ed-9820-2c8db1a964f5', 'title': 'Example Event1', 'description': 'Example of how to send event to Robot Agent', 'metadata': {}, 'severity': 1, 'medias': [{'filePath': 'C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_left.png', 'type': 1, 'title': 'Front Left', '360View': False}], 'mapPose': {'mapId': '56ded5f9-79a3-458e-8458-8a76e818048e', 'x': 1.0, 'y': 1.0, 'heading': 360}}

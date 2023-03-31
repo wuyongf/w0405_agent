@@ -53,8 +53,8 @@ class EventHandler:
     def add_description(self, description):
         self.description = description
     def add_mapPose(self):
-        self.mapPose = RMSchema.mapPose().to_json()
-        # self.mapPose = self.robot.get_current_mapPose().to_json()
+        # self.mapPose = RMSchema.mapPose().to_json()
+        self.mapPose = self.robot.get_current_mapPose().to_json()
     def add_medias(self, medias):
         self.medias = medias
         
