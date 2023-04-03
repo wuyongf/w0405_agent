@@ -70,7 +70,7 @@ if __name__ == "__main__":
     medias = []
     medias.append(RMSchema.Meida(event_img_path, 1, "Front Right"))
 
-    event_handler.add_title('event_test_rev04')
+    event_handler.add_title('event_test_rev05')
     event_handler.add_severity(1)
     event_handler.add_description('This is an event test')
     event_handler.add_mapPose()

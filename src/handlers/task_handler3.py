@@ -3,6 +3,7 @@ import time
 import json
 import paho.mqtt.client as mqtt
 import threading 
+import logging
 # yf
 import src.utils.methods as umethods
 import src.models.robot as Robot
@@ -49,7 +50,7 @@ class TaskHandler:
         print("*******************************************************************************************************")
 
         if msg.topic == '/rm/task':
-            print("Exeucte Task...")        
+            print("task handler...")        
             time.sleep(2)
             self.task_handler(str(msg.payload.decode("utf-8")))
 
@@ -63,9 +64,12 @@ class TaskHandler:
         task_status_msg = json.dumps(task_status_json)
         self.mq_publisher.publish("/robot/task/status", task_status_msg)
 
-    def task_handler(self, task):
+    def task_handler(self, task_str):
+        task = RMSchema.Task(json.loads(task_str))
+        if task is None: return print('[task_handler] Error: RM task is not assign correctly')
+
         if task.scheduleType == 4: # Start
-            self.execute_task(task)
+            self.execute_task(task_str)
             return
         if task.scheduleType == 3: # Resume
             self.robot.resume_current_task()
@@ -77,9 +81,9 @@ class TaskHandler:
             self.robot.cancel_current_task()
             return
 
-    def execute_task(self, task):
-        task_json = json.loads(task)
-        task = RMSchema.Task(json.loads(task))
+    def execute_task(self, task_str):
+        task_json = json.loads(task_str)
+        task = RMSchema.Task(json.loads(task_str))
         if task is None: return print('[execute_task] Error: RM task is not assign correctly')
 
         self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
@@ -114,6 +118,8 @@ class TaskHandler:
 
         
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.DEBUG,format='(%(threadName)-10s) %(message)s',)
 
     config = umethods.load_config('../../conf/config.properties')
     task_handler = TaskHandler(config, "localhost")

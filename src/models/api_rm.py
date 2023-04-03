@@ -13,6 +13,15 @@ class RMAPI(api.AuthenticatedAPI):
             "Content-Type": "application/json"
             }
         super().__init__(base_url=self.base_url, headers=self.headers)
+
+    # def thread_login(self):
+    #     continue_flag = True
+    #     while(continue_flag):
+    #         try:
+    #             self.token = self.login()
+    #             continue_flag = False
+    #         except:
+    #             print('[api_rm] login failed, retry...')
     
     def __login(self):
         base_url = self.base_url

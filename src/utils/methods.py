@@ -1,6 +1,8 @@
 import configparser  # config file
 import datetime
 import time
+import requests
+
 
 def load_config(config_addr):
         # Load config file
@@ -21,6 +23,14 @@ def is_future_time(scheduled, current):
         if scheduled > current: return True
     return False
 
+def check_network_connection(url = ''):
+    try:
+        res = requests.get('https://prod.robotmanager.com/')
+        if (res.status_code):
+            print('Success')
+    except:
+        print('[check_network_connection] Error. Please check IPC network connection...')
+
 if __name__ == '__main__':
 
     # ## method 1 - load config file and then retrieve data
@@ -29,13 +39,18 @@ if __name__ == '__main__':
     # res = config.get('RV','X-API-Key')
     # print(res)
 
-    ## method 2 - compare datetime
-    # Get the current time in UTC timezone
-    now = datetime.datetime.utcnow()
-    iso_time1 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    print(iso_time1)
-    time.sleep(1)
-    now = datetime.datetime.utcnow()
-    iso_time2 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # ## method 2 - compare datetime
+    # # Get the current time in UTC timezone
+    # now = datetime.datetime.utcnow()
+    # iso_time1 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # print(iso_time1)
+    # time.sleep(1)
+    # now = datetime.datetime.utcnow()
+    # iso_time2 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # print(is_future_time(iso_time1, iso_time2))
 
-    print(is_future_time(iso_time1, iso_time2))
+    ## method 3 - check network connection
+    while(True):
+        check_network_connection()
+
+        time.sleep(1)

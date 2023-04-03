@@ -10,10 +10,7 @@ class RVMQTT():
         self.broker_address = config.get('RV','localhost')
         # self.mq_publisher = mqtt.Client("rv_mqtt_publisher")
         
-        self.subscriber_name = "rv_mqtt_subscriber"
-        self.mq_subscriber = mqtt.Client(self.subscriber_name)
-        self.mq_subscriber.connect(self.broker_address)
-        self.mq_subscriber.on_message = self.__on_message
+        self.connect()
 
         # init-mqtt
         self.connected = False
@@ -31,12 +28,33 @@ class RVMQTT():
         self.moving = True
         self.task_is_executing = False
 
-    def start(self):
-        self.mq_subscriber.loop_start()
-        threading.Thread(target=self.__subscribe_task).start()   # from RV API
-        print('[RVMQTT] Start...')
+    def connect(self):
+        th_connect = threading.Thread(target=self.thread_connect)
+        th_connect.setDaemon(True)
+        th_connect.start()
 
-    def __on_message(self, client, userdata, msg):
+    def thread_connect(self):
+        self.subscriber_name = "rv_mqtt_subscriber"
+        self.mq_subscriber = mqtt.Client(self.subscriber_name)
+        self.mq_subscriber.on_message = self.on_message
+
+        while not self.mq_subscriber.is_connected():
+            try:
+                time.sleep(1)
+                print("[mqtt_rv] connecting...")
+                self.mq_subscriber.connect(self.broker_address, timeout=5)
+                self.mq_subscriber.loop_start()
+                
+                if(self.mq_subscriber.is_connected()): print('[mqtt_rv] connected!')
+                while self.mq_subscriber.is_connected():
+                    # print("is connected")
+                    time.sleep(1)
+            except Exception as e:
+                # print("Failed to connect to MQTT broker with error %s" % str(e))
+                print("[mqtt_rv] connection failed, retry...")
+                time.sleep(1)
+
+    def on_message(self, client, userdata, msg):
         # # print(msg.topic+" "+str(msg.payload))
         # print("*******************************************************************************************************")
         # print("message received ", str(msg.payload.decode("utf-8")))
@@ -99,9 +117,7 @@ if __name__ == '__main__':
     
     rvmqtt = RVMQTT(config)
 
-    rvmqtt.start()
-
     while(True):
-        print(rvmqtt.get_robot_is_moving())
+        # print('is_moving =', rvmqtt.get_robot_is_moving())
         time.sleep(1)
         
