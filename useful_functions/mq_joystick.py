@@ -9,7 +9,9 @@ broker_port = 1883
 # Define topic and payload
 topic = "rvautotech/fobo/joystick"
 payload = {
-    "object": {
+    "className": "com.rvautotech.fobo.amr.dto.JoystickDTO",
+    "object": 
+    {
         "upDown": 0.5,
         "leftRight": 0,
         "turboOn": False

@@ -1,5 +1,3 @@
-
-
 ## Workflow
 1. Start robot-agent-server (developed by ncs)
     1. download the latest repository. 

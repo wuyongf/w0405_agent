@@ -15,7 +15,7 @@ class Robot:
     def __init__(self, config):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT2.RVMQTT(config)
-        self.rmapi = RMAPI.RMAPI(config)
+        # self.rmapi = RMAPI.RMAPI(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
         # self.rvmqtt.start() # for RVMQTT.RVMQTT

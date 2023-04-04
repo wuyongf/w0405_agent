@@ -1,8 +1,17 @@
-import src.models.api_authenticated as api
+import api_authenticated as api
 import json
 import requests
-import src.utils.methods as umethods
 import sys
+import configparser
+
+def load_config(config_addr):
+        # Load config file
+        configs = configparser.ConfigParser()
+        try:
+            configs.read(config_addr)
+        except:
+            print("Error loading properties file, check the correct directory")
+        return configs
 
 class RMAPI(api.AuthenticatedAPI):
     def __init__(self, config):
@@ -14,15 +23,7 @@ class RMAPI(api.AuthenticatedAPI):
             }
         super().__init__(base_url=self.base_url, headers=self.headers)
 
-    # def thread_login(self):
-    #     continue_flag = True
-    #     while(continue_flag):
-    #         try:
-    #             self.token = self.login()
-    #             continue_flag = False
-    #         except:
-    #             print('[api_rm] login failed, retry...')
-    
+
     def __login(self):
         base_url = self.base_url
         endpoint = "/login"
@@ -63,10 +64,11 @@ class RMAPI(api.AuthenticatedAPI):
         return self.post('/mission/list', json.dumps(payload))
     
     def create_mission(self):
+        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
         payload = {}
         payload["type"] = 1
         payload["mode"] = 1
-        payload["layoutId"] = 'd3b4f645-023d-45e8-95df-3ef6465497e9'
+        payload["layoutId"] = 'd3b4f645-023d-45e8-95df-3ef6465497e6'
         payload["name"] = 'TestMission-Rev03'
         payload["robotIds"] = ['2658a873-a0a6-4c3f-967f-d179c4073272']
         payload['tasks'] = [
@@ -82,28 +84,8 @@ class RMAPI(api.AuthenticatedAPI):
         return self.delete(f'/mission/{mission_id}')
 
 if __name__ == '__main__':
-    config = umethods.load_config('../../conf/config.properties')
+    config = load_config('./config.properties')
     rmapi = RMAPI(config)
 
     json_data = rmapi.create_mission()
     print(json_data)
-
-    # ## list map
-    # json_data = rmapi.list_maps()
-    # print(json_data)
-
-    # # list missions and parse json
-    # json_data = rmapi.list_missions()
-    # # print(json_data)
-    # list_data = json_data['result']['list']
-    # print(len(list_data))
-
-    # # get mission status
-    # for i in range(len(list_data)):
-    #     print(list_data[i]['status'])
-    
-    # # get Mission(Job or Mission)
-    # for i in range(len(list_data)):
-    #     if(list_data[i]['type'] == 2):
-    #         print(list_data[i])
-
