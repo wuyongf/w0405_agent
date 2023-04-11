@@ -7,7 +7,6 @@ import src.models.api_authenticated as api
 import src.models.schema_rv as RVSchema
 import src.utils.methods as umethods
 
-
 class RVAPI(api.AuthenticatedAPI):
     def __init__(self, config):
         self.base_url = config.get('RV','base_url')
@@ -184,6 +183,10 @@ class RVAPI(api.AuthenticatedAPI):
 
     def resume_robot_task(self):
         return self.put('/baseControl/v1/resume')
+
+    def switch_manual(self, on = False):
+        if(on): return self.put('/baseControl/v1/manual/ON')
+        else: return self.put('/baseControl/v1/manual/OFF')
 
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
