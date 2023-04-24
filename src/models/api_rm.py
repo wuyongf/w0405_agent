@@ -85,12 +85,12 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    json_data = rmapi.create_mission()
-    print(json_data)
-
-    # ## list map
-    # json_data = rmapi.list_maps()
+    # json_data = rmapi.create_mission()
     # print(json_data)
+
+    ## list map
+    json_data = rmapi.list_maps()
+    print(json_data)
 
     # # list missions and parse json
     # json_data = rmapi.list_missions()

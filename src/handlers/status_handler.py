@@ -16,13 +16,14 @@ import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
 import src.models.schema_rm as RMSchema
 import src.models.schema_rv as RVSchema
+import src.models.enums_nw as NWEnum
 
 class StatusHandler:
-    def __init__(self, config, mq_host, mq_topic):
+    def __init__(self, config):
         # rm - mqtt
-        self.mq_publisher = mqtt.Client("status_publisher")
-        self.mq_topic_name = mq_topic        
-        self.mq_publisher.connect(mq_host)
+        self.publisher = mqtt.Client("status_publisher")
+        self.topic = "/robot/status"        
+        self.publisher.connect("localhost")
         # yf config
         self.robot = Robot.Robot(config)
         self.nwdb = NWDB.robotDBHandler(config)
@@ -33,7 +34,7 @@ class StatusHandler:
         self.map_id = 0
     
     def start(self):
-        self.mq_publisher.loop_start()
+        self.publisher.loop_start()
         threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb
         print(f'[status_handler]: Start...')
@@ -45,8 +46,8 @@ class StatusHandler:
                 self.rm_status.state = 1 # todo: robot status
 
                 self.rm_mapPose.mapId = self.robot.get_current_map_rm_guid()    # map
-                self.rm_status.batteryPct = self.robot.get_battery_state()      # battery
-                pixel_x, pixel_y, heading = self.robot.get_current_pose()       # current pose
+                self.rm_status.batteryPct = self.robot.get_battery_state(NWEnum.Protocol.RVAPI)      # battery
+                pixel_x, pixel_y, heading = self.robot.get_current_pose(NWEnum.Protocol.RVAPI)       # current pose
                 # print(pixel_x, pixel_y, heading)
                 self.rm_mapPose.x = pixel_x
                 self.rm_mapPose.y = pixel_y
@@ -66,14 +67,14 @@ class StatusHandler:
 
     def __publish_status(self): # publish thread
         while True:  
-            time.sleep(1)
+            time.sleep(2)
             print(f'[status_handler]: robot battery: {self.rm_status.batteryPct}')
             print(f'[status_handler]: robot map rm_guid: {self.rm_status.mapPose.mapId}')
             print(f'[status_handler]: robot position: ({self.rm_status.mapPose.x}, {self.rm_status.mapPose.y}, {self.rm_status.mapPose.heading})')
             
             try:                
                 ## to rm
-                self.mq_publisher.publish(self.mq_topic_name, self.rm_status.to_json())
+                self.publisher.publish(self.topic, self.rm_status.to_json())
                 ## to nwdb
                 self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)
                 self.nwdb.update_robot_map_id(self.map_id)
@@ -83,5 +84,5 @@ class StatusHandler:
             
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    status_handler = StatusHandler(config, "localhost", "/robot/status")
+    status_handler = StatusHandler(config)
     status_handler.start()

@@ -8,12 +8,19 @@ import src.models.schema_rv as RVSchema
 class RVMQTT():
     def __init__(self, config):
         self.broker_address = config.get('RV','localhost')
-        # self.mq_publisher = mqtt.Client("rv_mqtt_publisher")
         
-        self.subscriber_name = "rv_mqtt_subscriber"
-        self.mq_subscriber = mqtt.Client(self.subscriber_name)
-        self.mq_subscriber.connect(self.broker_address)
-        self.mq_subscriber.on_message = self.__on_message
+        self.subscriber = mqtt.Client("rv_mqtt_subscriber")
+        self.subscriber.connect(self.broker_address)
+        self.subscriber.on_message = self.__on_message
+
+        topics = []
+        topics.append(['rvautotech/fobo/pose',2])
+        topics.append(['rvautotech/fobo/battery',2])
+        topics.append(['rvautotech/fobo/map/active',2])
+        topics.append(['rvautotech/fobo/baseController/move',2])
+        self.subscriber.subscribe(topics)
+
+        self.subscriber.loop_start()
 
         # init-mqtt
         self.connected = False
@@ -32,7 +39,7 @@ class RVMQTT():
         self.task_is_executing = False
 
     def start(self):
-        self.mq_subscriber.loop_start()
+        
         threading.Thread(target=self.__subscribe_task).start()   # from RV API
         print('[RVMQTT] Start...')
 
@@ -68,14 +75,7 @@ class RVMQTT():
             # self.imageHeight = data['imageHeight']
 
     def __subscribe_task(self):
-        topics = []
-        topics.append(['rvautotech/fobo/pose',2])
-        topics.append(['rvautotech/fobo/battery',2])
-        topics.append(['rvautotech/fobo/map/active',2])
-        topics.append(['rvautotech/fobo/baseController/move',2])
         while True:
-            # publisher.publish("/robot/status", robotStatus)
-            self.mq_subscriber.subscribe(topics)
             time.sleep(1)
     
     ## Get Methods
@@ -94,14 +94,21 @@ class RVMQTT():
     def get_robot_is_moving(self):
         return self.moving
 
+import src.models.trans_rvrm as Trans
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    
+
+    T = Trans.RVRMTransform()
+
     rvmqtt = RVMQTT(config)
 
     rvmqtt.start()
 
+
     while(True):
-        print(rvmqtt.get_robot_is_moving())
-        time.sleep(1)
+        pos = rvmqtt.get_current_pose()
+        print(pos)
         
+        time.sleep(1)
+    

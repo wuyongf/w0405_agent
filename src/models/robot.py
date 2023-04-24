@@ -10,11 +10,12 @@ import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
 import src.models.enums_rm as RMEnum
+import src.models.enums_nw as NWEnum
 
 class Robot:
     def __init__(self, config):
         self.rvapi = RVAPI.RVAPI(config)
-        self.rvmqtt = RVMQTT2.RVMQTT(config)
+        self.rvmqtt = RVMQTT.RVMQTT(config)
         # self.rmapi = RMAPI.RMAPI(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
@@ -30,12 +31,14 @@ class Robot:
         self.mission_status = 0
 
     # robot status
-    def get_battery_state(self):
-        battery = self.rvmqtt.get_battery_percentage()
-        # battery = self.rvapi.get_battery_state().percentage
+    def get_battery_state(self, protocol = NWEnum.Protocol):
+        if(protocol == NWEnum.Protocol.RVMQTT):
+            battery = self.rvmqtt.get_battery_percentage()
+        if(protocol == NWEnum.Protocol.RVAPI):
+            battery = self.rvapi.get_battery_state().percentage
         return round(battery * 100, 3)
 
-    def get_current_pose(self):
+    def get_current_pose(self, protocol = NWEnum.Protocol):
         try:
             ## 1. get rv current map/ get rv activated map
             map_json= self.rvapi.get_active_map_json()
@@ -50,10 +53,12 @@ class Robot:
                 print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
                 return 0.0, 0.0, 0.0
             ## 3. transfrom
-            # pos = self.rvapi.get_current_pose()
-            # return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
-            pos = self.rvmqtt.get_current_pose()
-            return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
+            if(protocol == NWEnum.Protocol.RVMQTT):
+                pos = self.rvmqtt.get_current_pose()
+                return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
+            if(protocol == NWEnum.Protocol.RVAPI):
+                pos = self.rvapi.get_current_pose()
+                return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
         except:
             return 0,0,0
 
@@ -131,7 +136,7 @@ class Robot:
             else: return False
         except:
             return False
-        
+    # status_callback: check task_handler3.py    
     def goto(self, task_json, status_callback):
         try:
             # step 0. init. clear current task
@@ -217,11 +222,6 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
 
-    def status_callback(): pass
-    json_data = {}
-
-    print(robot.get_battery_state())
-    
-    # while(True):
-    #     time.sleep(1)
-    #     print(robot.get_current_map_rm_guid())
+    while(True):
+        time.sleep(1)
+        print(robot.get_battery_state(NWEnum.Protocol.RVAPI))

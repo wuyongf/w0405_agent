@@ -34,19 +34,18 @@ class RVMQTT():
         th_connect.start()
 
     def thread_connect(self):
-        self.subscriber_name = "rv_mqtt_subscriber"
-        self.mq_subscriber = mqtt.Client(self.subscriber_name)
-        self.mq_subscriber.on_message = self.on_message
+        self.subscriber = mqtt.Client('rv_mqtt_subscriber')
+        self.subscriber.on_message = self.on_message
 
-        while not self.mq_subscriber.is_connected():
+        while not self.subscriber.is_connected():
             try:
                 time.sleep(1)
                 print("[mqtt_rv] connecting...")
-                self.mq_subscriber.connect(self.broker_address, timeout=5)
-                self.mq_subscriber.loop_start()
+                self.subscriber.connect(self.broker_address, timeout=5)
+                self.subscriber.loop_start()
                 
-                if(self.mq_subscriber.is_connected()): print('[mqtt_rv] connected!')
-                while self.mq_subscriber.is_connected():
+                if(self.subscriber.is_connected()): print('[mqtt_rv] connected!')
+                while self.subscriber.is_connected():
                     # print("is connected")
                     time.sleep(1)
             except Exception as e:
@@ -93,7 +92,7 @@ class RVMQTT():
         topics.append(['rvautotech/fobo/baseController/move',2])
         while True:
             # publisher.publish("/robot/status", robotStatus)
-            self.mq_subscriber.subscribe(topics)
+            self.subscriber.subscribe(topics)
             time.sleep(1)
     
     ## Get Methods
@@ -118,6 +117,6 @@ if __name__ == '__main__':
     rvmqtt = RVMQTT(config)
 
     while(True):
-        # print('is_moving =', rvmqtt.get_robot_is_moving())
+        print('is_moving =', rvmqtt.get_robot_is_moving())
         time.sleep(1)
         

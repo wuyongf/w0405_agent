@@ -12,14 +12,14 @@ import src.models.schema_rm as RMSchema
 import src.models.enums_rm as RMEnum
 
 class TaskHandler:
-    def __init__(self, config, mq_host):
+    def __init__(self, config):
         # rm - mqtt
-        self.mq_publisher = mqtt.Client("task_status_publisher")
-        self.mq_publisher.connect(mq_host) 
+        self.publisher = mqtt.Client("task_status_publisher")
+        self.publisher.connect("localhost") 
 
-        self.mq_subscriber = mqtt.Client("task_subscriber")      
-        self.mq_subscriber.connect(mq_host)
-        self.mq_subscriber.on_message = self.on_message
+        self.subscriber = mqtt.Client("task_subscriber")      
+        self.subscriber.connect("localhost")
+        self.subscriber.on_message = self.on_message
 
         # yf config
         self.robot = Robot.Robot(config)
@@ -31,14 +31,14 @@ class TaskHandler:
         self.map_id = 0
 
     def start(self):
-        self.mq_publisher.loop_start()
-        self.mq_subscriber.loop_start()
+        self.publisher.loop_start()
+        self.subscriber.loop_start()
         threading.Thread(target=self.subscribe_task).start()   # from RV API
         print(f'[task_handler]: Start...')
 
     def subscribe_task(self):
         while True:
-            self.mq_subscriber.subscribe("/rm/task", 2)
+            self.subscriber.subscribe("/rm/task", 2)
             time.sleep(1)
     
     # MQTT MECHANISM - The callback for when a PUBLISH message is received from the server.
@@ -62,7 +62,7 @@ class TaskHandler:
             "taskStatusType": status.value # 1. executing, 2. complete 3. failed
         }
         task_status_msg = json.dumps(task_status_json)
-        self.mq_publisher.publish("/robot/task/status", task_status_msg)
+        self.publisher.publish("/robot/task/status", task_status_msg)
 
     def task_handler(self, task_str):
         task = RMSchema.Task(json.loads(task_str))
@@ -122,6 +122,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,format='(%(threadName)-10s) %(message)s',)
 
     config = umethods.load_config('../../conf/config.properties')
-    task_handler = TaskHandler(config, "localhost")
+    task_handler = TaskHandler(config)
 
     task_handler.start()

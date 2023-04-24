@@ -10,13 +10,13 @@ import src.models.api_rv as RVAPI
 # 2. publish mqtt topic
 
 class RVJoyStick():
-    def __init__(self, config, rvapi = RVAPI.RVAPI):
+    def __init__(self, config):
         # Init1: Create MQTT client and connect to broker
         self.broker_address = config.get('RV','localhost')
         self.client = mqtt.Client('rv_joystick_publisher')
         self.client.connect(self.broker_address, port=1883)
         self.client.loop_start()
-        self.rvapi = rvapi
+        self.rvapi = RVAPI.RVAPI(config)
 
     def enable(self):
         '''to enable the joystick. switch on AMR manual mode'''
@@ -47,22 +47,22 @@ class RVJoyStick():
 if __name__ == "__main__":
 
     config = umethods.load_config('../../conf/config.properties')
-    rvapi = RVAPI.RVAPI(config)
-    joystick = RVJoyStick(config, rvapi)
+
+    joystick = RVJoyStick(config)
 
     print('enable the joystick...')
     joystick.enable()
     time.sleep(2)
 
-    count = 0
-    while(True):
-        joystick.move()
-        time.sleep(0.02)
-        print('count = ',count)
-        count += 1
-        if(count > 200): break
-    joystick.stop()
+    # count = 0
+    # while(True):
+    #     joystick.move()
+    #     time.sleep(0.02)
+    #     print('count = ',count)
+    #     count += 1
+    #     if(count > 200): break
+    # joystick.stop()
 
-    print('disable the joystick...')
-    time.sleep(2)
-    joystick.disable()
+    # print('disable the joystick...')
+    # time.sleep(2)
+    # joystick.disable()

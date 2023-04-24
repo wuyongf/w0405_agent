@@ -6,6 +6,8 @@ import sys
 # yf
 import src.utils.methods as umethods
 import handlers.status_handler as status_handler
+import handlers.remote_control_handler as remote_control_handler
+import handlers.task_handler3 as task_handler
 
 if __name__ == '__main__':
     # Sleep for 30 seconds for Pi to connect to MiR network...
@@ -31,10 +33,16 @@ if __name__ == '__main__':
     config = umethods.load_config('../conf/config.properties')
 
     # Status handler updates robot status every second
-    status_handler = status_handler.StatusHandler(config, "localhost", "/robot/status")
+    status_handler = status_handler.StatusHandler(config)
     status_handler.start()
+    
     # # Task handler subscribes and execute task, also report task status to robotmanager
-    # th = task_handler.TaskHandler("localhost", 1883, "/robot/task", "/robot/task/status")
+    task_handler = task_handler.TaskHandler(config)
+    task_handler.start()
+
+    # Remote Control Handler
+    remote_control_handler = remote_control_handler.RemoteControlHandler(config)
+    remote_control_handler.start()
 
     # Successfully started the app
     logging.getLogger('').info("rm-mir-app successfully started!")
