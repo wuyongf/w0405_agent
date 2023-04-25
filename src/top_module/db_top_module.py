@@ -6,6 +6,7 @@ import src.utils.methods as umethods
 
 import datetime
 
+
 class robotDBHandler(db.AzureDB):
     # init and connect to NWDB
     def __init__(self, config):
@@ -36,19 +37,20 @@ class robotDBHandler(db.AzureDB):
         # print(statement)
         return self.Select(statement)
 
-    def InsertIaqData(self, table, column, value):
+    def InsertIaqData(self, table, key, value):
         # map_name
+        # task_id
         # posX,Y
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, column))}, created_date) VALUES ({", ".join(map(str, value))}, now());'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date) VALUES ({", ".join(map(str, value))}, now());'
         print(statement)
         self.Insert(statement)
-
 
     def GetUserRules(self):
         # TODO *** Let the userrules get sensor type from table "data.sensor.type"
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
