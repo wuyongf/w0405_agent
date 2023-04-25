@@ -18,14 +18,18 @@ class Robot:
     def __init__(self, config):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
-        # self.rmapi = RMAPI.RMAPI(config)
+        self.rmapi = RMAPI.RMAPI(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
-        # nw sensors
+        # # nw sensors
+        # # threading.Thread(target=IAQ.IaqSensor(config, "COM4", 2).run).start()
         self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
         self.iaq_sensor.run()
+        self.iaq_sensor.set_task_mode(True)
+        self.iaq_sensor.set_task_mode(False)
+
         self.laser_sensor = ''
         self.phone = ''
 
@@ -220,6 +224,11 @@ class Robot:
    
     def get_mission_status(self):
         pass 
+
+    def iaq_on(self, task_json):
+        mission_id = self.rmapi.get_mission_id(task_json['taskId'])
+        self.iaq_sensor.set_mission_id(mission_id)
+        self.iaq_sensor.task_mode(True)
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

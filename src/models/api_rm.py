@@ -80,6 +80,22 @@ class RMAPI(api.AuthenticatedAPI):
     
     def delete_mission(self, mission_id):
         return self.delete(f'/mission/{mission_id}')
+    
+    def get_mission_id(task_json):
+        json_data = rmapi.list_missions()
+        # print(json_data)
+        list_data = json_data['result']['list']
+        # print(list_data)
+        for mission in list_data:
+            # taskId == mission['tasks']['id']
+            if mission['tasks'] is None: continue
+            else:
+                for task in mission['tasks']:
+                    if (task_json['taskId'] == task['id']):
+                        return mission['id']
+                        print('found!')
+                        print('mission_id: ',  mission['id'])
+                        break
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -88,15 +104,27 @@ if __name__ == '__main__':
     # json_data = rmapi.create_mission()
     # print(json_data)
 
-    ## list map
-    json_data = rmapi.list_maps()
-    print(json_data)
+    # ## list map
+    # json_data = rmapi.list_maps()
+    # print(json_data)
 
-    # # list missions and parse json
-    # json_data = rmapi.list_missions()
-    # # print(json_data)
-    # list_data = json_data['result']['list']
+    taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
+
+    # list missions and parse json
+    json_data = rmapi.list_missions()
+    # print(json_data)
+    list_data = json_data['result']['list']
+    # print(list_data)
     # print(len(list_data))
+    for mission in list_data:
+        # taskId == mission['tasks']['id']
+        if mission['tasks'] is None: continue
+        else:
+            for task in mission['tasks']:
+                if (taskId == task['id']):
+                    print('found!')
+                    print('mission_id: ',  mission['id'])
+                    break
 
     # # get mission status
     # for i in range(len(list_data)):

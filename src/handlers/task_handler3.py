@@ -83,6 +83,7 @@ class TaskHandler:
 
     def execute_task(self, task_str):
         task_json = json.loads(task_str)
+        print(task_json['taskId'])
         task = RMSchema.Task(json.loads(task_str))
         if task is None: return print('[execute_task] Error: RM task is not assign correctly')
 

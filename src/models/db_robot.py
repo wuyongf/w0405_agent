@@ -63,6 +63,14 @@ class robotDBHandler(db.AzureDB):
     def check_map_exist(self, amr_guid):
         statement = f'SELECT EXISTS(SELECT * from {self.database}.`robot.map` WHERE amr_guid="{amr_guid}")'
         return self.Select(statement)
+    
+    def check_mission_id_exist(self, mission_id):
+        statement = f'SELECT EXISTS(SELECT * from {self.database}.`sys.mission` WHERE rm_mission_guid="{mission_id}")'
+        return self.Select(statement)
+    
+    def insert_new_mission_id(self,mission_id):
+        statement = f'INSERT INTO {self.database}.`sys.mission` (rm_mission_guid, created_date) VALUES ("{mission_id}", now())'
+        return self.Insert(statement)
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -79,5 +87,7 @@ if __name__ == '__main__':
     # res = nwdb.get_map_amr_guid('56ded5f9-79a3-458e-8458-8a76e818048e')
     # print(res)
 
-    res = nwdb.check_map_exist('')
+    # mission_id: 9b73504f-b4de-4a75-98c8-468cf588c5f6
+    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f6')
+    res = nwdb.check_mission_id_exist('')
     print(res)
