@@ -1,1 +1,7 @@
 pyserial
+mysql
+mysql-connector-python
+requests
+paho-mqtt
+
+# pip install -r requirements.txt

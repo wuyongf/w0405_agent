@@ -1,15 +1,14 @@
 import serial
 import time
-import sys
-import logging
-import os
-import datetime
+import threading
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import src.top_module.rules as rule
 
 class IaqSensor():
     def __init__(self, config, COM, Ti):
+        self.stop_event = threading.Event()
+        self.run_thread = threading.Thread(target=self.collect_data)
         self.port = COM
         self.bandwidth = '9600'
         self.count = 0
@@ -21,6 +20,19 @@ class IaqSensor():
         self.nwdb = NWDB.robotDBHandler(config)
         self.rules = rule.user_rules("none", 300, "LOW")
         self.data_stack = []
+        self.stop_event = threading.Event()
+        self.run_thread = threading.Thread(target=self.collect_data)
+
+
+    def run(self):
+        self.collect_data()
+        
+    def start(self):
+        self.run_thread.start()
+        
+    def stop(self) :
+        self.stop_event.set()
+
 
     def get_data(self, datahex):
         co2 = (datahex[0] << 8 | datahex[1])
@@ -45,13 +57,9 @@ class IaqSensor():
         print("dataStream")
         self.nwdb.InsertIaqData("sensor.iaq.stream", self.column_items, value)
 
-
     def set_task_mode(self, e):
         self.task_mode = e
         print(self.task_mode)
-
-    def run(self):
-        self.collect_data()
 
     def data_store(self, dataset):
         self.data_stack.append(dataset)
@@ -63,7 +71,7 @@ class IaqSensor():
     def get_rules_column(self, dataset, column):
         return [i.get(column) for i in dataset]
 
-    # NOTE:
+    # NOTE: *** Check the data with user define rules ***
     def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list
         rules_list = self.nwdb.GetUserRules()
@@ -89,11 +97,10 @@ class IaqSensor():
 
 
 
-
     def collect_data(self):
         ser = serial.Serial(self.port, self.bandwidth)  # Select Serial Port and bandwidth
 
-        while True:
+        while not self.stop_event.is_set():
             try:
                 named_tuple = time.localtime()  # get struct_time
                 time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
@@ -141,8 +148,11 @@ class IaqSensor():
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    iaq = IaqSensor(config, "COM4", 2)
+    iaq = IaqSensor(config, "COM3", 2)
     # iaq.set_task_id("")
     iaq.set_task_mode(True)
-    iaq.run()
-    print(iaq.get_data())
+    iaq.start()
+    time.sleep(2)
+    print('running*******************************')
+    iaq.stop()
+    print('stop*******************************')
