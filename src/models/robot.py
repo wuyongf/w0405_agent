@@ -26,9 +26,7 @@ class Robot:
         # # nw sensors
         # # threading.Thread(target=IAQ.IaqSensor(config, "COM4", 2).run).start()
         self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
-        self.iaq_sensor.run()
-        self.iaq_sensor.set_task_mode(True)
-        self.iaq_sensor.set_task_mode(False)
+        self.iaq_sensor.start()
 
         self.laser_sensor = ''
         self.phone = ''
@@ -229,7 +227,6 @@ class Robot:
         mission_id = self.rmapi.get_mission_id(task_json['taskId'])
         self.iaq_sensor.set_mission_id(mission_id)
         self.iaq_sensor.task_mode(True)
-
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
