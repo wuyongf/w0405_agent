@@ -11,6 +11,8 @@ import src.models.trans_rvrm as Trans
 import src.models.schema_rm as RMSchema
 import src.models.enums_rm as RMEnum
 import src.models.enums_nw as NWEnum
+# top module
+import src.top_module.sensor_iaq as IAQ
 
 class Robot:
     def __init__(self, config):
@@ -22,7 +24,8 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
         # nw sensors
-        self.iaq_sensor = ''
+        self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
+        self.iaq_sensor.run()
         self.laser_sensor = ''
         self.phone = ''
 
