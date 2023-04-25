@@ -98,53 +98,50 @@ class IaqSensor():
 
 
     def collect_data(self):
-        ser = serial.Serial(self.port, self.bandwidth)  # Select Serial Port and bandwidth
+        with serial.Serial(self.port, self.bandwidth) as ser:
+            while not self.stop_event.is_set():
+                try:
+                    named_tuple = time.localtime()  # get struct_time
+                    time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
 
-        while not self.stop_event.is_set():
-            try:
-                named_tuple = time.localtime()  # get struct_time
-                time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
-
-                if ser.is_open:
-                    # print("port open success")
+                    if not ser.is_open:
+                        continue
+                    
                     send_data = serial.to_bytes(self.command)
                     ser.write(send_data)  # 发送命令
                     time.sleep(0.1)  # 延时，否则len_return_data将返回0，此处易忽视！！！
+                    
                     len_return_data = ser.inWaiting()  # 获取缓冲数据（接收数据）长度
+                    if not len_return_data:
+                        continue
 
-                    if len_return_data:
-                        return_data = ser.read(len_return_data)  # 读取缓冲数据
-                        return_data_arr = bytearray(return_data)
-                        count = 1
-                        # print(return_data_arr)
-                        rawdata = []
+                    return_data = ser.read(len_return_data)  # 读取缓冲数据
+                    return_data_arr = bytearray(return_data)
+                    count = 1
+                    # print(return_data_arr)
+                    
+                    rawdata = [data for i, data in enumerate(return_data_arr) if 4 <= i + 1 <= 25]
+                    result = self.get_data(rawdata)
+                    print(result)
 
-                        for data in return_data_arr:
-                            if 4 <= count <= 25:
-                                rawdata.append(data)
-                            count += 1
+                    if sum(result) < 30000:
 
-                        result = self.get_data(rawdata)
-                        print(result)
-
-                        if sum(result) < 30000:
-
-                            if self.task_mode:
-                                # Insert to mySQL
-                                self.data_store(result)
-                                self.data_insert(result)
-                                pass
-                                # self.check_stack(result)
+                        if self.task_mode:
+                            # Insert to mySQL
+                            self.data_store(result)
+                            self.data_insert(result)
+                            pass
+                            # self.check_stack(result)
 
 
-                            # Stream to mySQL
-                            self.data_stream(result)
-                            time.sleep(self.time_interval)
+                        # Stream to mySQL
+                        self.data_stream(result)
+                        time.sleep(self.time_interval)
 
 
-            except IndexError:
-                self.GG += 1
-                continue
+                except IndexError:
+                    self.GG += 1
+                    continue
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -152,8 +149,8 @@ if __name__ == '__main__':
     # iaq.set_task_id("")
     iaq.set_task_mode(True)
     iaq.start()
-    time.sleep(2)
+    time.sleep(10)
     print('running*******************************')
     iaq.stop()
     print('stop*******************************')
-    print('abc')
+    # print('abc')

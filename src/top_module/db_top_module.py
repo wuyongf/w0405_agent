@@ -43,9 +43,6 @@ class robotDBHandler(db.AzureDB):
         print(statement)
         self.Insert(statement)
 
-    # def GetUserRules_Column(self):
-    #     statement = f'SELECT * FROM {self.database}.`event.user_rules`;'
-    #     return self.GetColumn(statement)
 
     def GetUserRules(self):
         # TODO *** Let the userrules get sensor type from table "data.sensor.type"
