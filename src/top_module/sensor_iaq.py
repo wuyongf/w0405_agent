@@ -16,6 +16,7 @@ class IaqSensor():
         self.time_interval = Ti
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
+        self.task_id = ""
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.robotDBHandler(config)
         self.rules = rule.user_rules("none", 300, "LOW")
@@ -57,11 +58,12 @@ class IaqSensor():
         print("dataStream")
         self.nwdb.InsertIaqData("sensor.iaq.stream", self.column_items, value)
 
-    def set_task_mode(self, e):
+    def set_task_mode(self, e, taskid=""):
         self.task_mode = e
+        self.task_id = taskid
         print(self.task_mode)
 
-    def data_store(self, dataset):
+    def data_check_stack(self, dataset):
         self.data_stack.append(dataset)
         if len(self.data_stack) >= 5:
             self.check_stack(self.data_stack)
@@ -79,21 +81,28 @@ class IaqSensor():
         rules_type_list = self.get_rules_column(rules_list, "data_type")
         rules_threshold_list = self.get_rules_column(rules_list, "threshold")
         rules_limit_type_list = self.get_rules_column(rules_list, "limit_type")
+        rules_name_list = self.get_rules_column(rules_list, "name")
 
         for data in data_stack:
-            for row_num, row_value in enumerate(rules_type_list):
+            for row_num, data_type in enumerate(rules_type_list):
                 try:
                     # Compare with rules_type_list, find the index of data
-                    col = self.column_items.index(row_value)
-                    print("check : ", data, " Type : ", row_value, " | col : ", col, " Limit Type : ", rules_limit_type_list[row_num], " Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
-                    if rules_limit_type_list[row_num] == "HIGH" and data[col] > rules_threshold_list[row_num]: # TODO: change to threshold in each row
-                        print("*** Higher then threshold, Type : ", row_value," Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
+                    col_idx = self.column_items.index(data_type)
+                    threshold = rules_threshold_list[row_num]
+                    limit_type = rules_limit_type_list[row_num]
+                    name = rules_name_list[row_num]
+                    value = data[col_idx]
+                    
+                    print(f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
 
-                    elif rules_limit_type_list[row_num] == "LOW" and data[col] < rules_threshold_list[row_num]:
-                        print("*** Lower then threshold, Type : ", row_value," Threshold : ", rules_threshold_list[row_num], " Value : ", data[col])
+                    if limit_type == "HIGH" and value > threshold:
+                        print(f"*** Higher than threshold, Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
 
-                except:
-                    print("Except: No matched data type.", self.rules.type)
+                    elif limit_type == "LOW" and value < threshold:
+                        print(f"*** Lower than threshold, Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
+
+                except ValueError:
+                    print(f"No matched data type for rule data type {data_type}")
 
 
 
@@ -128,11 +137,10 @@ class IaqSensor():
 
                         if self.task_mode:
                             # Insert to mySQL
-                            self.data_store(result)
+                            # print('***********taskmode  ON**********')
+                            self.data_check_stack(result)
                             self.data_insert(result)
-                            pass
-                            # self.check_stack(result)
-
+                            print(f"Task ID: {self.task_id}")
 
                         # Stream to mySQL
                         self.data_stream(result)
@@ -147,10 +155,15 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     iaq = IaqSensor(config, "COM3", 2)
     # iaq.set_task_id("")
-    iaq.set_task_mode(True)
     iaq.start()
+    
     time.sleep(10)
-    print('running*******************************')
+    iaq.set_task_mode(True, "Place task_id Here")
+    
+    time.sleep(10)
+    # second argument (task id) is optional
+    iaq.set_task_mode(False)
+    
+    time.sleep(10)
+    # Stop the thread
     iaq.stop()
-    print('stop*******************************')
-    # print('abc')
