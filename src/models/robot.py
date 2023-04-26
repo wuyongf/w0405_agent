@@ -12,7 +12,8 @@ import src.models.schema_rm as RMSchema
 import src.models.enums_rm as RMEnum
 import src.models.enums_nw as NWEnum
 # top module
-import src.top_module.sensor_iaq as IAQ
+import src.models.modules as Modules
+# import src.top_module.sensor_iaq as IAQ
 
 class Robot:
     def __init__(self, config):
@@ -23,13 +24,18 @@ class Robot:
         self.T = Trans.RVRMTransform()
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
-        # # nw sensors
-        # # threading.Thread(target=IAQ.IaqSensor(config, "COM4", 2).run).start()
-        self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
-        self.iaq_sensor.start()
+        # # # module - models/sensors
+        # self.module_iaq = Modules.IAQ()
+        # self.module_laser = Modules.LaserDistanceSensor()
+        # self.module_lift_inspect =Modules.LiftInspectionSensor()
+        # self.module_internal = Modules.InternalDevice()
+        # self.module_monitor = Modules.Monitor()
+        # self.module_locker = Modules.Locker()
+        # self.modmodule_phone = Modules.PhoneDevice()
 
-        self.laser_sensor = ''
-        self.phone = ''
+        # # threading.Thread(target=IAQ.IaqSensor(config, "COM4", 2).run).start()
+        # self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
+        # self.iaq_sensor.start()
 
         ## robot baisc info
         self.connection_status = 0
@@ -224,9 +230,29 @@ class Robot:
         pass 
 
     def iaq_on(self, task_json):
-        mission_id = self.rmapi.get_mission_id(task_json['taskId'])
-        self.iaq_sensor.set_mission_id(mission_id)
-        self.iaq_sensor.task_mode(True)
+        # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
+        # self.module_iaq.set_mission_id(mission_id)
+        # self.module_iaq.enable_task_mode()
+        pass
+
+    def iaq_off(self, task_json):
+        # self.module_iaq.disable_task_mode()
+        pass
+
+    def inspect_lift_noise(self, task_json):
+        pass
+
+    def inspect_lift_video(self, task_json):
+        pass
+
+    def inspect_lift_hegiht(self, task_json):
+        pass
+
+    def inspect_lift_vibration(self, task_json):
+        pass
+
+
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     robot = Robot(config)
