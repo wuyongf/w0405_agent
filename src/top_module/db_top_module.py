@@ -1,5 +1,4 @@
 import time
-
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
