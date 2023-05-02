@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
+
 class IAQ(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -38,7 +40,9 @@ class IAQ(ABC):
         """
         pass
 
+
 class LaserDistanceSensor(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -52,6 +56,11 @@ class LaserDistanceSensor(ABC):
     def start_data_collection(self, *args, **kwargs):
         """
         start collecting the data
+            1. Activate two laser distant sensors
+            2. Start to collect data
+            3. Activate the pre-set motion of linear actuator
+            4. Wait for finish
+            5. Return a finish msg
         """
         pass
 
@@ -70,7 +79,9 @@ class LaserDistanceSensor(ABC):
     def upload_to_cloud(self, *args, **kwargs):
         pass
 
+
 class PhoneDevice(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -91,7 +102,9 @@ class PhoneDevice(ABC):
     def is_door_open(self, *args, **kwargs):
         pass
 
+
 class Locker(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -113,7 +126,9 @@ class Locker(ABC):
     def upload_to_cloud(self, *args, **kwargs):
         pass
 
+
 class Monitor(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -138,7 +153,9 @@ class Monitor(ABC):
         """
         pass
 
+
 class LiftInspectionSensor(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -160,7 +177,7 @@ class LiftInspectionSensor(ABC):
     @abstractmethod
     def stop_sound_recording(self, *args, **kwargs):
         pass
-    
+
     # Video Related Methods
     @abstractmethod
     def start_video_recording(self, *args, **kwargs):
@@ -173,9 +190,10 @@ class LiftInspectionSensor(ABC):
     @abstractmethod
     def upload_to_cloud(self, *args, **kwargs):
         pass
-    
+
 
 class InternalDevice(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -201,7 +219,9 @@ class InternalDevice(ABC):
     def upload_to_cloud(self, *args, **kwargs):
         pass
 
+
 class ThermalCam(ABC):
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """
@@ -222,7 +242,7 @@ class ThermalCam(ABC):
     @abstractmethod
     def check_water_leakage(self, *args, **kwargs):
         pass
-    
+
     @abstractmethod
     def upload_to_cloud(self, *args, **kwargs):
         pass
