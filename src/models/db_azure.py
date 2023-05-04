@@ -2,13 +2,14 @@ import mysql.connector
 from mysql.connector import errorcode
 import time
 
+
 class AzureDB():
     def __init__(self, cfg):
         self.config = cfg
         self.Connect()
 
     def Connect(self):
-        #connect to db
+        # connect to db
         try:
             self.conn = mysql.connector.connect(**self.config)
             print("Connection established")
@@ -20,7 +21,8 @@ class AzureDB():
             else:
                 print(err)
         else:
-            self.cursor = self.conn.cursor(buffered=True) # should add buffered=True
+            self.cursor = self.conn.cursor(
+                buffered=True)  # should add buffered=True
             print('cursor connect')
 
     def Disconnect(self):
@@ -93,7 +95,8 @@ class AzureDB():
             self.conn.commit()
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Insert] Error Code: {}".format(err))
-        
+
+
 if __name__ == '__main__':
 
     statement = "CREATE TABLE inventory (id serial PRIMARY KEY, name VARCHAR(50), quantity INTEGER);"

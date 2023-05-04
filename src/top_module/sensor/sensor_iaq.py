@@ -7,8 +7,6 @@ import src.top_module.rules as rule
 
 class IaqSensor():
     def __init__(self, config, COM, Ti):
-        self.stop_event = threading.Event()
-        self.run_thread = threading.Thread(target=self.collect_data)
         self.port = COM
         self.bandwidth = '9600'
         self.count = 0
@@ -19,7 +17,6 @@ class IaqSensor():
         self.task_id = ""
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.robotDBHandler(config)
-        self.rules = rule.user_rules("none", 300, "LOW")
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)

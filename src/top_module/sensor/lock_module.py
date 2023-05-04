@@ -1,7 +1,7 @@
 import serial
 import time
 from datetime import datetime
-#Voltage = 12V
+# Voltage = 12V
 
 
 class Locker():

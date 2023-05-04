@@ -7,8 +7,8 @@ from datetime import datetime
 
 class ioController():
 
-    def __init__(self):
-        self.port = "COM3"
+    def __init__(self, COM):
+        self.port = COM
         self.baudrate = '38400'
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.1
@@ -33,10 +33,10 @@ class ioController():
         self.y7_off = [0x01, 0x06, 0x00, 0x07, 0x00, 0x00, 0x38, 0x0B]  # ventilation fan off
         self.get_input = [0x01, 0x02, 0x00, 0x00, 0x00, 0x08, 0x79, 0xCC]  # read X0 - X7
 
-    def open_com(self):
-        self.port = "COM3"
-        self.baudrate = '38400'
-        self.ser = serial.Serial(self.port, self.baudrate)
+    # def open_com(self):
+    #     self.port = "COM3"
+    #     self.baudrate = '38400'
+    #     self.ser = serial.Serial(self.port, self.baudrate)
 
     def y_control(self, bytearray):
         send_data = serial.to_bytes(bytearray)
@@ -141,10 +141,10 @@ class ioController():
 
 if __name__ == '__main__':
     # example usage
-    io = ioController()
+    io = ioController("COM4")
     # io.y_control(io.y1_on)
     # io.y_control(io.y2_on)
-    io.phone_servo(0.5)
+    # io.phone_servo(0.5)
     io.y_init()
 
     # io.y_control(io.y7_on)
