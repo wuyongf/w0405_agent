@@ -1,13 +1,16 @@
 import serial
 import time
 from datetime import datetime
+import src.utils.methods as umethods
+import src.top_module.port as port
 # Voltage = 12V
 
 
 class Locker():
-
     def __init__(self):
-        self.port = '/dev/ttyUSB2'
+        self.sid = umethods.load_config('../../../conf/port_config.properties').get('IAQ', 'sid')
+        self.port = port.port().port_match(self.sid)
+
         self.baudrate = 9600
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.3
@@ -61,5 +64,6 @@ class Locker():
 if __name__ == '__main__':
     # example usage
     lock = Locker()
-    lock.unlock()
-    lock.read_status()  # return 'locked'/'unlocked'
+    print(lock.sid)
+    # lock.unlock()
+    # lock.read_status()  # return 'locked'/'unlocked'
