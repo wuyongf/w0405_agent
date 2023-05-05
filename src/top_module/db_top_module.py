@@ -49,13 +49,19 @@ class robotDBHandler(db.AzureDB):
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
+    
+    def InsertDistanceChunk(self, distance_chunk, sensor_side, move_dir ):
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (distance_chunk, sensor_side, move_dir, created_date) VALUES ("{distance_chunk}", "{sensor_side}", "{move_dir}" , now())'
+        return self.Insert(statement)
+        
+        
 
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
     # print(nwdb.GetUserRules_Column())
-    print(nwdb.GetUserRules())
+    # print(nwdb.GetUserRules())
     # print((nwdb.GetUserRules()[2]).get('type'))
     test = [i.get('type') for i in nwdb.GetUserRules()]
     # print(test)
@@ -67,4 +73,6 @@ if __name__ == '__main__':
     # # battery
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
+    
+    nwdb.InsertDistanceChunk("test", 0,0)
     pass
