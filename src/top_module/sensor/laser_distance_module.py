@@ -16,6 +16,8 @@ class LaserDistanceSensor():
         self.read_distant = [0x01, 0x03, 0x00, 0x24,
                              0x00, 0x02, 0x84, 0x00]  # all open
         self.laser_distance = []
+        self.start_flag = 0
+        
 
     def collect_data(self, current_ser):
         if current_ser and current_ser.is_open:
@@ -29,6 +31,7 @@ class LaserDistanceSensor():
                     if len_return_data:
                         return_data = current_ser.read(len_return_data)
                         return_data_arr = list(bytearray(return_data))
+                        print(return_data)
                         if len(return_data_arr) == 9:
                             
                             distant_data = return_data_arr[5] * \
@@ -38,7 +41,8 @@ class LaserDistanceSensor():
                             if distant_data <= 500:
                                 return distant_data
                         else :
-                            # print(f'***Error {return_data_arr}')
+                            # print(f'***Error {return_data}')
+                            # return 0
                             pass
 
                 except serial.SerialException:
@@ -53,6 +57,8 @@ class LaserDistanceSensor():
             self.laser_distance[1]=self.collect_data(self.right)
             print(self.laser_distance)
             # return self.laser_distance[0], self.laser_distance[1]
+
+
 
 
 if __name__ == '__main__':
