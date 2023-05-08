@@ -2,13 +2,17 @@ import serial
 import time
 from datetime import datetime
 import random 
+import src.top_module.db_top_module as NWDB
+import src.utils.methods as umethods
 
 class LaserDistanceSensor():
 
     def __init__(self, COM_L, COM_R):
-        self.port_left = 'COM5'
-        self.port_right = 'COM7'
+        self.port_left = 'COM1'
+        self.port_right = 'COM1'
         self.baudrate = 115200
+        self.config = umethods.load_config('../../../conf/config.properties')
+        self.nwdb = NWDB.robotDBHandler(self.config)
         # self.left = serial.Serial(self.port_left, self.baudrate)
         # self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015
@@ -52,14 +56,6 @@ class LaserDistanceSensor():
         else:
             print("serial port is not open")
 
-    def data_integration(self):
-        while True:
-            self.laser_distance = [0,0]
-            self.laser_distance[0]=self.collect_data(self.left)
-            self.laser_distance[1]=self.collect_data(self.right)
-            print(self.laser_distance)
-            # return self.laser_distance[0], self.laser_distance[1]
-
     def debug_generate_random_number(self):
         while True:
             n = random.random()
@@ -67,19 +63,37 @@ class LaserDistanceSensor():
             # print(n)
             return(n)
     
+    def data_integration(self):
+        while True:
+            self.laser_distance = [0,0]
+            # self.laser_distance[0]=self.collect_data(self.left)
+            # self.laser_distance[1]=self.collect_data(self.right)
+            self.laser_distance[0]=self.debug_generate_random_number()
+            self.laser_distance[1]=self.debug_generate_random_number()
+            print(self.laser_distance)
+            # return self.laser_distance[0], self.laser_distance[1]
 
-    def store_data(self, current_ser):
+    def create_data_pack(self, task_id):
+        # TODO: task_id
+        return self.nwdb.CreateDistanceDataPack(task_id)
+
+    def store_data(self, pack_id, current_ser, move_dir):
+        data_stack = []
         stop = 0
         while stop != 1:
             # collected_data = self.collect_data(current_ser)
             collected_data = round(self.debug_generate_random_number(), 5)
-            self.data_stack_right.append(collected_data)
-            print(self.data_stack_right)
-            if len(self.data_stack_right) > 600:
-                 stop = 1
-                 listToStr = ','.join([str(elem) for elem in self.data_stack_right])
-                 print(len(listToStr))
-                 print(listToStr)
+            data_stack.append(collected_data)
+            # print(data_stack)
+            if len(data_stack) > 500:
+                #  stop = 1
+                 list_to_str = ','.join([str(elem) for elem in data_stack])
+                 data_stack = [] #clean data stack
+                #  print(len(list_to_str))
+                #  print(list_to_str)
+                 print('insert to db')
+                 self.nwdb.InsertDistanceChunk(pack_id,list_to_str,current_ser,move_dir)
+                 # insert with linear actuator move_dir
             
             
 
@@ -88,4 +102,4 @@ if __name__ == '__main__':
     # print(laser.data_integration())
     laser = LaserDistanceSensor('COM1', 'COM1')
     # laser.debug_generate_random_number()
-    laser.store_data("")
+    # laser.store_data("")

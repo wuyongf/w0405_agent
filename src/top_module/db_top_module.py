@@ -49,12 +49,19 @@ class robotDBHandler(db.AzureDB):
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
-    
-    def InsertDistanceChunk(self, distance_chunk, sensor_side, move_dir ):
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (distance_chunk, sensor_side, move_dir, created_date) VALUES ("{distance_chunk}", "{sensor_side}", "{move_dir}" , now())'
-        return self.Insert(statement)
+            
+    def CreateDistanceDataPack(self, task_id):
+        # pos_x
+        # pos_y
+        # floor_id
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor` (task_id, created_date) VALUES ("{task_id}", now())'
+        self.Insert(statement)
+        # return the auto-generated ID of the new data pack
+        return self.Select("SELECT LAST_INSERT_ID()")
         
-        
+    def InsertDistanceChunk(self, pack_id, distance_chunk, sensor_side, move_dir ):
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (pack_id, distance_chunk, sensor_side, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk}", "{sensor_side}", "{move_dir}" , now())'
+        self.Insert(statement)
 
 
 if __name__ == '__main__':
@@ -74,5 +81,7 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
     
-    nwdb.InsertDistanceChunk("test", 0,0)
+    nwdb.InsertDistanceChunk(10,"test", 0,0)
+    # print(nwdb.CreateDistanceDataPack(0))
+    
     pass

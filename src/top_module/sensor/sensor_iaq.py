@@ -149,7 +149,7 @@ class IaqSensor():
                     continue
 
 if __name__ == '__main__':
-    config = umethods.load_config('../../conf/config.properties')
+    config = umethods.load_config('../../../conf/config.properties')
     iaq = IaqSensor(config, "COM3", 2)
     # iaq.set_task_id("")
     iaq.start()
