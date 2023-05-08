@@ -4,6 +4,7 @@ from datetime import datetime
 import random 
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
+import threading
 # import src.top_module.port as port
 
 
@@ -25,10 +26,21 @@ class LaserDistanceSensor():
                              0x00, 0x02, 0x84, 0x00]  # all open
         self.laser_distance = []
         self.start_flag = 0
+        self.interrupt_flag = False
         self.data_stack_left = []
         self.data_stack_right = []
+        self.stop_event = threading.Event()
+        self.move_dir = 0
         
-
+    def set_thread(self, pack_id, current_ser, move_dir):
+        self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
+    
+    def set_interrupt_flag(self, event):
+        self.interrupt_flag = event
+    
+    def set_move_dir(self,dir):
+        self.move_dir = dir
+    
     def collect_data(self, current_ser):
         if current_ser and current_ser.is_open:
             while True:
@@ -82,28 +94,54 @@ class LaserDistanceSensor():
         return self.nwdb.CreateDistanceDataPack(task_id)
 
     def store_data(self, pack_id, current_ser, move_dir):
-        data_stack = []
-        stop = 0
-        while stop != 1:
+        """
+        Collects data and stores it in the database.
+        """
+        distance_data  = []
+        collecting_data = True
+        while collecting_data:
             # collected_data = self.collect_data(current_ser)
             collected_data = round(self.debug_generate_random_number(), 5)
-            data_stack.append(collected_data)
+            distance_data .append(collected_data)
             # print(data_stack)
-            if len(data_stack) > 500:
-                #  stop = 1
-                 list_to_str = ','.join([str(elem) for elem in data_stack])
-                 data_stack = [] #clean data stack
+                
+            if len(distance_data ) > 500 or self.interrupt_flag == 1:
+                # insert if data stack full
+                 list_to_str = ','.join([str(elem) for elem in distance_data ])
+                 distance_data  = [] #clean data stack
                 #  print(len(list_to_str))
-                #  print(list_to_str)
                  print('insert to db')
                  self.nwdb.InsertDistanceChunk(pack_id,list_to_str,current_ser,move_dir)
                  # insert with linear actuator move_dir
+                 
+                 if self.interrupt_flag == True:
+                     # insert immediately
+                     print('interrupt!')
+                     self.interrupt_flag = False
+                     break
             
-            
-
+    def start(self):
+        self.run_thread.start()
+        
+    def stop(self):
+        self.stop_event.set()
+        
 if __name__ == '__main__':
     # laser = LaserDistanceSensor('COM5', 'COM7')
     # print(laser.data_integration())
     laser = LaserDistanceSensor()
     # laser.debug_generate_random_number()
-    # laser.store_data("")
+    laser.interrupt_flag = False
+    #******************** move_dir cannot be argument
+    laser.set_thread(1,1,laser.move_dir)
+    laser.start()
+    time.sleep(5)
+    laser.set_move_dir(1)
+    # laser.stop()
+    
+    # laser.interrupt_flag = True
+    time.sleep(5)
+    # laser.start()
+    
+    # laser.store_data(1,1,1)
+
