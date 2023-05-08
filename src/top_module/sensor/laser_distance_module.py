@@ -4,16 +4,16 @@ from datetime import datetime
 import random 
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
-import src.top_module.port as port
+# import src.top_module.port as port
 
 
 class LaserDistanceSensor():
 
     def __init__(self):
-        self.sid_left = umethods.load_config('../../../conf/port_config.properties').get('LASER_L', 'sid')
-        self.sid_right = umethods.load_config('../../../conf/port_config.properties').get('LASER_R', 'sid')
-        self.port_left = port.port().port_match(self.sid_left)
-        self.port_right = port.port().port_match(self.sid_right)
+        # self.sid_left = umethods.load_config('../../../conf/port_config.properties').get('LASER_L', 'sid')
+        # self.sid_right = umethods.load_config('../../../conf/port_config.properties').get('LASER_R', 'sid')
+        # self.port_left = port.port().port_match(self.sid_left)
+        # self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
         self.config = umethods.load_config('../../../conf/config.properties')
         self.nwdb = NWDB.robotDBHandler(self.config)
@@ -98,32 +98,12 @@ class LaserDistanceSensor():
                  print('insert to db')
                  self.nwdb.InsertDistanceChunk(pack_id,list_to_str,current_ser,move_dir)
                  # insert with linear actuator move_dir
-                def debug_generate_random_number(self):
-        while True:
-            n = random.random()
-            time.sleep(0.015)
-            # print(n)
-            return(n)
-    
-
-    def store_data(self, current_ser):
-        stop = 0
-        while stop != 1:
-            # collected_data = self.collect_data(current_ser)
-            collected_data = round(self.debug_generate_random_number(), 5)
-            self.data_stack_right.append(collected_data)
-            print(self.data_stack_right)
-            if len(self.data_stack_right) > 600:
-                 stop = 1
-                 listToStr = ','.join([str(elem) for elem in self.data_stack_right])
-                 print(len(listToStr))
-                 print(listToStr)
-
+            
             
 
 if __name__ == '__main__':
     # laser = LaserDistanceSensor('COM5', 'COM7')
     # print(laser.data_integration())
-    laser = LaserDistanceSensor('COM1', 'COM1')
+    laser = LaserDistanceSensor()
     # laser.debug_generate_random_number()
-    laser.store_data("")
+    # laser.store_data("")

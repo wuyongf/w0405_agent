@@ -10,18 +10,21 @@ class LiftLevellingModule():
         self.COM_linear_actuator = 'COM6'
         self.COM_laser_distance_left = 'COM1'
         self.COM_laser_distance_right = 'COM1'
-        # self.config = umethods.load_config('../../../conf/config.properties')
-        # self.nwdb = NWDB.robotDBHandler(self.config)
+        self.config = umethods.load_config('../../../conf/config.properties')
+        self.nwdb = NWDB.robotDBHandler(self.config)
         self.linear_actuator = LinearActuator.LinearActuator(self.COM_linear_actuator)
-        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(self.COM_laser_distance_left, self.COM_laser_distance_right)
+        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor()
         self.pack_id = 0
+
+    def create_data_pack(self, task_id):
+        return self.nwdb.CreateDistanceDataPack(task_id)
 
     def start(self):
         pass
     
 if __name__ == "__main__":
     ll = LiftLevellingModule()
-    ll.pack_id = ll.laser_distance.create_data_pack(task_id=0)
-    print(ll.pack_id)
+    ll.pack_id = ll.create_data_pack(task_id=0)
+    print(f"pack{ll.pack_id}")
     ll.laser_distance.store_data(pack_id = ll.pack_id, current_ser = LDEnum.LaserDistanceSide.Left.value, move_dir=LAEnum.LinearActuatorStatus.Extend.value)
     # ll.laser_distance.data_integration()
