@@ -8,9 +8,9 @@ import src.top_module.port as port
 
 class Locker():
     def __init__(self):
-        self.sid = umethods.load_config('../../../conf/port_config.properties').get('IAQ', 'sid')
+        self.sid = umethods.load_config('../../../conf/port_config.properties').get('LOCK', 'sid')
         self.port = port.port().port_match(self.sid)
-
+        print(self.port)
         self.baudrate = 9600
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.3
@@ -65,5 +65,5 @@ if __name__ == '__main__':
     # example usage
     lock = Locker()
     print(lock.sid)
-    # lock.unlock()
+    lock.unlock()
     # lock.read_status()  # return 'locked'/'unlocked'

@@ -1,5 +1,7 @@
 import serial
 import time
+import src.utils.methods as umethods
+import src.top_module.port as port
 # Voltage = 9 - 36V
 
 # Todo:
@@ -10,7 +12,8 @@ import time
 class ultra:
 
     def __init__(self):
-        self.port = '/dev/ttyUSB2'
+        self.sid = umethods.load_config('../../../conf/port_config.properties').get('ULTRA', 'sid')
+        self.port = port.port().port_match(self.sid)
         self.baudrate = 9600
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.25  # shd be fixed to 0.25

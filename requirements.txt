@@ -3,5 +3,6 @@ mysql
 mysql-connector-python
 requests
 paho-mqtt
+pyudev
 
 # pip install -r requirements.txt

@@ -4,10 +4,12 @@ import threading
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import src.top_module.rules as rule
+import src.top_module.port as port
 
 class IaqSensor():
     def __init__(self, config, COM, Ti):
-        self.port = COM
+        self.sid = umethods.load_config('../../../conf/port_config.properties').get('IAQ', 'sid')
+        self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
         self.count = 0
         self.GG = 0
