@@ -28,22 +28,22 @@ class LaserDistanceSensor():
                              0x00, 0x02, 0x84, 0x00]  # all open
         self.laser_distance = []
         self.start_flag = 0
-        self.interrupt_flag = False
+        self.retract_flag = False
         self.data_stack_left = []
         self.data_stack_right = []
         self.stop_event = threading.Event()
         
         self.pack_id = 11
         self.move_dir = 0
-        self.run_thread_l = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Left.value,))
-        self.run_thread_r = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Right.value,))
+        self.run_thread = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Left.value,))
+        # self.run_thread_r = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Right.value,))
         
         
     # def set_thread(self, pack_id, current_ser, move_dir):
     #     self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
     
-    def set_interrupt_flag(self, event):
-        self.interrupt_flag = event
+    def set_retract_flag(self, event):
+        self.retract_flag = event
     
     def set_move_dir(self, dir):
         self.move_dir = dir
@@ -103,8 +103,7 @@ class LaserDistanceSensor():
     def insert_data(self, data, current_ser):
         list_to_str = ','.join([str(elem) for elem in data])
         data  = [] #clean data stack
-        print('insert to db')
-        self.nwdb.InsertDistanceChunk(self.pack_id,list_to_str, current_ser, self.move_dir)
+        self.nwdb.InsertDistanceChunk(self.pack_id,list_to_str, list_to_str, self.move_dir)
 
     def create_data_pack(self, task_id):
         # TODO: task_id
@@ -119,7 +118,7 @@ class LaserDistanceSensor():
         while collecting_data:
             # collected_data = self.collect_data(current_ser)
             collected_data = round(self.debug_generate_random_number(), 5)
-            distance_data .append(collected_data)
+            distance_data.append(collected_data)
             # print(data_stack)
             
             if self.stop_event.is_set():
@@ -129,24 +128,26 @@ class LaserDistanceSensor():
                 self.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
                 break
                                
-            if self.interrupt_flag == True:                    # insert immediately
+            if self.retract_flag == True:                    # insert immediately
                 print('interrupt, Upload immediately')
                 self.insert_data(distance_data, current_ser)
+                distance_data = [] #clean data stack
+                
                 time.sleep(1)
-                self.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value) 
+                self.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value)
                 print(f"direction indicator set, move_dir = {self.move_dir}")
-                self.interrupt_flag = False
+                self.retract_flag = False
                      
             elif len(distance_data) > 200:
                 # insert if data stack full
+                print('insert to db')
                 self.insert_data(distance_data, current_ser)
                 distance_data = [] #clean data stack
                  # insert with linear actuator move_dir
             
     def start(self):
-        self.run_thread_l.start()
-        # time.sleep(1)
-        # self.run_thread_r.start()
+        self.run_thread.start()
+        time.sleep(0.1)
         print("Start Thread")
         
     def stop(self):
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     # print(laser.data_integration())
     laser = LaserDistanceSensor()
     # laser.debug_generate_random_number()
-    laser.interrupt_flag = False
+    laser.retract_flag = False
     laser.set_pack_id(12)
     #******************** move_dir cannot be argument
     # laser.set_thread(1,1,laser.move_dir)
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     laser.set_move_dir(1)
     # laser.stop()
     
-    # laser.interrupt_flag = True
+    # laser.retract_flag = True
     time.sleep(5)
     # laser.start()
     

@@ -22,19 +22,16 @@ class LiftLevellingModule():
         
     def callback_direction(self):
         # called when linear acturator finish extent
-        self.laser_distance.set_interrupt_flag(True)
+        self.laser_distance.set_retract_flag(True)
         print("callback: change direction")
         time.sleep(2)
-        # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value)
-        # print(f"direction indicator set, move_dir = {ll.laser_distance.move_dir}")
-        
+
         # Callback function when linear actuator finish extent,
         # 1. stop collecting data and upload immediately
         # 2. change move_dir
         # 3. get move_dir
         # 4. collect data again
 
-        # stop insert data
         
     def callback_finish(self):
         # called when linear acturator finish retract

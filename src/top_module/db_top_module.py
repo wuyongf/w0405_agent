@@ -59,8 +59,8 @@ class robotDBHandler(db.AzureDB):
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
         
-    def InsertDistanceChunk(self, pack_id, distance_chunk, sensor_side, move_dir ):
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (pack_id, distance_chunk, sensor_side, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk}", "{sensor_side}", "{move_dir}" , now())'
+    def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir ):
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now())'
         self.Insert(statement)
 
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
     
-    nwdb.InsertDistanceChunk(10,"test", 0,0)
+    nwdb.InsertDistanceChunk(10,"test",'test', 1,1)
     # print(nwdb.CreateDistanceDataPack(0))
     
     pass
