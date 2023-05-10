@@ -16,11 +16,11 @@ class ultra:
         self.port = port.port().port_match(self.sid)
         self.baudrate = 9600
         self.ser = serial.Serial(self.port, self.baudrate)
-        self.time_interval = 0.25  # shd be fixed to 0.25
+        self.time_interval = 0.23  # shd be fixed to 0.24
         print("SerialController initialized")
         self.command = [0x55, 0xAA, 0x01, 0x01, 0x01]
 
-        self.ser = serial.Serial(port, baudrate)
+        self.ser = serial.Serial(self.port, self.baudrate)
         if self.ser.is_open:
             print("port open success")
 
@@ -37,7 +37,7 @@ class ultra:
                 try:
                     send_data = serial.to_bytes(self.command)
                     self.ser.write(send_data)
-                    time.sleep(time_interval)
+                    time.sleep(self.time_interval)
                     len_return_data = self.ser.inWaiting()
 
                     if len_return_data:
