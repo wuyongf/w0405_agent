@@ -113,7 +113,7 @@ class LaserDistanceSensor():
         """
         Collects data and stores it in the database.
         """
-        distance_data  = []
+        distance_data = []
         collecting_data = True
         while collecting_data:
             # collected_data = self.collect_data(current_ser)

@@ -81,7 +81,7 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
     
-    nwdb.InsertDistanceChunk(10,"test",'test', 1,1)
+    nwdb.InsertDistanceChunk(10,"test",'test', 1)
     # print(nwdb.CreateDistanceDataPack(0))
     
     pass

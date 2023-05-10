@@ -41,26 +41,44 @@ class LiftLevellingModule():
         
 
     def start(self):
-        pass
+        # Create data pack
+        self.laser_distance.set_pack_id(self.laser_distance.create_data_pack(task_id=1))
+        print(f"pack created, pack_id = {self.laser_distance.pack_id}")
+        
+        # Set moving direction
+        self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
+        print(f"direction indicator set, move_dir = {self.laser_distance.move_dir}")
+        
+        # Start laser distance Thread
+        self.laser_distance.start()
+        
+        # Set time limit of extend/ retract movement
+        self.linear_actuator.set_time_limit(20.0)
+        
+        # Start linear actuator Thread
+        self.linear_actuator.start()
+        
     
 if __name__ == "__main__":
     ll = LiftLevellingModule()
     # ll.pack_id = ll.create_data_pack(task_id=0)
     
-    # Create data pack
-    ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1)) 
-    print(f"pack created, pack_id = {ll.laser_distance.pack_id}")
+    ll.start()
     
-    # Set moving direction
-    ll.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
-    print(f"direction indicator set, move_dir = {ll.laser_distance.move_dir}")
+    # # Create data pack
+    # ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1)) 
+    # print(f"pack created, pack_id = {ll.laser_distance.pack_id}")
     
-    # Start laser distance Thread
-    ll.laser_distance.start()
+    # # Set moving direction
+    # ll.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
+    # print(f"direction indicator set, move_dir = {ll.laser_distance.move_dir}")
     
-    # Set time limit of extend/ retract movement
-    ll.linear_actuator.set_time_limit(20.0)
+    # # Start laser distance Thread
+    # ll.laser_distance.start()
     
-    # Start linear actuator Thread
-    ll.linear_actuator.start()
+    # # Set time limit of extend/ retract movement
+    # ll.linear_actuator.set_time_limit(20.0)
+    
+    # # Start linear actuator Thread
+    # ll.linear_actuator.start()
     
