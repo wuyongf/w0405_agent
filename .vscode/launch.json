@@ -16,7 +16,7 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
               },
-            "sudo": true
+            // "sudo": true
         }
     ]
 }

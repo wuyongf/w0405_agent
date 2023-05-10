@@ -20,13 +20,13 @@ class LiftLevellingModule():
         
     def callback(self):
         print("callback function")
-        """
-        Callback function when linear actuator finish extent,
-        1. stop collecting data and upload immediately
-        2. change move_dir
-        3. get move_dir
-        4. collecting data again
-        """
+
+        # Callback function when linear actuator finish extent,
+        # 1. stop collecting data and upload immediately
+        # 2. change move_dir
+        # 3. get move_dir
+        # 4. collect data again
+
         self.laser_distance.set_interrupt_flag(True)
         # stop insert data
         

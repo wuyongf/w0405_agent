@@ -30,10 +30,15 @@ class LaserDistanceSensor():
         self.data_stack_left = []
         self.data_stack_right = []
         self.stop_event = threading.Event()
-        self.move_dir = 0
         
-    def set_thread(self, pack_id, current_ser, move_dir):
+        self.pack_id = 0
+        self.move_dir = 0
+        def set_thread(self, pack_id, current_ser, move_dir):
         self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
+        
+        
+    # def set_thread(self, pack_id, current_ser, move_dir):
+    #     self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
     
     def set_interrupt_flag(self, event):
         self.interrupt_flag = event
