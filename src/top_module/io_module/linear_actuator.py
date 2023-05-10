@@ -10,13 +10,13 @@ from typing import Callable
 # TBC: sleep listener
 
 class LinearActuator():
-    def __init__(self, COM: str, callback: Callable)->None:
+    def __init__(self, COM: str, callback_direction: Callable, callback_finish: Callable)->None:
         self.io = ioController.ioController(COM)
         self.time_limit = 2.0
         self.stop_flag = 0
         self.status = LAEnum.LinearActuatorStatus.Idle.value
         self.stop_event = threading.Event()
-        self.run_thread = threading.Thread(target=self.extend_retract, args=(callback,))
+        self.run_thread = threading.Thread(target=self.extend_retract, args=(callback_direction, callback_finish,))
     
     
     def setCOM(self, COM):
@@ -78,18 +78,17 @@ class LinearActuator():
         time.sleep(0.5)
         self.stop_flag = 0
 
-    def extend_retract(self, callback):
+    def extend_retract(self, callback_direction, callback_finish):
         self.status = 1
         self.stop_flag = 0
         while not self.stop_event.is_set():
             self.motion_extend()
             time.sleep(2)
-            # if callable(callback):
-                # callback()
-            callback()
+            callback_direction()
             time.sleep(2)
             self.motion_retract()
             print('extend_retract_finished')
+            callback_finish()
             break
 
     def callback_test(self):
@@ -98,7 +97,7 @@ class LinearActuator():
     # def thread_target(self,callback):
     #     self.extend_retract(callback)
 
-    def set_timelimite(self, t):
+    def set_time_limit(self, t):
         self.time_limit = t/2
         
     def get_status(self):
@@ -118,9 +117,9 @@ if __name__ == '__main__':
     def cb():
         print('cb')
         
-    la = LinearActuator('COM6', cb)
+    la = LinearActuator('COM6', cb, cb)
     print(LAEnum.LinearActuatorStatus.Extend.value)
-    la.set_timelimite(10.0)
+    la.set_time_limit(20.0)
     # la.extend()
     # time.sleep(2)
     # la.retract()

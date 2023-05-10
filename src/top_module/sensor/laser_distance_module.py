@@ -6,6 +6,8 @@ import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import threading
 # import src.top_module.port as port
+import src.top_module.enums.enums_laser_distance as LDEnum
+import src.top_module.enums.enums_linear_actuator as LAEnum
 
 
 class LaserDistanceSensor():
@@ -31,10 +33,10 @@ class LaserDistanceSensor():
         self.data_stack_right = []
         self.stop_event = threading.Event()
         
-        self.pack_id = 0
+        self.pack_id = 11
         self.move_dir = 0
-        def set_thread(self, pack_id, current_ser, move_dir):
-        self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
+        self.run_thread_l = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Left.value,))
+        self.run_thread_r = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Right.value,))
         
         
     # def set_thread(self, pack_id, current_ser, move_dir):
@@ -43,8 +45,11 @@ class LaserDistanceSensor():
     def set_interrupt_flag(self, event):
         self.interrupt_flag = event
     
-    def set_move_dir(self,dir):
+    def set_move_dir(self, dir):
         self.move_dir = dir
+    
+    def set_pack_id(self, id):
+        self.pack_id = id
     
     def collect_data(self, current_ser):
         if current_ser and current_ser.is_open:
@@ -94,11 +99,18 @@ class LaserDistanceSensor():
             print(self.laser_distance)
             # return self.laser_distance[0], self.laser_distance[1]
 
+
+    def insert_data(self, data, current_ser):
+        list_to_str = ','.join([str(elem) for elem in data])
+        data  = [] #clean data stack
+        print('insert to db')
+        self.nwdb.InsertDistanceChunk(self.pack_id,list_to_str, current_ser, self.move_dir)
+
     def create_data_pack(self, task_id):
         # TODO: task_id
         return self.nwdb.CreateDistanceDataPack(task_id)
 
-    def store_data(self, pack_id, current_ser, move_dir):
+    def store_data(self, current_ser):
         """
         Collects data and stores it in the database.
         """
@@ -109,27 +121,37 @@ class LaserDistanceSensor():
             collected_data = round(self.debug_generate_random_number(), 5)
             distance_data .append(collected_data)
             # print(data_stack)
-                
-            if len(distance_data ) > 500 or self.interrupt_flag == 1:
+            
+            if self.stop_event.is_set():
+                print('finish, Upload immediately')
+                self.insert_data(distance_data, current_ser)
+                distance_data = [] #clean data stack
+                self.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
+                break
+                               
+            if self.interrupt_flag == True:                    # insert immediately
+                print('interrupt, Upload immediately')
+                self.insert_data(distance_data, current_ser)
+                time.sleep(1)
+                self.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value) 
+                print(f"direction indicator set, move_dir = {self.move_dir}")
+                self.interrupt_flag = False
+                     
+            elif len(distance_data) > 200:
                 # insert if data stack full
-                 list_to_str = ','.join([str(elem) for elem in distance_data ])
-                 distance_data  = [] #clean data stack
-                #  print(len(list_to_str))
-                 print('insert to db')
-                 self.nwdb.InsertDistanceChunk(pack_id,list_to_str,current_ser,move_dir)
+                self.insert_data(distance_data, current_ser)
+                distance_data = [] #clean data stack
                  # insert with linear actuator move_dir
-                 
-                 if self.interrupt_flag == True:
-                     # insert immediately
-                     print('interrupt!')
-                     self.interrupt_flag = False
-                     break
             
     def start(self):
-        self.run_thread.start()
+        self.run_thread_l.start()
+        # time.sleep(1)
+        # self.run_thread_r.start()
+        print("Start Thread")
         
     def stop(self):
         self.stop_event.set()
+        print('Stop Thread')
         
 if __name__ == '__main__':
     # laser = LaserDistanceSensor('COM5', 'COM7')
@@ -137,8 +159,9 @@ if __name__ == '__main__':
     laser = LaserDistanceSensor()
     # laser.debug_generate_random_number()
     laser.interrupt_flag = False
+    laser.set_pack_id(12)
     #******************** move_dir cannot be argument
-    laser.set_thread(1,1,laser.move_dir)
+    # laser.set_thread(1,1,laser.move_dir)
     laser.start()
     time.sleep(5)
     laser.set_move_dir(1)
