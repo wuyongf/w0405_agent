@@ -110,8 +110,6 @@ class LinearActuator():
         self.stop_event.set()
         self.stopAll()
 
-        pass
-
 
 if __name__ == '__main__':
     def cb():

@@ -63,6 +63,17 @@ class robotDBHandler(db.AzureDB):
         statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now())'
         self.Insert(statement)
 
+    # Get raw data set of laser distance chunk
+    def GetDistanceChunk(self, side, pack_id, move_dir):
+        statement = f'SELECT `distance_chunk_{side}` FROM {self.database}.`sensor.distance_sensor_datachunk` WHERE pack_id = "{pack_id}" AND move_dir = "{move_dir}";'
+        return self.SelectAll(statement)
+
+    # Get combined list of result
+    def GetDistanceResult(self, side, pack_id, move_dir):
+        result = []
+        for i in nwdb.GetDistanceChunk(side = side, pack_id = pack_id, move_dir = move_dir):
+            result = result + list(i.values())[0].split(",")
+        return result
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -81,7 +92,9 @@ if __name__ == '__main__':
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
     
-    nwdb.InsertDistanceChunk(10,"test",'test', 1)
+    # nwdb.InsertDistanceChunk(10,"test",'test', 1)
     # print(nwdb.CreateDistanceDataPack(0))
+    
+    print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     
     pass
