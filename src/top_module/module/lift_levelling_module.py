@@ -16,7 +16,7 @@ class LiftLevellingModule():
         self.laser_distance = LaserDistanceSensor.LaserDistanceSensor()
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
-        self.linear_actuator = LinearActuator.LinearActuator(self.COM_linear_actuator, self.cb_dir, self.cb_finish)
+        self.linear_actuator = LinearActuator.LinearActuator(self.cb_dir, self.cb_finish)
         self.pack_id = 0
         
         

@@ -10,8 +10,8 @@ from typing import Callable
 # TBC: sleep listener
 
 class LinearActuator():
-    def __init__(self, COM: str, callback_direction: Callable, callback_finish: Callable)->None:
-        self.io = ioController.ioController(COM)
+    def __init__(self, callback_direction: Callable, callback_finish: Callable)->None:
+        self.io = ioController.ioController()
         self.time_limit = 2.0
         self.stop_flag = 0
         self.status = LAEnum.LinearActuatorStatus.Idle.value
@@ -19,8 +19,8 @@ class LinearActuator():
         self.run_thread = threading.Thread(target=self.extend_retract, args=(callback_direction, callback_finish,))
     
     
-    def setCOM(self, COM):
-        self.io = ioController.ioController(COM)
+    def setCOM(self):
+        self.io = ioController.ioController()
 
     def motion(self, type_name, on_control, off_control, x_address, status):
         if self.stop_event.is_set() or self.stop_flag == 1:
