@@ -143,7 +143,7 @@ class ioController():
 
 if __name__ == '__main__':
     # example usage
-    io = ioController("COM4")
+    io = ioController("COM8")
     # io.y_control(io.y1_on)
     # io.y_control(io.y2_on)
     # io.phone_servo(0.5)

@@ -54,7 +54,7 @@ class robotDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor` (task_id, created_date) VALUES ("{task_id}", now())'
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datapack` (task_id, created_date) VALUES ("{task_id}", now())'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")

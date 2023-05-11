@@ -8,7 +8,7 @@ import time
 
 class LiftLevellingModule():
     def __init__(self):
-        self.COM_linear_actuator = 'COM6'
+        self.COM_linear_actuator = 'COM8'
         self.COM_laser_distance_left = 'COM1'
         self.COM_laser_distance_right = 'COM1'
         self.config = umethods.load_config('../../../conf/config.properties')
