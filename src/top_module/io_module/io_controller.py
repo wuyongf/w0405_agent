@@ -1,16 +1,17 @@
 import serial
 import time
 from datetime import datetime
-# import src.utils.methods as umethods
-# import src.top_module.port as port
+import src.utils.methods as umethods
+import src.top_module.port as port
 
 # TBC: sleep listener
 
 
 class ioController():
 
-    def __init__(self, COM):
-        self.port = COM
+    def __init__(self):
+        self.sid = umethods.load_config('../../../conf/port_config.properties').get('IO', 'sid')
+        self.port = port.port().port_match(self.sid)
         self.baudrate = '38400'
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.1
