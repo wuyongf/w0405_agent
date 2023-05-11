@@ -5,7 +5,7 @@ import random
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import threading
-# import src.top_module.port as port
+import src.top_module.port as port
 import src.top_module.enums.enums_laser_distance as LDEnum
 import src.top_module.enums.enums_linear_actuator as LAEnum
 
@@ -13,19 +13,21 @@ import src.top_module.enums.enums_linear_actuator as LAEnum
 class LaserDistanceSensor():
 
     def __init__(self):
-        # self.sid_left = umethods.load_config('../../../conf/port_config.properties').get('LASER_L', 'sid')
-        # self.sid_right = umethods.load_config('../../../conf/port_config.properties').get('LASER_R', 'sid')
-        # self.port_left = port.port().port_match(self.sid_left)
-        # self.port_right = port.port().port_match(self.sid_right)
+        self.sid_left = umethods.load_config('../../../conf/port_config.properties').get('LASER_L', 'sid')
+        self.sid_right = umethods.load_config('../../../conf/port_config.properties').get('LASER_R', 'sid')
+        self.port_left = port.port().port_match(self.sid_left)
+        self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
-        self.config = umethods.load_config('../../../conf/config.properties')
-        self.nwdb = NWDB.robotDBHandler(self.config)
-        # # self.left = serial.Serial(self.port_left, self.baudrate)
-        # # self.right = serial.Serial(self.port_right, self.baudrate)
+        # self.config = umethods.load_config('../../../conf/config.properties')
+        # self.nwdb = NWDB.robotDBHandler(self.config)
+        self.left = serial.Serial(self.port_left, self.baudrate)
+        self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015
         print("SerialController initialized")
         self.read_distant = [0x01, 0x03, 0x00, 0x24,
                              0x00, 0x02, 0x84, 0x00]  # all open
+        self.laser_on = [0x01, 0x10, 0x00, 0x07, 0x00, 0x01, 0x02, 0x00, 0x01, 0x66, 0x27]
+        self.laser_off = [0x01, 0x10, 0x00, 0x07, 0x00, 0x01, 0x02, 0x00, 0x00, 0xA7, 0xE7]
         self.laser_distance = []
         self.start_flag = 0
         self.retract_flag = False
@@ -42,6 +44,30 @@ class LaserDistanceSensor():
     # def set_thread(self, pack_id, current_ser, move_dir):
     #     self.run_thread = threading.Thread(target=self.store_data, args=(pack_id, current_ser, move_dir))
     
+    def laser_control(self, signal):
+        if signal == 1:
+            command = self.laser_on
+        if signal == 0:
+            command = self.laser_off
+        if self.left.is_open:
+            try:
+                send_data = serial.to_bytes(self.laser_on)
+                self.left.write(send_data)
+                print(f'laser_l: {signal}')
+                time.sleep(self.time_interval)
+            except serial.SerialException:
+                    print("failed to send command")
+        if self.right.is_open:
+            try:
+                send_data = serial.to_bytes(self.laser_on)
+                self.right.write(send_data)
+                print(f'laser_r: {signal}')
+                time.sleep(self.time_interval)
+            except serial.SerialException:
+                    print("failed to send command")
+
+        
+
     def set_retract_flag(self, event):
         self.retract_flag = event
     
@@ -63,22 +89,21 @@ class LaserDistanceSensor():
                     if len_return_data:
                         return_data = current_ser.read(len_return_data)
                         return_data_arr = list(bytearray(return_data))
-                        print(return_data)
+                        # print(return_data)
                         if len(return_data_arr) == 9:
                             
                             distant_data = return_data_arr[5] * \
                                 256 + return_data_arr[6]
                             # print(return_data_arr)
-                                
+                            print(distant_data)
                             if distant_data <= 500:
                                 return distant_data
-                        else :
+                        elif len(return_data_arr) == 5:
+                            return 0
                             # print(f'***Error {return_data}')
-                            # return 0
-                            pass
 
                 except serial.SerialException:
-                    print("failed to send unlock command")
+                    print("failed to send command")
         else:
             print("serial port is not open")
 
@@ -155,21 +180,23 @@ class LaserDistanceSensor():
         print('Stop Thread')
         
 if __name__ == '__main__':
+    # Example usage:
+    laser = LaserDistanceSensor()
+    # laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
     # laser = LaserDistanceSensor('COM5', 'COM7')
     # print(laser.data_integration())
-    laser = LaserDistanceSensor()
     # laser.debug_generate_random_number()
-    laser.retract_flag = False
-    laser.set_pack_id(12)
-    #******************** move_dir cannot be argument
-    # laser.set_thread(1,1,laser.move_dir)
-    laser.start()
-    time.sleep(5)
-    laser.set_move_dir(1)
-    # laser.stop()
+    # laser.retract_flag = False
+    # laser.set_pack_id(12)
+    # #******************** move_dir cannot be argument
+    # # laser.set_thread(1,1,laser.move_dir)
+    # laser.start()
+    # time.sleep(5)
+    # laser.set_move_dir(1)
+    # # laser.stop()
     
-    # laser.retract_flag = True
-    time.sleep(5)
+    # # laser.retract_flag = True
+    # time.sleep(5)
     # laser.start()
     
     # laser.store_data(1,1,1)
