@@ -21,3 +21,7 @@ class port():
             serial_number = device.get('ID_SERIAL_SHORT')
             serial_port = device.device_node
             print(vid, pid, serial_number, serial_port)
+            
+if __name__ == "__main__":
+    port = port()
+    port.list_ports()

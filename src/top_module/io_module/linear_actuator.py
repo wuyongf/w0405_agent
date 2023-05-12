@@ -17,6 +17,7 @@ class LinearActuator():
         self.status = LAEnum.LinearActuatorStatus.Idle.value
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.extend_retract, args=(callback_direction, callback_finish,))
+        # self.run_thread = threading.Thread(target=self.motion_retract, )
     
     
     def setCOM(self):
@@ -37,12 +38,15 @@ class LinearActuator():
         while True:
             time.sleep(0.1)
             i += 1
-
             # If X1 is high, retract is completed, turn off Y1 and break out of the loop
-            if self.io.x_get(x_address) == 1:
-                self.io.y_control(off_control)
-                print(f'{type_name} completed')
-                break
+            if self.io.x_get(x_address) == 0:
+                time.sleep(0.1)
+                if self.io.x_get(x_address) == 0:
+                    print(x_address)
+                    print(self.io.x_get(x_address))
+                    self.io.y_control(off_control)
+                    print(f'{type_name} completed')
+                    break
 
             # If time limit is reached, turn off Y1, print error message and break out of the loop
             elif i > (self.time_limit * 10):
@@ -63,14 +67,21 @@ class LinearActuator():
                 # TODO: Send error code to database
                 break
 
+    # def motion_extend(self):
+    #     self.motion("Extend", self.io.y0_on, self.io.y0_off,
+    #                 0, LAEnum.LinearActuatorStatus.Extend.value)
+
+    # def motion_retract(self):
+    #     self.motion("Retract", self.io.y1_on, self.io.y1_off,
+    #                 1, LAEnum.LinearActuatorStatus.Retract.value)
     def motion_extend(self):
-        self.motion("Extend", self.io.y0_on, self.io.y0_off,
+        self.motion("Extend", self.io.y1_on, self.io.y1_off,
                     0, LAEnum.LinearActuatorStatus.Extend.value)
 
     def motion_retract(self):
-        self.motion("Retract", self.io.y1_on, self.io.y1_off,
+        self.motion("Retract", self.io.y0_on, self.io.y0_off,
                     1, LAEnum.LinearActuatorStatus.Retract.value)
-
+        
     def stopAll(self):
         self.stop_flag = 1
         self.io.y_control(self.io.y0_off)
@@ -83,9 +94,9 @@ class LinearActuator():
         self.stop_flag = 0
         while not self.stop_event.is_set():
             self.motion_extend()
-            time.sleep(2)
+            time.sleep(1)
             callback_direction()
-            time.sleep(2)
+            time.sleep(1)
             self.motion_retract()
             print('extend_retract_finished')
             callback_finish()
@@ -115,27 +126,27 @@ if __name__ == '__main__':
     def cb():
         print('cb')
         
-    la = LinearActuator('COM6', cb, cb)
-    print(LAEnum.LinearActuatorStatus.Extend.value)
-    la.set_time_limit(20.0)
+    la = LinearActuator(cb, cb)
+    # print(la.io.x_get(0))
+    la.set_time_limit(30.0)
     # la.extend()
     # time.sleep(2)
-    # la.retract()
+    # la.motion_retract()
     la.start()
     # time.sleep(2)
     # la.stop()
     # la.extend_retract()
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
-    print(la.status)
-    time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)
+    # print(la.status)
+    # time.sleep(2)

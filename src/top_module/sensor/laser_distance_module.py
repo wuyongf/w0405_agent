@@ -18,8 +18,8 @@ class LaserDistanceSensor():
         self.port_left = port.port().port_match(self.sid_left)
         self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
-        # self.config = umethods.load_config('../../../conf/config.properties')
-        # self.nwdb = NWDB.robotDBHandler(self.config)
+        self.config = umethods.load_config('../../../conf/config.properties')
+        self.nwdb = NWDB.robotDBHandler(self.config)
         self.left = serial.Serial(self.port_left, self.baudrate)
         self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015
@@ -35,9 +35,9 @@ class LaserDistanceSensor():
         self.data_stack_right = []
         self.stop_event = threading.Event()
         
-        self.pack_id = 11
-        self.move_dir = 0
-        self.run_thread = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Left.value,))
+        self.pack_id = 50
+        self.move_dir = 1
+        self.run_thread = threading.Thread(target=self.store_data,)
         # self.run_thread_r = threading.Thread(target=self.store_data, args=(LDEnum.LaserDistanceSide.Right.value,))
         
         
@@ -95,7 +95,7 @@ class LaserDistanceSensor():
                             distant_data = return_data_arr[5] * \
                                 256 + return_data_arr[6]
                             # print(return_data_arr)
-                            print(distant_data)
+                            # print(distant_data)
                             if distant_data <= 500:
                                 return distant_data
                         elif len(return_data_arr) == 5:
@@ -110,64 +110,71 @@ class LaserDistanceSensor():
     def debug_generate_random_number(self):
         while True:
             n = random.random()
-            time.sleep(0.015)
+            time.sleep(0.01)
             # print(n)
             return(n)
     
     def data_integration(self):
         while True:
             self.laser_distance = [0,0]
-            # self.laser_distance[0]=self.collect_data(self.left)
-            # self.laser_distance[1]=self.collect_data(self.right)
-            self.laser_distance[0]=self.debug_generate_random_number()
-            self.laser_distance[1]=self.debug_generate_random_number()
-            print(self.laser_distance)
-            # return self.laser_distance[0], self.laser_distance[1]
+            self.laser_distance[0]=self.collect_data(self.left)
+            self.laser_distance[1]=self.collect_data(self.right)
+            # self.laser_distance[0]=self.debug_generate_random_number()
+            # self.laser_distance[1]=self.debug_generate_random_number()
+            # print(self.laser_distance)
+            return self.laser_distance[0], self.laser_distance[1]
 
 
-    def insert_data(self, data, current_ser):
-        list_to_str = ','.join([str(elem) for elem in data])
-        data  = [] #clean data stack
-        self.nwdb.InsertDistanceChunk(self.pack_id,list_to_str, list_to_str, self.move_dir)
+    def insert_data(self, data_l, data_r):
+        list_to_str_l = ','.join([str(elem) for elem in data_l])
+        list_to_str_r = ','.join([str(elem) for elem in data_r])
+        data_l  = [] #clean data stack
+        data_r  = [] #clean data stack
+        self.nwdb.InsertDistanceChunk(self.pack_id, list_to_str_l, list_to_str_r, self.move_dir)
 
     def create_data_pack(self, task_id):
         # TODO: task_id
         return self.nwdb.CreateDistanceDataPack(task_id)
 
-    def store_data(self, current_ser):
+    def store_data(self):
         """
         Collects data and stores it in the database.
         """
-        distance_data = []
+        distance_data_l = []
+        distance_data_r = []
         collecting_data = True
         while collecting_data:
             # collected_data = self.collect_data(current_ser)
-            collected_data = round(self.debug_generate_random_number(), 5)
-            distance_data.append(collected_data)
+            # collected_data = round(self.debug_generate_random_number(), 5)
+            collected_data = self.data_integration()
+            distance_data_l.append(collected_data[0])
+            distance_data_r.append(collected_data[1])
             # print(data_stack)
             
             if self.stop_event.is_set():
                 print('finish, Upload immediately')
-                self.insert_data(distance_data, current_ser)
-                distance_data = [] #clean data stack
+                self.insert_data(distance_data_l, distance_data_r)
+                distance_data_l = [] #clean data stack
+                distance_data_r = [] #clean data stack
                 self.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
                 break
                                
             if self.retract_flag == True:                    # insert immediately
                 print('interrupt, Upload immediately')
-                self.insert_data(distance_data, current_ser)
-                distance_data = [] #clean data stack
-                
+                self.insert_data(distance_data_l, distance_data_r)
+                distance_data_l = [] #clean data stack
+                distance_data_r = [] #clean data stack
                 time.sleep(1)
                 self.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value)
                 print(f"direction indicator set, move_dir = {self.move_dir}")
                 self.retract_flag = False
                      
-            elif len(distance_data) > 200:
+            elif len(distance_data_l) > 200:
                 # insert if data stack full
                 print('insert to db')
-                self.insert_data(distance_data, current_ser)
-                distance_data = [] #clean data stack
+                self.insert_data(distance_data_l, distance_data_r)
+                distance_data_l = [] #clean data stack
+                distance_data_r = [] #clean data stack
                  # insert with linear actuator move_dir
             
     def start(self):
@@ -182,7 +189,12 @@ class LaserDistanceSensor():
 if __name__ == '__main__':
     # Example usage:
     laser = LaserDistanceSensor()
+    time.sleep(1)
     # laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
+    laser.store_data()
+    
+    # laser.collect_data(laser.left)
+
     # laser = LaserDistanceSensor('COM5', 'COM7')
     # print(laser.data_integration())
     # laser.debug_generate_random_number()

@@ -12,6 +12,7 @@ class ioController():
     def __init__(self):
         self.sid = umethods.load_config('../../../conf/port_config.properties').get('IO', 'sid')
         self.port = port.port().port_match(self.sid)
+        # self.port = "/dev/ttyUSB1"
         self.baudrate = '38400'
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.1
@@ -144,11 +145,15 @@ class ioController():
 
 if __name__ == '__main__':
     # example usage
-    io = ioController("COM8")
+    io = ioController()
+    # print(io.port)
     # io.y_control(io.y1_on)
+    # time.sleep(2)
+    # io.y_control(io.y1_off)
+    
     # io.y_control(io.y2_on)
     # io.phone_servo(0.5)
-    io.y_init()
+    # io.y_init()
 
     # io.y_control(io.y7_on)
     # io.linear_actuator(1)           # Extension = 1
@@ -160,4 +165,4 @@ if __name__ == '__main__':
     # io.fan('iaq','off')             # iaq fan off
     # io.fan('ventilation','on')      # ventilation fan on
     # io.fan('ventilation','off')     # ventilation fan off
-    # io.get_inputStatus(0)           # Status of X0 - X7, High = 1 / Low = 0
+    print(io.get_inputStatus(1) )          # Status of X0 - X7, High = 1 / Low = 0

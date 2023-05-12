@@ -53,7 +53,7 @@ class LiftLevellingModule():
         self.laser_distance.start()
         
         # Set time limit of extend/ retract movement
-        self.linear_actuator.set_time_limit(20.0)
+        self.linear_actuator.set_time_limit(30.0)
         
         # Start linear actuator Thread
         self.linear_actuator.start()
