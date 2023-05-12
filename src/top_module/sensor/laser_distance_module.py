@@ -96,8 +96,10 @@ class LaserDistanceSensor():
                                 256 + return_data_arr[6]
                             # print(return_data_arr)
                             # print(distant_data)
-                            if distant_data <= 500:
+                            if distant_data <= 550:
                                 return distant_data
+                            elif distant_data >550:
+                                return 700
                         elif len(return_data_arr) == 5:
                             return 0
                             # print(f'***Error {return_data}')
