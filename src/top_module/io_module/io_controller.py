@@ -147,9 +147,9 @@ if __name__ == '__main__':
     # example usage
     io = ioController()
     # print(io.port)
-    # io.y_control(io.y1_on)
-    # time.sleep(2)
-    # io.y_control(io.y1_off)
+    io.y_control(io.y0_on)
+    time.sleep(20)
+    io.y_control(io.y0_off)
     
     # io.y_control(io.y2_on)
     # io.phone_servo(0.5)
@@ -165,4 +165,4 @@ if __name__ == '__main__':
     # io.fan('iaq','off')             # iaq fan off
     # io.fan('ventilation','on')      # ventilation fan on
     # io.fan('ventilation','off')     # ventilation fan off
-    print(io.get_inputStatus(1) )          # Status of X0 - X7, High = 1 / Low = 0
+    # print(io.get_inputStatus(1) )          # Status of X0 - X7, High = 1 / Low = 0

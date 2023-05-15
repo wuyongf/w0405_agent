@@ -51,7 +51,7 @@ class LaserDistanceSensor():
             command = self.laser_off
         if self.left.is_open:
             try:
-                send_data = serial.to_bytes(self.laser_on)
+                send_data = serial.to_bytes(command)
                 self.left.write(send_data)
                 print(f'laser_l: {signal}')
                 time.sleep(self.time_interval)
@@ -59,7 +59,7 @@ class LaserDistanceSensor():
                     print("failed to send command")
         if self.right.is_open:
             try:
-                send_data = serial.to_bytes(self.laser_on)
+                send_data = serial.to_bytes(command)
                 self.right.write(send_data)
                 print(f'laser_r: {signal}')
                 time.sleep(self.time_interval)
@@ -192,8 +192,8 @@ if __name__ == '__main__':
     # Example usage:
     laser = LaserDistanceSensor()
     time.sleep(1)
-    # laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
-    laser.store_data()
+    laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
+    # laser.store_data()
     
     # laser.collect_data(laser.left)
 
