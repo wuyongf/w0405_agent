@@ -100,6 +100,7 @@ class LinearActuator():
             time.sleep(1)
             self.motion_retract()
             print('extend_retract_finished')
+            self.status = LAEnum.LinearActuatorStatus.Idle
             callback_finish()
             break
 
