@@ -1,8 +1,10 @@
 pyserial
 mysql
+mysqlclient
 mysql-connector-python
 requests
 paho-mqtt
 pyudev
+jproperties
 
 # pip install -r requirements.txt
