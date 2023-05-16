@@ -31,13 +31,14 @@ if __name__ == '__main__':
 
     # # Loading config files
     config = umethods.load_config('../conf/config.properties')
+    port_config = umethods.load_config('../conf/port_config.properties')
 
     # Status handler updates robot status every second
-    status_handler = status_handler.StatusHandler(config)
+    status_handler = status_handler.StatusHandler(config, port_config)
     status_handler.start()
     
     # # Task handler subscribes and execute task, also report task status to robotmanager
-    task_handler = task_handler.TaskHandler(config)
+    task_handler = task_handler.TaskHandler(config, port_config)
     task_handler.start()
 
     # Remote Control Handler

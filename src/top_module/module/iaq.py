@@ -7,8 +7,8 @@ import src.top_module.rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config, COM, Ti):
-        self.sid = umethods.load_config('../../../conf/port_config.properties').get('IAQ', 'sid')
+    def __init__(self, config,port_config, Ti):
+        self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
         self.count = 0
@@ -152,7 +152,8 @@ class IaqSensor():
 
 if __name__ == '__main__':
     config = umethods.load_config('../../../conf/config.properties')
-    iaq = IaqSensor(config, "COM3", 2)
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    iaq = IaqSensor(config, port_config, 2)
     # iaq.set_task_id("")
     iaq.start()
     
@@ -162,6 +163,7 @@ if __name__ == '__main__':
     time.sleep(10)
     # second argument (task id) is optional
     iaq.set_task_mode(False)
+
     
     time.sleep(10)
     # Stop the thread

@@ -4,21 +4,26 @@ import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import src.top_module.enums.enums_linear_actuator as LAEnum
 import src.top_module.enums.enums_laser_distance as LDEnum
+import src.top_module.enums.enums_module_status as MoEnum
 import time
 
 class LiftLevellingModule():
-    def __init__(self):
-        self.COM_linear_actuator = 'COM8'
-        self.COM_laser_distance_left = 'COM1'
-        self.COM_laser_distance_right = 'COM1'
-        self.config = umethods.load_config('../../../conf/config.properties')
-        self.nwdb = NWDB.robotDBHandler(self.config)
-        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor()
+    def __init__(self, config, port_config):
+        self.nwdb = NWDB.robotDBHandler(config)
+        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(config, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
-        self.linear_actuator = LinearActuator.LinearActuator(self.cb_dir, self.cb_finish)
+        self.linear_actuator = LinearActuator.LinearActuator(port_config, self.cb_dir, self.cb_finish)
         self.pack_id = 0
+        self.status = MoEnum.LiftLevellingStatus.Idle
         
+    def thread_get_status(self):
+        while(True):
+            print(self.status)
+            time.sleep(1)
+
+    def get_status(self):
+        return self.status
         
     def callback_direction(self):
         # called when linear acturator finish extent
@@ -37,10 +42,13 @@ class LiftLevellingModule():
         # called when linear acturator finish retract
         print("callback: finish")
         self.laser_distance.stop()
+        self.status = MoEnum.LiftLevellingStatus.Finish
         # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
         
 
     def start(self):
+        self.status = MoEnum.LiftLevellingStatus.Executing
+
         # Create data pack
         self.laser_distance.set_pack_id(self.laser_distance.create_data_pack(task_id=1))
         print(f"pack created, pack_id = {self.laser_distance.pack_id}")
@@ -57,13 +65,21 @@ class LiftLevellingModule():
         
         # Start linear actuator Thread
         self.linear_actuator.start()
-        
+
+import threading
     
 if __name__ == "__main__":
-    ll = LiftLevellingModule()
+    config = umethods.load_config('../../../conf/config.properties')
+
+    ll = LiftLevellingModule(config)
     # ll.pack_id = ll.create_data_pack(task_id=0)
+
+    threading.Thread(target=ll.thread_get_status).start()  
     
     ll.start()
+
+    
+    
     
     # # Create data pack
     # ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1)) 

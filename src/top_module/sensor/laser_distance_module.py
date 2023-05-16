@@ -12,14 +12,14 @@ import src.top_module.enums.enums_linear_actuator as LAEnum
 
 class LaserDistanceSensor():
 
-    def __init__(self):
-        self.sid_left = umethods.load_config('../../../conf/port_config.properties').get('LASER_L', 'sid')
-        self.sid_right = umethods.load_config('../../../conf/port_config.properties').get('LASER_R', 'sid')
+    def __init__(self, config, port_config):
+        self.sid_left = port_config.get('LASER_L', 'sid')
+        self.sid_right = port_config.get('LASER_R', 'sid')
         self.port_left = port.port().port_match(self.sid_left)
         self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
-        self.config = umethods.load_config('../../../conf/config.properties')
-        self.nwdb = NWDB.robotDBHandler(self.config)
+        # self.config = umethods.load_config('../../../conf/config.properties')
+        self.nwdb = NWDB.robotDBHandler(config)
         self.left = serial.Serial(self.port_left, self.baudrate)
         self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015
@@ -190,7 +190,10 @@ class LaserDistanceSensor():
         
 if __name__ == '__main__':
     # Example usage:
-    laser = LaserDistanceSensor()
+    config = umethods.load_config('../../../conf/config.properties')
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+
+    laser = LaserDistanceSensor(config, port_config)
     time.sleep(1)
     laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
     # laser.store_data()

@@ -3,6 +3,7 @@ import src.top_module.io_module.io_controller as ioController
 import threading
 import src.top_module.enums.enums_linear_actuator as LAEnum
 from typing import Callable
+import src.utils.methods as umethods
 # import src.utils.methods as umethods
 # import src.top_module.port as port
 
@@ -10,8 +11,8 @@ from typing import Callable
 # TBC: sleep listener
 
 class LinearActuator():
-    def __init__(self, callback_direction: Callable, callback_finish: Callable)->None:
-        self.io = ioController.ioController()
+    def __init__(self, prot_config, callback_direction: Callable, callback_finish: Callable)->None:
+        self.io = ioController.ioController(prot_config)
         self.time_limit = 2.0
         self.stop_flag = 0
         self.status = LAEnum.LinearActuatorStatus.Idle.value
@@ -125,8 +126,8 @@ class LinearActuator():
 if __name__ == '__main__':
     def cb():
         print('cb')
-        
-    la = LinearActuator(cb, cb)
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    la = LinearActuator(prot_config, cb, cb)
     # print(la.io.x_get(0))
     la.set_time_limit(30.0)
     la.extend()

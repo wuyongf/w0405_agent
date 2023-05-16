@@ -14,7 +14,7 @@ import src.models.enums_rm as RMEnum
 
 
 class TaskHandler:
-    def __init__(self, config):
+    def __init__(self, config, port_config):
         # rm - mqtt
         self.publisher = mqtt.Client("task_status_publisher")
         self.publisher.connect("localhost")
@@ -24,7 +24,7 @@ class TaskHandler:
         self.subscriber.on_message = self.on_message
 
         # yf config
-        self.robot = Robot.Robot(config)
+        self.robot = Robot.Robot(config, port_config)
         self.nwdb = NWDB.robotDBHandler(config)
         # rm status
         self.rm_mapPose = RMSchema.mapPose()
@@ -117,6 +117,20 @@ class TaskHandler:
 
         if task.taskType == 'RV-LEDOFF':
             res = self.robot.led_off(task)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'FUNC-LIFTLEVLLING':
+            res = self.robot.inspect_lift_levelling(task_json)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'FUNC-IAQ':
+            res = self.robot.inspect_lift_levelling(task_json)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:

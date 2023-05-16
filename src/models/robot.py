@@ -12,11 +12,14 @@ import src.models.schema_rm as RMSchema
 import src.models.enums_rm as RMEnum
 import src.models.enums_nw as NWEnum
 # top module
-import src.models.modules as Modules
+import src.top_module.enums.enums_module_status as MoEnum
+from top_module.module import lift_levelling_module as MoLiftLevelling
+from top_module.module import iaq as MoIAQ
+# import src.models.modules as Modules
 # import src.top_module.sensor_iaq as IAQ
 
 class Robot:
-    def __init__(self, config):
+    def __init__(self, config, port_config):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rmapi = RMAPI.RMAPI(config)
@@ -25,6 +28,8 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
         # # # module - models/sensors
+        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
+        self.mo_iaq = MoIAQ.IaqSensor(config, port_config ,2)
         # self.module_iaq = Modules.IAQ()
         # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
@@ -251,6 +256,21 @@ class Robot:
     def inspect_lift_vibration(self, task_json):
         pass
 
+    def inspect_lift_levelling(self, task_json):
+        
+        def get_status():
+            return self.mo_lift_levelling.get_status()
+        
+        self.mo_lift_levelling.start()
+        time.sleep(1)
+
+        while(get_status() == MoEnum.LiftLevellingStatus.Executing):
+            time.sleep(1)
+        
+        if(get_status() == MoEnum.LiftLevellingStatus.Finish):
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':

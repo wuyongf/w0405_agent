@@ -7,8 +7,8 @@ import src.top_module.port as port
 
 
 class Locker():
-    def __init__(self):
-        self.sid = umethods.load_config('../../../conf/port_config.properties').get('LOCK', 'sid')
+    def __init__(self, port_config):
+        self.sid = port_config.get('LOCK', 'sid')
         self.port = port.port().port_match(self.sid)
         print(self.port)
         self.baudrate = 9600
@@ -63,7 +63,8 @@ class Locker():
 
 if __name__ == '__main__':
     # example usage
-    lock = Locker()
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    lock = Locker(port_config)
     print(lock.sid)
     lock.unlock()
     # lock.read_status()  # return 'locked'/'unlocked'

@@ -19,13 +19,13 @@ import src.models.schema_rv as RVSchema
 import src.models.enums_nw as NWEnum
 
 class StatusHandler:
-    def __init__(self, config):
+    def __init__(self, config, port_config):
         # rm - mqtt
         self.publisher = mqtt.Client("status_publisher")
         self.topic = "/robot/status"        
         self.publisher.connect("localhost")
         # yf config
-        self.robot = Robot.Robot(config)
+        self.robot = Robot.Robot(config, port_config)
         self.nwdb = NWDB.robotDBHandler(config)
         # rm status
         self.rm_mapPose = RMSchema.mapPose()
