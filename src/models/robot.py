@@ -29,7 +29,7 @@ class Robot:
 
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
-        self.mo_iaq = MoIAQ.IaqSensor(config, port_config ,2)
+        self.mo_iaq = MoIAQ.IaqSensor(config, port_config ,Ti = 2)
         # self.module_iaq = Modules.IAQ()
         # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
