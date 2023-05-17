@@ -234,15 +234,22 @@ class Robot:
     def get_mission_status(self):
         pass 
 
+    def iaq_start(self):
+        self.mo_iaq.start()
+
     def iaq_on(self, task_json):
-        # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
-        # self.module_iaq.set_mission_id(mission_id)
-        # self.module_iaq.enable_task_mode()
-        pass
+        try: 
+            mission_id = self.rmapi.get_mission_id(task_json)
+            # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
+            self.mo_iaq.set_task_mode(True, mission_id)
+            return True
+        except: return False
 
     def iaq_off(self, task_json):
-        # self.module_iaq.disable_task_mode()
-        pass
+        try: 
+            self.mo_iaq.set_task_mode(False)
+            return True
+        except: return False
 
     def inspect_lift_noise(self, task_json):
         pass

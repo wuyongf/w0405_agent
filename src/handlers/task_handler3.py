@@ -129,8 +129,15 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
-        if task.taskType == 'FUNC-IAQ':
-            res = self.robot.inspect_lift_levelling(task_json)
+        if task.taskType == 'FUNC-IAQ-ON':
+            res = self.robot.iaq_on(task_json)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'FUNC-IAQ-OFF':
+            res = self.robot.iaq_off(task_json)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:

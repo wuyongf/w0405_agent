@@ -33,7 +33,11 @@ class StatusHandler:
         # nwdb
         self.map_id = 0
     
+    def start_sensor(self):
+        self.robot.iaq_start()
+
     def start(self):
+        # status
         self.publisher.loop_start()
         threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb

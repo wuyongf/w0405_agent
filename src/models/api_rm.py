@@ -81,8 +81,9 @@ class RMAPI(api.AuthenticatedAPI):
     def delete_mission(self, mission_id):
         return self.delete(f'/mission/{mission_id}')
     
-    def get_mission_id(task_json):
-        json_data = rmapi.list_missions()
+    def get_mission_id(self, task_json):
+        # self.__init__()
+        json_data = self.list_missions()
         # print(json_data)
         list_data = json_data['result']['list']
         # print(list_data)
@@ -112,6 +113,8 @@ if __name__ == '__main__':
 
     # list missions and parse json
     json_data = rmapi.list_missions()
+
+    print(json_data)
     # print(json_data)
     list_data = json_data['result']['list']
     # print(list_data)
