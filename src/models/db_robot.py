@@ -1,7 +1,7 @@
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
-import src.models.schema_rv as RVSchema
+import src.models.schema.rv as RVSchema
 
 class robotDBHandler(db.AzureDB):
     # init and connect to NWDB
@@ -72,6 +72,10 @@ class robotDBHandler(db.AzureDB):
         statement = f'INSERT INTO {self.database}.`sys.mission` (rm_mission_guid, created_date) VALUES ("{mission_id}", now())'
         return self.Insert(statement)
 
+    def get_latest_mission_id(self):
+        statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`sys.mission`"
+        return self.Select(statement)
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
@@ -88,6 +92,9 @@ if __name__ == '__main__':
     # print(res)
 
     # mission_id: 9b73504f-b4de-4a75-98c8-468cf588c5f6
-    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f6')
+    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f8')
     res = nwdb.check_mission_id_exist('')
     print(res)
+
+    id = nwdb.get_latest_mission_id()
+    print(id)

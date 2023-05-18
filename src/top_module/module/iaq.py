@@ -55,7 +55,7 @@ class IaqSensor():
 
     def data_stream(self, value):
         print("dataStream")
-        self.nwdb.InsertIaqData("sensor.iaq.stream", self.column_items, value, self.task_id)
+        self.nwdb.StreamIaqData("sensor.iaq.stream", self.column_items, value)
 
     def set_task_mode(self, e, taskid=0):
         self.task_mode = e
@@ -157,8 +157,8 @@ if __name__ == '__main__':
     # iaq.set_task_id("")
     iaq.start()
     
-    time.sleep(10)
-    iaq.set_task_mode(True, 1)
+    time.sleep(5)
+    iaq.set_task_mode(True, 5)
     
     time.sleep(10)
     # second argument (task id) is optional

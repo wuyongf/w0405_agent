@@ -7,7 +7,7 @@ import sys
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.trans_rvrm as Trans
-import src.models.schema_rm as RMSchema
+import src.models.schema.rm as RMSchema
 import src.models.db_robot as RobotDB
 
 config = umethods.load_config('../../conf/config.properties')

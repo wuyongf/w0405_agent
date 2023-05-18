@@ -14,8 +14,8 @@ import threading
 import src.utils.methods as umethods
 import src.models.robot as Robot
 import src.models.db_robot as NWDB
-import src.models.schema_rm as RMSchema
-import src.models.enums_rm as RMEnum
+import src.models.schema.rm as RMSchema
+import src.models.enums.rm as RMEnum
 import src.models.mqtt_rv_joystick as RVJoyStick
 
 class RemoteControlHandler:

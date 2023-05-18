@@ -4,7 +4,7 @@ import json
 import uuid
 # yf
 import src.models.api_authenticated as api
-import src.models.schema_rv as RVSchema
+import src.models.schema.rv as RVSchema
 import src.utils.methods as umethods
 
 class RVAPI(api.AuthenticatedAPI):

@@ -1,5 +1,5 @@
 import math
-import src.models.schema_rv as RVSchema
+import src.models.schema.rv as RVSchema
 
 
 class RVRMTransform:

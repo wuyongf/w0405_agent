@@ -9,8 +9,8 @@ import src.utils.methods as umethods
 import src.models.robot as Robot
 import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
-import src.models.schema_rm as RMSchema
-import src.models.schema_rv as RVSchema
+import src.models.schema.rm as RMSchema
+import src.models.schema.rv as RVSchema
 
 class MQLOGGER:
     def __init__(self, config, mq_host):

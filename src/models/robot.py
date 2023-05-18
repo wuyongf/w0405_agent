@@ -8,9 +8,9 @@ import src.models.mqtt_rv2 as RVMQTT2
 import src.models.api_rm as RMAPI
 import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
-import src.models.schema_rm as RMSchema
-import src.models.enums_rm as RMEnum
-import src.models.enums_nw as NWEnum
+import src.models.schema.rm as RMSchema
+import src.models.enums.rm as RMEnum
+import src.models.enums.nw as NWEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
 from top_module.module import lift_levelling_module as MoLiftLevelling

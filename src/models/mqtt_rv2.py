@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import json
 #yf
 import src.utils.methods as umethods
-import src.models.schema_rv as RVSchema
+import src.models.schema.rv as RVSchema
 class RVMQTT():
     def __init__(self, config):
         self.broker_address = config.get('RV','localhost')
