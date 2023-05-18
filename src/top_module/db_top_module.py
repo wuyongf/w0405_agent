@@ -36,11 +36,11 @@ class robotDBHandler(db.AzureDB):
         # print(statement)
         return self.Select(statement)
 
-    def InsertIaqData(self, table, key, value):
+    def InsertIaqData(self, table, key, value, task_id):
         # map_name
         # task_id
         # posX,Y
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date) VALUES ({", ".join(map(str, value))}, now());'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id) VALUES ({", ".join(map(str, value))}, now(), {task_id});'
         print(statement)
         self.Insert(statement)
 

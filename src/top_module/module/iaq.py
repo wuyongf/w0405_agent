@@ -7,7 +7,7 @@ import src.top_module.rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config,port_config, Ti):
+    def __init__(self, config, port_config, Ti):
         self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
@@ -16,7 +16,7 @@ class IaqSensor():
         self.time_interval = Ti
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
-        self.task_id = ""
+        self.task_id = 0
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.robotDBHandler(config)
         self.data_stack = []
@@ -51,13 +51,13 @@ class IaqSensor():
 
     def data_insert(self, value):
         print("dataInsert")
-        self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items, value)
+        self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items, value, self.task_id)
 
     def data_stream(self, value):
         print("dataStream")
-        self.nwdb.InsertIaqData("sensor.iaq.stream", self.column_items, value)
+        self.nwdb.InsertIaqData("sensor.iaq.stream", self.column_items, value, self.task_id)
 
-    def set_task_mode(self, e, taskid=""):
+    def set_task_mode(self, e, taskid=0):
         self.task_mode = e
         self.task_id = taskid
         print(self.task_mode)
