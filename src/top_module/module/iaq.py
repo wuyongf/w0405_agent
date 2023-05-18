@@ -158,7 +158,7 @@ if __name__ == '__main__':
     iaq.start()
     
     time.sleep(10)
-    iaq.set_task_mode(True, "Place task_id Here")
+    iaq.set_task_mode(True, 1)
     
     time.sleep(10)
     # second argument (task id) is optional

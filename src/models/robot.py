@@ -241,6 +241,7 @@ class Robot:
         try: 
             mission_id = self.rmapi.get_mission_id(task_json)
             # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
+            print(f'mission_id: {mission_id}')
             self.mo_iaq.set_task_mode(True, mission_id)
             return True
         except: return False
