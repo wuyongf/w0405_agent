@@ -2,6 +2,7 @@ import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
 import src.models.schema.rv as RVSchema
+import src.models.enums.nw as NWEnums
 
 class robotDBHandler(db.AzureDB):
     # init and connect to NWDB
@@ -68,8 +69,8 @@ class robotDBHandler(db.AzureDB):
         statement = f'SELECT EXISTS(SELECT * from {self.database}.`sys.mission` WHERE rm_mission_guid="{mission_id}")'
         return self.Select(statement)
     
-    def insert_new_mission_id(self,mission_id):
-        statement = f'INSERT INTO {self.database}.`sys.mission` (rm_mission_guid, created_date) VALUES ("{mission_id}", now())'
+    def insert_new_mission_id(self,mission_id, type = NWEnums.MissionType):
+        statement = f'INSERT INTO {self.database}.`sys.mission` (rm_mission_guid, created_date, type) VALUES ("{mission_id}", now(), {type.value})'
         return self.Insert(statement)
 
     def get_latest_mission_id(self):
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     # print(res)
 
     # mission_id: 9b73504f-b4de-4a75-98c8-468cf588c5f6
-    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f8')
+    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f9', NWEnums.MissionType.IAQ)
     res = nwdb.check_mission_id_exist('')
     print(res)
 

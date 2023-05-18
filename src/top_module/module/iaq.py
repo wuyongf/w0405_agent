@@ -158,7 +158,7 @@ if __name__ == '__main__':
     iaq.start()
     
     time.sleep(5)
-    iaq.set_task_mode(True, 5)
+    iaq.set_task_mode(True, 6)
     
     time.sleep(10)
     # second argument (task id) is optional

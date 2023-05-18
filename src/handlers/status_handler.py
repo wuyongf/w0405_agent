@@ -32,9 +32,6 @@ class StatusHandler:
         self.rm_status  = RMSchema.Status(0.0, 0, self.rm_mapPose)
         # nwdb
         self.map_id = 0
-    
-    def start_sensor(self):
-        self.robot.iaq_start()
 
     def start(self):
         # status

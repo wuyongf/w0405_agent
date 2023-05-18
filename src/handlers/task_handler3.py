@@ -32,6 +32,9 @@ class TaskHandler:
         # nwdb
         self.map_id = 0
 
+    def start_sensor(self):
+        self.robot.iaq_start()
+    
     def start(self):
         self.publisher.loop_start()
         self.subscriber.loop_start()

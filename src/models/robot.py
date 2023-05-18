@@ -239,10 +239,14 @@ class Robot:
 
     def iaq_on(self, task_json):
         try: 
-            mission_id = self.rmapi.get_mission_id(task_json)
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+
+            self.nwdb.insert_new_mission_id(rm_mission_guid, NWEnum.MissionType.IAQ)
+            mission_id = self.nwdb.get_latest_mission_id()
+
             # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
             print(f'mission_id: {mission_id}')
-            self.mo_iaq.set_task_mode(True, mission_id)
+            self.mo_iaq.set_task_mode(e = True, taskid = mission_id)
             return True
         except: return False
 
