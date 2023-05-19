@@ -142,41 +142,41 @@ class LaserDistanceSensor():
         """
         Collects data and stores it in the database.
         """
-        distance_data_l = []
-        distance_data_r = []
+        collected_data_l = []
+        collected_data_r = []
         collecting_data = True
         while collecting_data:
             # collected_data = self.collect_data(current_ser)
             # collected_data = round(self.debug_generate_random_number(), 5)
             collected_data = self.data_integration()
-            distance_data_l.append(collected_data[0])
-            distance_data_r.append(collected_data[1])
+            collected_data_l.append(collected_data[0])
+            collected_data_r.append(collected_data[1])
             # print(data_stack)
             
             if self.stop_event.is_set():
                 print('finish, Upload immediately')
-                self.insert_data(distance_data_l, distance_data_r)
-                distance_data_l = [] #clean data stack
-                distance_data_r = [] #clean data stack
+                self.insert_data(collected_data_l, collected_data_r)
+                collected_data_l = [] #clean data stack
+                collected_data_r = [] #clean data stack
                 self.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
                 break
                                
             if self.retract_flag == True:                    # insert immediately
                 print('interrupt, Upload immediately')
-                self.insert_data(distance_data_l, distance_data_r)
-                distance_data_l = [] #clean data stack
-                distance_data_r = [] #clean data stack
+                self.insert_data(collected_data_l, collected_data_r)
+                collected_data_l = [] #clean data stack
+                collected_data_r = [] #clean data stack
                 time.sleep(1)
                 self.set_move_dir(LAEnum.LinearActuatorStatus.Retract.value)
                 print(f"direction indicator set, move_dir = {self.move_dir}")
                 self.retract_flag = False
                      
-            elif len(distance_data_l) > 200:
+            elif len(collected_data_l) > 200:
                 # insert if data stack full
                 print('insert to db')
-                self.insert_data(distance_data_l, distance_data_r)
-                distance_data_l = [] #clean data stack
-                distance_data_r = [] #clean data stack
+                self.insert_data(collected_data_l, collected_data_r)
+                collected_data_l = [] #clean data stack
+                collected_data_r = [] #clean data stack
                  # insert with linear actuator move_dir
             
     def start(self):
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 
     laser = LaserDistanceSensor(config, port_config)
     time.sleep(1)
-    laser.laser_control(0)       #signal = 1/0 , 1 = on, 0 = off
+    # laser.laser_control(1)       #signal = 1/0 , 1 = on, 0 = off
     # laser.store_data()
     
     # laser.collect_data(laser.left)
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     # laser.set_pack_id(12)
     # #******************** move_dir cannot be argument
     # # laser.set_thread(1,1,laser.move_dir)
-    # laser.start()
+    laser.start()
     # time.sleep(5)
     # laser.set_move_dir(1)
     # # laser.stop()

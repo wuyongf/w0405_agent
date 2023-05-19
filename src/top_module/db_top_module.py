@@ -20,11 +20,6 @@ class TopModuleDBHandler(db.AzureDB):
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
         
-        # ===for Test===
-        # self.config = umethods.load_config('../../conf/config.properties')
-        # self.port_config = umethods.load_config('../../conf/port_config.properties')
-        # self.robot = Robot.Robot(config, port_config)
-        # ==============
         
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = self.GetRobotId()
@@ -67,18 +62,18 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datapack` (task_id, created_date) VALUES ("{task_id}", now())'
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date) VALUES ("{task_id}", now())'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
         
     def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir ):
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor_datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now())'
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now())'
         self.Insert(statement)
 
     # Get raw data set of laser distance chunk
     def GetDistanceChunk(self, side, pack_id, move_dir):
-        statement = f'SELECT `distance_chunk_{side}` FROM {self.database}.`sensor.distance_sensor_datachunk` WHERE pack_id = "{pack_id}" AND move_dir = "{move_dir}";'
+        statement = f'SELECT `distance_chunk_{side}` FROM {self.database}.`sensor.distance_sensor.datachunk` WHERE pack_id = "{pack_id}" AND move_dir = "{move_dir}";'
         return self.SelectAll(statement)
 
     # Get combined list of result
@@ -88,9 +83,23 @@ class TopModuleDBHandler(db.AzureDB):
             result = result + list(i.values())[0].split(",")
         return result
 
-    def Test(self):
-        print(self.robot.get_current_pose(NWEnum.Protocol.RVAPI))
-        pass
+    # Create Gyro Data Pack
+    def CreateDistanceDataPack(self, task_id):
+            # pos_x
+            # pos_y
+            # floor_id
+            statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date) VALUES ("{task_id}", now())'
+            self.Insert(statement)
+            # return the auto-generated ID of the new data pack
+            return self.Select("SELECT LAST_INSERT_ID()")
+
+    # Insert Gyro Data Chunk
+    def InsertGyroChunk(self, pack_id, accel_z ):
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", now())'
+        self.Insert(statement)
+
+
+
         
     
 if __name__ == '__main__':

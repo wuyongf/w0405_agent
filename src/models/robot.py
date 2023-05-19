@@ -9,19 +9,13 @@ import src.models.api_rm as RMAPI
 import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
 import src.models.schema.rm as RMSchema
+import src.models.schema.nw as NWSchema
 import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module import lift_levelling_module as MoLiftLevelling
 from src.top_module.module import iaq as MoIAQ
-# import src.models.modules as Modules
-# import src.top_module.sensor_iaq as IAQ
-
-class TopModule:
-    def __init__(self, robot, config, port_config):
-        self.robot = robot
-        pass
 
 class Robot:
     def __init__(self, config, port_config):
@@ -33,9 +27,8 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
         # # # module - models/sensors
-        # self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
-        self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.get_current_pose, Ti = 2)
-        # self.module_iaq = Modules.IAQ()
+        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
+        self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
         # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -43,13 +36,25 @@ class Robot:
         # self.module_locker = Modules.Locker()
         # self.modmodule_phone = Modules.PhoneDevice()
 
-        # # threading.Thread(target=IAQ.IaqSensor(config, "COM4", 2).run).start()
-        # self.iaq_sensor = IAQ.IaqSensor(config, "COM4", 2)
-        # self.iaq_sensor.start()
-
         ## robot baisc info
         self.connection_status = 0
         self.mission_status = 0
+
+    def status_summary(self):
+        # 1) init
+        protocal = NWEnum.Protocol.RVAPI
+        
+        # 2) get status
+        battery = self.get_battery_state(protocal)
+        x, y, theta = self.get_current_pose(protocal)
+        map_id = self.get_current_map_id()
+        # robot_id = self.get_robot_id()
+        # mission_status = self.get_mission_status()
+
+        # 3) convert to json
+        pos = NWSchema.Position(x, y, theta)
+        status  = NWSchema.Status(battery, pos, map_id)
+        return status.to_json()
 
     # robot status
     def get_battery_state(self, protocol = NWEnum.Protocol):
@@ -180,7 +185,7 @@ class Robot:
             self.rvapi.delete_all_waypoints(rv_map_name)
             pose_name = 'temp'
             self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
-            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=True)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
             thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
             thread.setDaemon(True)
@@ -206,13 +211,14 @@ class Robot:
                 if(self.check_goto_has_arrived()): 
                     print('flag arrive')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
-                # if error
-                if(self.check_goto_has_error): 
-                    print('flag error') # throw error log
-                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
+                # # if error
+                # if(self.check_goto_has_error): 
+                #     print('flag error') # throw error log
+                #     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
                 # if cancelled
                 if(self.check_goto_is_cancelled()): 
                     print('flag cancelled')
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
         logging.debug('[check_mission_status] Exiting...')
 
     def check_goto_has_arrived(self):
@@ -297,5 +303,6 @@ if __name__ == '__main__':
 
     while(True):
         time.sleep(1)
-        print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
+        print(type(robot.status_summary()))
+        # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
         # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))

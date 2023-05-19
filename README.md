@@ -8,6 +8,9 @@
        2. `cd C:\dev\robot-agent-v2.0`
        3. `bash ./run-agent.sh` or
        4. `java -jar robot-agent-2.5.0.jar --config ${1:-'./conf/root-config'}.properties` (for robot-agent-2.5.0)
+    4. IPC: to run robot-agent.sh
+        `cd ~/dev/robot-agent-v2.0/`
+        `bash ./run-agent.sh`
 2. run python script to update robotmanager
 
 ## NCS API Keywords

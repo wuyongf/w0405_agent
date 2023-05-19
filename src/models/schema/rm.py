@@ -67,7 +67,9 @@ class TaskParams:
 # to receive mtqq task json
 class Task:
     def __init__(self, dct = None):
-        if dct is None: return None
+        if dct is None: 
+            print('task_json is NULL')
+            return None
         else:
             self.taskId = dct['taskId']
             self.scheduleType = dct['scheduleType']

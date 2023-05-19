@@ -128,7 +128,7 @@ if __name__ == '__main__':
     def cb():
         print('cb')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    la = LinearActuator(prot_config, cb, cb)
+    la = LinearActuator(port_config, cb, cb)
     # print(la.io.x_get(0))
     la.set_time_limit(30.0)
     la.extend()

@@ -1,13 +1,14 @@
 import serial
 import time
 import threading
+import json
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import src.top_module.rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config, port_config, status_callback, Ti):
+    def __init__(self, config, port_config, status_summary, Ti):
         self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
@@ -17,12 +18,13 @@ class IaqSensor():
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
         self.task_id = 0
+        self.column_items_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta"]
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)
-        self.get_position = status_callback
+        self.status_summary = status_summary
 
 
     def run(self):
@@ -52,7 +54,7 @@ class IaqSensor():
 
     def data_insert(self, value):
         print("dataInsert")
-        self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items, value, self.task_id)
+        self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items_insert, value, self.task_id)
 
     def data_stream(self, value):
         print("dataStream")
@@ -110,8 +112,6 @@ class IaqSensor():
         with serial.Serial(self.port, self.bandwidth) as ser:
             while not self.stop_event.is_set():
                 try:
-                    print(f'iaq position: {self.get_position()}')
-
                     named_tuple = time.localtime()  # get struct_time
                     time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
 
@@ -133,15 +133,19 @@ class IaqSensor():
                     
                     rawdata = [data for i, data in enumerate(return_data_arr) if 4 <= i + 1 <= 25]
                     result = self.get_data(rawdata)
-                    print(result)
+                    # print(result)
+                    
+
+                    # print(result_insert)
 
                     if sum(result) < 30000:
-
                         if self.task_mode:
                             # Insert to mySQL
                             # print('***********taskmode  ON**********')
+                            result_insert = result.copy()
+                            result_insert = self.append_robot_position(result_insert)
                             self.data_check_stack(result)
-                            self.data_insert(result)
+                            self.data_insert(result_insert)
                             print(f"Task ID: {self.task_id}")
 
                         # Stream to mySQL
@@ -153,21 +157,49 @@ class IaqSensor():
                     self.GG += 1
                     continue
 
+    def parse_json(self):
+        obj = json.loads(self.status_summary())
+        print(obj["position"]["x"])
+        print(obj["position"]["y"])
+        return obj
+
+    def append_robot_position(self, array):
+        obj = json.loads(self.status_summary())
+        array.append(obj["position"]["x"])
+        array.append(obj["position"]["y"])
+        array.append(obj["position"]["theta"])
+        return array
+
+
 if __name__ == '__main__':
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    iaq = IaqSensor(config, port_config, 2)
+
+    def status_summary():
+        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null}'
+        return status
+
+    iaq = IaqSensor(config, port_config, status_summary, 2)
+    # iaq.parse_json()
+    # print((status_summary()["position"]["x"]))
     # iaq.set_task_id("")
     iaq.start()
-    
-    time.sleep(5)
+    # time.sleep(5)
     iaq.set_task_mode(True, 6)
-    
+    # 
+    time.sleep(10)
+    # second argument (task id) is optional
+    iaq.set_task_mode(False)
+
+    time.sleep(10)
+
+    iaq.set_task_mode(True, 6)
+    # 
     time.sleep(10)
     # second argument (task id) is optional
     iaq.set_task_mode(False)
 
     
-    time.sleep(10)
+    # time.sleep(10)
     # Stop the thread
-    iaq.stop()
+    # iaq.stop()

@@ -1,5 +1,7 @@
 import serial
 import time
+import threading
+import src.top_module.db_top_module as NWDB
 from datetime import datetime
 import src.utils.methods as umethods
 import src.top_module.port as port
@@ -25,6 +27,7 @@ class gryo():
         self.baudrate = 115200
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.05  # Max: 200Hz, time interval = 0.005,  Default = 0.01sec, 100Hz
+        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
         print("SerialController initialized")
         self.acc = []
         self.gyro = []
@@ -32,6 +35,18 @@ class gryo():
         self.temp = []
         self.pnh = []
         self.command = [0x50, 0x03, 0x00, 0x2D, 0x00, 0x1C, 0xD9, 0x8B]
+        self.stop_event = threading.Event()
+        self.run_thread = threading.Thread(target=self.collect_data)
+
+
+    def run(self):
+        self.collect_data()
+        
+    def start(self):
+        self.run_thread.start()
+        
+    def stop(self) :
+        self.stop_event.set()
 
     def get_acc(self, datahex):
         axh = datahex[0]
@@ -50,7 +65,7 @@ class gryo():
             acc_y -= 2 * k_acc
         if acc_z >= k_acc:
             acc_z -= 2 * k_acc
-        return acc_x, acc_y, acc_z
+        return [acc_x, acc_y, acc_z]
 
     def get_gyro(self, datahex):
         wxh = datahex[0]
@@ -69,7 +84,7 @@ class gryo():
             gyro_y -= 2 * k_gyro
         if gyro_z >= k_gyro:
             gyro_z -= 2 * k_gyro
-        return gyro_x, gyro_y, gyro_z
+        return [gyro_x, gyro_y, gyro_z]
 
     def get_angle(self, datahex):
         rxh = datahex[0]
@@ -88,7 +103,7 @@ class gryo():
             angle_y -= 2 * k_angle
         if angle_z >= k_angle:
             angle_z -= 2 * k_angle
-        return angle_x, angle_y, angle_z
+        return [angle_x, angle_y, angle_z]
 
     def get_pnh(self, datahex):
         p0 = datahex[0]
@@ -112,6 +127,7 @@ class gryo():
 
     def collect_data(self):
         if self.ser and self.ser.is_open:
+            collected_data = []
             while True:
                 send_data = serial.to_bytes(self.command)
                 self.ser.write(send_data)
@@ -143,7 +159,18 @@ class gryo():
                         count += 1
 
                     result = self.get_motion_data()
-                    print(result)
+                    result_acc_z = round(result[0][2],2)
+                    
+                    if result_acc_z > 0:
+                        collected_data.append(result_acc_z)
+                        if len(collected_data) > 400:
+                            # insert to datachunk
+                            
+                            # clear data stack
+                            collected_data = []
+                            pass
+                    
+                    # print(collected_data)
 
     def print_data(self):
         print(datetime.now())
@@ -159,7 +186,10 @@ class gryo():
         print("angle-rz: " + str(round(self.get_angle(self.angle)[2], 2)))
 
     def get_motion_data(self):
-        return self.get_acc(self.acc), self.get_gyro(self.gyro), self.get_angle(self.angle)
+        return [self.get_acc(self.acc), self.get_gyro(self.gyro), self.get_angle(self.angle)]
+
+    # def get_acc_data(self):
+    #     return self.get_acc(self.acc)
 
 
 if __name__ == '__main__':
