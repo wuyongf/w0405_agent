@@ -2,13 +2,14 @@ import time
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
-
+import src.models.robot as Robot
+import src.models.enums.nw as NWEnum
 import datetime
 
 
-class robotDBHandler(db.AzureDB):
+class TopModuleDBHandler(db.AzureDB):
     # init and connect to NWDB
-    def __init__(self, config):
+    def __init__(self, config, port_config):
         self.cfg = {
             'host': config.get('NWDB', 'host'),
             'user': config.get('NWDB', 'user'),
@@ -18,6 +19,13 @@ class robotDBHandler(db.AzureDB):
             'ssl_ca': config.get('NWDB', 'ssl_ca')}
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
+        
+        # ===for Test===
+        # self.config = umethods.load_config('../../conf/config.properties')
+        # self.port_config = umethods.load_config('../../conf/port_config.properties')
+        # self.robot = Robot.Robot(config, port_config)
+        # ==============
+        
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = self.GetRobotId()
 
@@ -80,13 +88,18 @@ class robotDBHandler(db.AzureDB):
             result = result + list(i.values())[0].split(",")
         return result
 
+    def Test(self):
+        print(self.robot.get_current_pose(NWEnum.Protocol.RVAPI))
+        pass
+        
+    
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    nwdb = robotDBHandler(config)
+    nwdb = TopModuleDBHandler(config)
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())
     # print((nwdb.GetUserRules()[2]).get('type'))
-    test = [i.get('type') for i in nwdb.GetUserRules()]
+    # test = [i.get('type') for i in nwdb.GetUserRules()]
     # print(test)
 
     # # position
@@ -100,6 +113,7 @@ if __name__ == '__main__':
     # nwdb.InsertDistanceChunk(10,"test",'test', 1)
     # print(nwdb.CreateDistanceDataPack(0))
     
-    print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
+    # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
+    nwdb.Test()
     
     pass

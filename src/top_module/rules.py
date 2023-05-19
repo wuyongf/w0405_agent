@@ -3,8 +3,8 @@ import src.utils.methods as umethods
 
 
 class user_rules():
-    def __init__(self, config):
-        self.nwdb = NWDB.robotDBHandler(config)
+    def __init__(self, config, port_config):
+        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
 
     def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list
@@ -46,3 +46,4 @@ class user_rules():
 
 if __name__ == "__main__":
     config = umethods.load_config('../../conf/config.properties')
+    port_config = umethods.load_config('../../conf/port_config.properties')

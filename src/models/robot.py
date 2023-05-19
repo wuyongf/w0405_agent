@@ -13,10 +13,15 @@ import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
-from top_module.module import lift_levelling_module as MoLiftLevelling
-from top_module.module import iaq as MoIAQ
+from src.top_module.module import lift_levelling_module as MoLiftLevelling
+from src.top_module.module import iaq as MoIAQ
 # import src.models.modules as Modules
 # import src.top_module.sensor_iaq as IAQ
+
+class TopModule:
+    def __init__(self, robot, config, port_config):
+        self.robot = robot
+        pass
 
 class Robot:
     def __init__(self, config, port_config):
@@ -28,8 +33,8 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
         # # # module - models/sensors
-        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
-        self.mo_iaq = MoIAQ.IaqSensor(config, port_config ,Ti = 2)
+        # self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
+        self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.get_current_pose, Ti = 2)
         # self.module_iaq = Modules.IAQ()
         # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
@@ -287,8 +292,10 @@ class Robot:
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    robot = Robot(config)
+    port_config = umethods.load_config('../../conf/port_config.properties')
+    robot = Robot(config,port_config)
 
     while(True):
         time.sleep(1)
-        print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
+        print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
+        # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))

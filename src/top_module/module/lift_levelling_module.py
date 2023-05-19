@@ -9,7 +9,7 @@ import time
 
 class LiftLevellingModule():
     def __init__(self, config, port_config):
-        self.nwdb = NWDB.robotDBHandler(config)
+        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
         self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(config, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish

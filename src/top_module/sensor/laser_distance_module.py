@@ -19,7 +19,7 @@ class LaserDistanceSensor():
         self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
         # self.config = umethods.load_config('../../../conf/config.properties')
-        self.nwdb = NWDB.robotDBHandler(config)
+        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
         self.left = serial.Serial(self.port_left, self.baudrate)
         self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015

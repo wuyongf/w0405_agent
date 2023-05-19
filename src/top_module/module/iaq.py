@@ -7,7 +7,7 @@ import src.top_module.rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config, port_config, Ti):
+    def __init__(self, config, port_config, status_callback, Ti):
         self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
@@ -18,10 +18,11 @@ class IaqSensor():
         self.task_mode = 0
         self.task_id = 0
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
-        self.nwdb = NWDB.robotDBHandler(config)
+        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)
+        self.get_position = status_callback
 
 
     def run(self):
@@ -109,6 +110,8 @@ class IaqSensor():
         with serial.Serial(self.port, self.bandwidth) as ser:
             while not self.stop_event.is_set():
                 try:
+                    print(f'iaq position: {self.get_position()}')
+
                     named_tuple = time.localtime()  # get struct_time
                     time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
 
