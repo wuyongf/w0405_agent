@@ -36,6 +36,7 @@ if __name__ == '__main__':
     # Status handler updates robot status every second
     status_handler = status_handler.StatusHandler(config, port_config)
     status_handler.start()
+
     
     # # Task handler subscribes and execute task, also report task status to robotmanager
     task_handler = task_handler.TaskHandler(config, port_config)
@@ -48,4 +49,5 @@ if __name__ == '__main__':
 
     # Successfully started the app
     logging.getLogger('').info("rm-mir-app successfully started!")
+    print('main finished')
 
