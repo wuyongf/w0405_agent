@@ -8,7 +8,7 @@ import src.top_module.rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config, port_config, status_summary, Ti, robot_id):
+    def __init__(self, config, port_config, status_summary, Ti):
         self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
@@ -18,7 +18,6 @@ class IaqSensor():
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
         self.task_id = 0
-        self.robot_id = robot_id
         self.column_items_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta"]
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
