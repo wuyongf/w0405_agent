@@ -19,7 +19,7 @@ class TopModuleDBHandler(db.AzureDB):
             'ssl_ca': config.get('NWDB', 'ssl_ca')}
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
-        
+
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = self.GetRobotId()
 
@@ -28,7 +28,7 @@ class TopModuleDBHandler(db.AzureDB):
         return self.Select(statement)
 
     def StreamIaqData(self, table, key, value):
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date) VALUES ({", ".join(map(str, value))}, now());'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
         print(statement)
         self.Insert(statement)
 
@@ -36,7 +36,7 @@ class TopModuleDBHandler(db.AzureDB):
         # map_name
         # task_id
         # posX,Y
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id) VALUES ({", ".join(map(str, value))}, now(), {task_id});'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id, robot_id) VALUES ({", ".join(map(str, value))}, now(), {task_id}, {self.robot_id});'
         print(statement)
         self.Insert(statement)
 
@@ -45,7 +45,7 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
-            
+
     def CreateDistanceDataPack(self, task_id):
         # pos_x
         # pos_y
@@ -54,9 +54,9 @@ class TopModuleDBHandler(db.AzureDB):
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
-        
-    def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir ):
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now())'
+
+    def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir):
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date, robot_id) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now(), {self.robot_id})'
         self.Insert(statement)
 
     # Get raw data set of laser distance chunk
@@ -67,29 +67,26 @@ class TopModuleDBHandler(db.AzureDB):
     # Get combined list of result
     def GetDistanceResult(self, side, pack_id, move_dir):
         result = []
-        for i in nwdb.GetDistanceChunk(side = side, pack_id = pack_id, move_dir = move_dir):
+        for i in nwdb.GetDistanceChunk(side=side, pack_id=pack_id, move_dir=move_dir):
             result = result + list(i.values())[0].split(",")
         return result
 
     # Create Gyro Data Pack
     def CreateDistanceDataPack(self, task_id):
-            # pos_x
-            # pos_y
-            # floor_id
-            statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date) VALUES ("{task_id}", now())'
-            self.Insert(statement)
-            # return the auto-generated ID of the new data pack
-            return self.Select("SELECT LAST_INSERT_ID()")
+        # pos_x
+        # pos_y
+        # floor_id
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id) VALUES ("{task_id}", now(), {self.robot_id})'
+        self.Insert(statement)
+        # return the auto-generated ID of the new data pack
+        return self.Select("SELECT LAST_INSERT_ID()")
 
     # Insert Gyro Data Chunk
-    def InsertGyroChunk(self, pack_id, accel_z ):
+    def InsertGyroChunk(self, pack_id, accel_z):
         statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", now())'
         self.Insert(statement)
 
 
-
-        
-    
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = TopModuleDBHandler(config)
@@ -106,11 +103,11 @@ if __name__ == '__main__':
     # # battery
     # nwdb.UpdateRobotBattery(30.22)
     # nwdb.InsertIaqData("sensor.iaq.history", ["temperature", "RH", "HCHO"], [2, 3, 20], 1, 2)
-    
+
     # nwdb.InsertDistanceChunk(10,"test",'test', 1)
     # print(nwdb.CreateDistanceDataPack(0))
-    
+
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     nwdb.Test()
-    
+
     pass

@@ -179,7 +179,7 @@ if __name__ == '__main__':
         status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null}'
         return status
 
-    iaq = IaqSensor(config, port_config, status_summary, 2, 0)
+    iaq = IaqSensor(config, port_config, status_summary, 2)
     # iaq.parse_json()
     # print((status_summary()["position"]["x"]))
     # iaq.set_task_id("")
