@@ -20,7 +20,7 @@ import src.top_module.port as port
 
 class gryo():
 
-    def __init__(self, port_config):
+    def __init__(self,config, port_config):
         
         self.sid = port_config.get('GYRO', 'sid')
         self.port = port.port().port_match(self.sid)
@@ -194,6 +194,7 @@ class gryo():
 
 if __name__ == '__main__':
     # Example usage:
+    config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    gryo = gryo(port_config)
+    gryo = gryo(config, port_config)
     gryo.collect_data()

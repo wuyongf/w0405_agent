@@ -11,7 +11,7 @@ import src.utils.methods as umethods
 # TBC: sleep listener
 
 class LinearActuator():
-    def __init__(self, prot_config, callback_direction: Callable, callback_finish: Callable)->None:
+    def __init__(self, prot_config, callback_direction: Callable, callback_finish: Callable) -> None:
         self.io = ioController.ioController(prot_config)
         self.time_limit = 2.0
         self.stop_flag = 0
@@ -19,10 +19,6 @@ class LinearActuator():
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.extend_retract, args=(callback_direction, callback_finish,))
         # self.run_thread = threading.Thread(target=self.motion_retract, )
-    
-    
-    def setCOM(self):
-        self.io = ioController.ioController()
 
     def motion(self, type_name, on_control, off_control, x_address, status):
         if self.stop_event.is_set() or self.stop_flag == 1:
@@ -68,13 +64,7 @@ class LinearActuator():
                 # TODO: Send error code to database
                 break
 
-    # def motion_extend(self):
-    #     self.motion("Extend", self.io.y0_on, self.io.y0_off,
-    #                 0, LAEnum.LinearActuatorStatus.Extend.value)
 
-    # def motion_retract(self):
-    #     self.motion("Retract", self.io.y1_on, self.io.y1_off,
-    #                 1, LAEnum.LinearActuatorStatus.Retract.value)
     def motion_extend(self):
         self.motion("Extend", self.io.y1_on, self.io.y1_off,
                     0, LAEnum.LinearActuatorStatus.Extend.value)
@@ -82,7 +72,7 @@ class LinearActuator():
     def motion_retract(self):
         self.motion("Retract", self.io.y0_on, self.io.y0_off,
                     1, LAEnum.LinearActuatorStatus.Retract.value)
-        
+
     def stopAll(self):
         self.stop_flag = 1
         self.io.y_control(self.io.y0_off)
@@ -107,15 +97,12 @@ class LinearActuator():
     def callback_test(self):
         print('callback: extend finish')
 
-    # def thread_target(self,callback):
-    #     self.extend_retract(callback)
-
     def set_time_limit(self, t):
         self.time_limit = t/2
-        
+
     def get_status(self):
         return (self.status)
-    
+
     def start(self):
         self.run_thread.start()
 
