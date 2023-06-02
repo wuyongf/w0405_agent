@@ -41,27 +41,13 @@ if __name__ == '__main__':
     # Sleep for 30 seconds for Pi to connect to MiR network...
     time.sleep(2)
 
-    # # Setup logging configs
-    # if not os.path.exists('../../logs'):
-    #     os.makedirs('../../logs')
-    # logname = "../../logs/nw-rm-rv-app.log"
-    # formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(filename)s:%(lineno)d %(funcName)s(): %(message)s',
-    #                               datefmt='%d-%b-%y %H:%M:%S')
-    # logHandler = handlers.TimedRotatingFileHandler(logname, when='D', interval=1, backupCount=30, encoding='utf-8')
-    # logHandler.setFormatter(formatter)
-    # logStreamHandler = logging.StreamHandler(sys.stdout)
-    # logStreamHandler.setFormatter(formatter)
-
-    # logger = logging.getLogger('')
-    # logger.addHandler(logStreamHandler)
-    # logger.addHandler(logHandler)
-    # logger.setLevel(logging.INFO)
+    # Logging...
 
     # # Loading config files
     config = umethods.load_config('../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
 
-    # 
+    # Robot
     robot = Robot.Robot(config, port_config)
     robot.status_start(NWEnum.Protocol.RVMQTT)
     robot.sensor_start()
@@ -79,6 +65,5 @@ if __name__ == '__main__':
     remote_control_handler.start()
 
     # Successfully started the app
-    # logging.getLogger('').info("rm-mir-app successfully started!")
     print('main finished')
 
