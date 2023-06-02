@@ -85,18 +85,19 @@ class RMAPI(api.AuthenticatedAPI):
         # self.__init__()
         json_data = self.list_missions()
         # print(json_data)
-        list_data = json_data['result']['list']
-        # print(list_data)
-        for mission in list_data:
-            # taskId == mission['tasks']['id']
-            if mission['tasks'] is None: continue
-            else:
-                for task in mission['tasks']:
-                    if (task_json['taskId'] == task['id']):
-                        return mission['id']
-                        print('found!')
-                        print('mission_id: ',  mission['id'])
-                        break
+        if json_data is not None:
+            list_data = json_data['result']['list']
+            # print(list_data)
+            for mission in list_data:
+                # taskId == mission['tasks']['id']
+                if mission['tasks'] is None: continue
+                else:
+                    for task in mission['tasks']:
+                        if (task_json['taskId'] == task['id']):
+                            return mission['id']
+        else: 
+            print('[api_rm.get_mission_id]: cannot find the mission_id')
+            return None
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -109,32 +110,32 @@ if __name__ == '__main__':
     # json_data = rmapi.list_maps()
     # print(json_data)
 
-    taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
+    # taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
 
     # list missions and parse json
     json_data = rmapi.list_missions()
 
     print(json_data)
-    # print(json_data)
-    list_data = json_data['result']['list']
-    # print(list_data)
-    # print(len(list_data))
-    for mission in list_data:
-        # taskId == mission['tasks']['id']
-        if mission['tasks'] is None: continue
-        else:
-            for task in mission['tasks']:
-                if (taskId == task['id']):
-                    print('found!')
-                    print('mission_id: ',  mission['id'])
-                    break
+    # # print(json_data)
+    # list_data = json_data['result']['list']
+    # # print(list_data)
+    # # print(len(list_data))
+    # for mission in list_data:
+    #     # taskId == mission['tasks']['id']
+    #     if mission['tasks'] is None: continue
+    #     else:
+    #         for task in mission['tasks']:
+    #             if (taskId == task['id']):
+    #                 print('found!')
+    #                 print('mission_id: ',  mission['id'])
+    #                 break
 
-    # # get mission status
-    # for i in range(len(list_data)):
-    #     print(list_data[i]['status'])
+    # # # get mission status
+    # # for i in range(len(list_data)):
+    # #     print(list_data[i]['status'])
     
-    # # get Mission(Job or Mission)
-    # for i in range(len(list_data)):
-    #     if(list_data[i]['type'] == 2):
-    #         print(list_data[i])
+    # # # get Mission(Job or Mission)
+    # # for i in range(len(list_data)):
+    # #     if(list_data[i]['type'] == 2):
+    # #         print(list_data[i])
 

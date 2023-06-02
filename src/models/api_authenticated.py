@@ -33,49 +33,54 @@ class AuthenticatedAPI:
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
-    
-    # def get(self, endpoint):
+        except requests.exceptions.HTTPError as http_error:
+            status_code = http_error.response.status_code
+            if status_code == 400:
+                print(f"HTTP Error {status_code}: Bad Request - {http_error.response.text}")
+
+    # def post(self, endpoint, json=None):
     #     url = self.base_url + endpoint
     #     try:
-    #         response = requests.get(url, headers=self.headers)
-    #         if response.status_code == 200:
-    #             if not response.content:
-    #                 print("[AuthenticatedAPI]: Empty JSON response received.")
-    #                 return None
-    #             return response.json()
-    #         else:
-    #             print(f"Error: {response.status_code} {response.reason}")
-    #             return None
+    #         response = requests.post(url, headers=self.headers, data=json)
+    #         response.raise_for_status()
+
+
+    #         if 'Content-Length' in response.headers:
+    #             if response.headers['Content-Length'] == '0': 
+    #                 print("[AuthenticatedAPI]: Empty JSON response received.") 
+
+    #         return response.json()
+
     #     except requests.exceptions.RequestException as error:
     #         print(f"Error: {error}")
-    #         return None
 
+    #     except requests.exceptions.HTTPError as http_error:
+    #         status_code = http_error.response.status_code
+    #         if status_code == 400:
+    #             print(f"HTTP Error {status_code}: Bad Request - {http_error.response.text}")
+    #         elif status_code == 401:
+    #             print(f"HTTP Error {status_code}: Unauthorized - {http_error.response.text}")
+    #         # Add more specific error handling for other status codes if needed
 
-    # def post(self, endpoint, json_data=None):
-    #     url = self.base_url + endpoint
-    #     try:
-    #         response = requests.post(url, headers=self.headers, json=json_data)
-    #         if response.status_code == 200:
-    #             if not response.content:
-    #                 print("[AuthenticatedAPI]: Empty JSON response received.")
-    #                 return None
-    #             return response.json()
-    #         else:
-    #             print(f"Error: {response.status_code} {response.reason}")
-    #             return None
-    #     except requests.exceptions.RequestException as error:
-    #         print(f"Error: {error}")
-    #         return None
-
+        except ValueError as value_error:
+            print(f"ValueError: {value_error}")
 
     def put(self, endpoint, json = None):
         url = self.base_url + endpoint
         try:
             response = requests.put(url, headers=self.headers, data=json)
             response.raise_for_status()
-            return response.json()
+            content_type = response.headers.get('content-type', '')
+            if 'application/json' in content_type:
+                response_json = response.json()
+                # Process the JSON data
+            else:
+                print("Response does not contain JSON data")
+                response_json = None
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
+        finally:
+            return response_json
         
     def delete(self, endpoint):
         url = self.base_url + endpoint

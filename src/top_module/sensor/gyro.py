@@ -21,7 +21,6 @@ import src.top_module.port as port
 class gryo():
 
     def __init__(self,config, port_config):
-        
         self.sid = port_config.get('GYRO', 'sid')
         self.port = port.port().port_match(self.sid)
         self.baudrate = 115200
@@ -35,9 +34,17 @@ class gryo():
         self.temp = []
         self.pnh = []
         self.command = [0x50, 0x03, 0x00, 0x2D, 0x00, 0x1C, 0xD9, 0x8B]
+        self.pack_id = 0
+        self.task_id = 0
+        self.lift_id = 0
         self.stop_event = threading.Event()
-        self.run_thread = threading.Thread(target=self.collect_data)
+        self.run_thread = threading.Thread(target=self.start_collection)
 
+    def set_task_id(self, id):
+        self.task_id = id
+        
+    def set_lift_id(self, id):
+        self.lift_id = id
 
     def run(self):
         self.collect_data()
@@ -124,11 +131,30 @@ class gryo():
         tempval = (temph << 8 | templ)
         temperature = round(tempval / 100, 2)
         return temperature
+    
+    def set_pack_id(self, id):
+        self.pack_id = id
+    
+    def start_collection(self):
+        # create data pack & set pack_id
+        self.set_pack_id(self.create_data_pack(task_id=self.task_id, lift_id=self.lift_id))
+        # start collect data
+        self.collect_data()
+        
+
+    def create_data_pack(self, task_id, lift_id):
+        # TODO: task_id
+        return self.nwdb.CreateGyroDataPack(task_id=task_id, lift_id=lift_id)
+
+    def insert_data(self, data):
+        print("[gyro.py] dataInsert")
+        list_to_str = ','.join([str(elem) for elem in data])
+        self.nwdb.InsertGyroChunk(pack_id=self.pack_id, accel_z=list_to_str)
 
     def collect_data(self):
         if self.ser and self.ser.is_open:
             collected_data = []
-            while True:
+            while not self.stop_event.is_set():
                 send_data = serial.to_bytes(self.command)
                 self.ser.write(send_data)
                 time.sleep(self.time_interval)
@@ -163,14 +189,21 @@ class gryo():
                     
                     if result_acc_z > 0:
                         collected_data.append(result_acc_z)
-                        if len(collected_data) > 400:
+                        if self.stop_event.is_set():
+                            print('finish, Upload immediately')
                             # insert to datachunk
-                            
+                            self.insert_data(data=collected_data)
                             # clear data stack
                             collected_data = []
-                            pass
+                            break
+       
+                        if len(collected_data) > 200:
+                            # insert to datachunk
+                            self.insert_data(data=collected_data)
+                            # clear data stack
+                            collected_data = []
                     
-                    # print(collected_data)
+                    print(collected_data)
 
     def print_data(self):
         print(datetime.now())
@@ -197,4 +230,8 @@ if __name__ == '__main__':
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
     gryo = gryo(config, port_config)
-    gryo.collect_data()
+    # gryo.collect_data()
+    # gryo.start_collection()
+    gryo.start()
+    time.sleep(2)
+    gryo.stop()

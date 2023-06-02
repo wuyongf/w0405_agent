@@ -38,19 +38,50 @@ class Robot:
 
         ## robot baisc info
         self.robot_id = self.nwdb.robot_id
-        self.connection_status = 0
-        self.mission_status = 0
+        self.robot_status = RMSchema.Status(0.0,0,RMSchema.mapPose())
+        self.map_id = None
+
+    def sensor_start(self):
+        self.iaq_start()
+        print(f'[robot.sensor_start]: Start...')
+    
+    def status_start(self, protocol: NWEnum.Protocol):
+        threading.Thread(target=self.update_status, args=(protocol,)).start()   # from RV API
+        print(f'[robot.status_start]: Start...')
+    
+    def update_status(self, protocol): # update thread
+        while True:  
+            try:
+                # # rm status <--- rv statu
+                self.robot_status.state = 1 # todo: robot status
+                self.robot_status.mapPose.mapId = self.get_current_map_rm_guid()    # map
+                self.robot_status.batteryPct = self.get_battery_state(protocol)      # battery
+                pixel_x, pixel_y, heading = self.get_current_pose(protocol)       # current pose
+                # print(pixel_x, pixel_y, heading)
+                self.robot_status.mapPose.x = pixel_x
+                self.robot_status.mapPose.y = pixel_y
+                self.robot_status.mapPose.heading = heading
+
+                ## TO NWDB
+                self.map_id = self.get_current_map_id()
+            except:
+                print('[robot.update_status] error!')
+                
+            time.sleep(1.0)
 
     def status_summary(self):
         # 1) init
         protocal = NWEnum.Protocol.RVAPI
         
         # 2) get status
-        battery = self.get_battery_state(protocal)
-        x, y, theta = self.get_current_pose(protocal)
-        map_id = self.get_current_map_id()
-        # robot_id = self.get_robot_id()
-        # mission_status = self.get_mission_status()
+        # battery = self.get_battery_state(protocal)
+        # x, y, theta = self.get_current_pose(protocal)
+        # map_id = self.get_current_map_id()
+        battery = self.robot_status.batteryPct
+        x = self.robot_status.mapPose.x
+        y = self.robot_status.mapPose.y
+        theta = self.robot_status.mapPose.heading
+        map_id = self.map_id
 
         # 3) convert to json
         pos = NWSchema.Position(x, y, theta)
@@ -77,7 +108,7 @@ class Robot:
                 self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
             else:
                 self.T.clear_rv_map_info()
-                print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
+                # print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
                 return 0.0, 0.0, 0.0
             ## 3. transfrom
             if(protocol == NWEnum.Protocol.RVMQTT):
@@ -185,7 +216,9 @@ class Robot:
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
             pose_name = 'TEMP'
+            time.sleep(1)
             self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
             thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
@@ -301,9 +334,10 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
     robot = Robot(config,port_config)
+    robot.status_start(NWEnum.Protocol.RVAPI)
 
     while(True):
         time.sleep(1)
-        print(type(robot.status_summary()))
+        print(robot.status_summary())
         # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
         # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))

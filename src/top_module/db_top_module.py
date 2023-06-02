@@ -72,11 +72,11 @@ class TopModuleDBHandler(db.AzureDB):
         return result
 
     # Create Gyro Data Pack
-    def CreateDistanceDataPack(self, task_id):
+    def CreateGyroDataPack(self, task_id, lift_id):
         # pos_x
         # pos_y
         # floor_id
-        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id) VALUES ("{task_id}", now(), {self.robot_id})'
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id) VALUES ("{task_id}", now(), {self.robot_id}, "{lift_id}")'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
@@ -89,7 +89,12 @@ class TopModuleDBHandler(db.AzureDB):
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    nwdb = TopModuleDBHandler(config)
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    
+    nwdb = TopModuleDBHandler(config, port_config)
+    
+    nwdb.CreateGyroDataPack(1,1)
+    nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())
     # print((nwdb.GetUserRules()[2]).get('type'))
@@ -108,6 +113,6 @@ if __name__ == '__main__':
     # print(nwdb.CreateDistanceDataPack(0))
 
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
-    nwdb.Test()
+    # nwdb.Test()
 
     pass

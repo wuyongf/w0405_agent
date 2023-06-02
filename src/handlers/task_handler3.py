@@ -14,7 +14,7 @@ import src.models.enums.rm as RMEnum
 
 
 class TaskHandler:
-    def __init__(self, config, port_config):
+    def __init__(self, robot: Robot.Robot):
         # rm - mqtt
         self.publisher = mqtt.Client("task_status_publisher")
         self.publisher.connect("localhost")
@@ -24,16 +24,7 @@ class TaskHandler:
         self.subscriber.on_message = self.on_message
 
         # yf config
-        self.robot = Robot.Robot(config, port_config)
-        self.nwdb = NWDB.robotDBHandler(config)
-        # rm status
-        self.rm_mapPose = RMSchema.mapPose()
-        self.rm_status = RMSchema.Status(0.0, 0, self.rm_mapPose)
-        # nwdb
-        self.map_id = 0
-
-    def start_sensor(self):
-        self.robot.iaq_start()
+        self.robot = robot
     
     def start(self):
         self.publisher.loop_start()
@@ -162,8 +153,6 @@ class TaskHandler:
 
 if __name__ == "__main__":
 
-    logging.basicConfig(level=logging.DEBUG,
-                        format='(%(threadName)-10s) %(message)s',)
 
     config = umethods.load_config('../../conf/config.properties')
     task_handler = TaskHandler(config)

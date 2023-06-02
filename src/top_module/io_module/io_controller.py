@@ -92,13 +92,13 @@ class ioController():
 
     def phone_servo(self, duration):
         # 0 degree
-        self.y_control(self.y2_on)  # y2 on
-        self.y_control(self.y2_off)  # y2 off
+        self.y_control(self.y3_on)  # y2 on
+        self.y_control(self.y3_off)  # y2 off
         # wait for finish
         time.sleep(duration)
         # 90 degree
-        self.y_control(self.y3_on)  # y3 on
-        self.y_control(self.y3_off)  # y3 off
+        self.y_control(self.y2_on)  # y3 on
+        self.y_control(self.y2_off)  # y3 off
 
     def surfacepro_angle(self, angle):
         duration = 3
@@ -145,14 +145,15 @@ class ioController():
 
 if __name__ == '__main__':
     # example usage
-    io = ioController()
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    io = ioController(port_config)
     # print(io.port)
-    io.y_control(io.y0_on)
-    time.sleep(20)
-    io.y_control(io.y0_off)
+    # io.y_control(io.y0_on)
+    # time.sleep(20)
+    # io.y_control(io.y0_off)
     
     # io.y_control(io.y2_on)
-    # io.phone_servo(0.5)
+    io.phone_servo(0.4)
     # io.y_init()
 
     # io.y_control(io.y7_on)

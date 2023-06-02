@@ -10,6 +10,8 @@ import src.utils.methods as umethods
 import handlers.status_handler as status_handler
 import handlers.remote_control_handler as remote_control_handler
 import handlers.task_handler3 as task_handler
+import src.models.robot as Robot
+import src.models.enums.nw as NWEnum
 
 def run_robot_agent():
 
@@ -59,14 +61,18 @@ if __name__ == '__main__':
     config = umethods.load_config('../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
 
+    # 
+    robot = Robot.Robot(config, port_config)
+    robot.status_start(NWEnum.Protocol.RVMQTT)
+    robot.sensor_start()
+
     # Status handler updates robot status every second
-    status_handler = status_handler.StatusHandler(config, port_config)
+    status_handler = status_handler.StatusHandler(robot)
     status_handler.start()
 
     # # Task handler subscribes and execute task, also report task status to robotmanager
-    task_handler = task_handler.TaskHandler(config, port_config)
+    task_handler = task_handler.TaskHandler(robot)
     task_handler.start()
-    task_handler.start_sensor()
 
     # Remote Control Handler
     remote_control_handler = remote_control_handler.RemoteControlHandler(config)

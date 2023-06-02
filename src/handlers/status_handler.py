@@ -19,24 +19,21 @@ import src.models.schema.rv as RVSchema
 import src.models.enums.nw as NWEnum
 
 class StatusHandler:
-    def __init__(self, config, port_config):
+    def __init__(self, robot: Robot.Robot):
         # rm - mqtt
         self.publisher = mqtt.Client("status_publisher")
         self.topic = "/robot/status"        
         self.publisher.connect("localhost")
         # yf config
-        self.robot = Robot.Robot(config, port_config)
-        self.nwdb = NWDB.robotDBHandler(config)
-        # rm status
-        self.rm_mapPose = RMSchema.mapPose()
-        self.rm_status  = RMSchema.Status(0.0, 0, self.rm_mapPose)
+        self.robot = robot
+
         # nwdb
         self.map_id = 0
 
     def start(self):
         # status
         self.publisher.loop_start()
-        threading.Thread(target=self.__update_status).start()   # from RV API
+        # threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb
         print(f'[status_handler]: Start...')
 
@@ -69,21 +66,45 @@ class StatusHandler:
     def __publish_status(self): # publish thread
         while True:  
             time.sleep(2)
-            print(f'[status_handler]: robot battery: {self.rm_status.batteryPct}')
-            print(f'[status_handler]: robot map rm_guid: {self.rm_status.mapPose.mapId}')
-            print(f'[status_handler]: robot position: ({self.rm_status.mapPose.x}, {self.rm_status.mapPose.y}, {self.rm_status.mapPose.heading})')
             
-            try:                
+            try:     
+                print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
+                print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
+                print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
+                       
                 ## to rm
-                self.publisher.publish(self.topic, self.rm_status.to_json())
+                self.publisher.publish(self.topic, self.robot.robot_status.to_json())
                 ## to nwdb
-                self.nwdb.update_robot_position(self.rm_status.mapPose.x, self.rm_status.mapPose.y, self.rm_status.mapPose.heading)
-                self.nwdb.update_robot_map_id(self.map_id)
-                self.nwdb.update_robot_battery(self.rm_status.batteryPct)
+                self.robot.nwdb.update_robot_position(self.robot.robot_status.mapPose.x, self.robot.robot_status.mapPose.y, self.robot.robot_status.mapPose.heading)
+                self.robot.nwdb.update_robot_map_id(self.robot.map_id)
+                self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
+            except:
+                print('[status_handler.__publish_status] Error. Plese Check')
+
+    def publish_status(self): # publish thread
+        while True:  
+            time.sleep(2)
+            
+            try:     
+                print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
+                print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
+                print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
+                       
+                ## to rm
+                self.publisher.publish(self.topic, self.robot.robot_status.to_json())
+                ## to nwdb
+                self.robot.nwdb.update_robot_position(self.robot.robot_status.mapPose.x, self.robot.robot_status.mapPose.y, self.robot.robot_status.mapPose.heading)
+                self.robot.nwdb.update_robot_map_id(self.robot.map_id)
+                self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
             
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    status_handler = StatusHandler(config)
-    status_handler.start()
+    port_config = umethods.load_config('../../conf/port_config.properties')
+    robot = Robot.Robot(config,port_config)
+    robot.status_start(NWEnum.Protocol.RVAPI)
+    status_handler = StatusHandler(robot)
+    # status_handler.start()
+    
+    status_handler.publish_status()

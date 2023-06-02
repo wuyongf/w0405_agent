@@ -1,12 +1,14 @@
 import mysql.connector
 from mysql.connector import errorcode
 import time
-
+import threading
 
 class AzureDB():
     def __init__(self, cfg):
         self.config = cfg
         self.Connect()
+        # lock
+        self.lock = threading.Lock()
 
     def Connect(self):
         # connect to db
@@ -39,15 +41,18 @@ class AzureDB():
             print("[AzureDBHandler.Query] Error Code: {}".format(err))
 
     def Select(self, statement):
+        self.lock.acquire()
         try:
             self.cursor.execute(statement)
             row = self.cursor.fetchone()
-            return row[0]
-            # rows = self.cursor.fetchone()
-            # for i in range(len(rows)):
-            #     print(rows[i])
+            if row:
+                return row[0]
+            else:
+                return None
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Select] Error Code: {}".format(err))
+        finally:
+            self.lock.release()
 
     # def GetColumn(self, statement):
     #     try:
@@ -59,6 +64,7 @@ class AzureDB():
     #         print("[AzureDBHandler.Select] Error Code: {}".format(err))
 
     def SelectAll(self, statement):
+        self.lock.acquire()
         try:
             dict_list = []
             self.cursor.execute(statement)
@@ -74,27 +80,38 @@ class AzureDB():
 
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Select] Error Code: {}".format(err))
+        finally:
+            self.lock.release()
 
     def Update(self, statement):
+        self.lock.acquire()
         try:
             self.cursor.execute(statement)
             self.conn.commit()
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Update] Error Code: {}".format(err))
+        finally:
+            self.lock.release()
 
     def Insert(self, statement):
+        self.lock.acquire()
         try:
             self.cursor.execute(statement)
             self.conn.commit()
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Insert] Error Code: {}".format(err))
+        finally:
+            self.lock.release()
 
     def Delete(self, statement):
+        self.lock.acquire()
         try:
             self.cursor.execute(statement)
             self.conn.commit()
         except mysql.connector.Error as err:
             print("[AzureDBHandler.Insert] Error Code: {}".format(err))
+        finally:
+            self.lock.release()
 
 
 if __name__ == '__main__':

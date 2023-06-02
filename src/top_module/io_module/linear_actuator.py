@@ -11,8 +11,8 @@ import src.utils.methods as umethods
 # TBC: sleep listener
 
 class LinearActuator():
-    def __init__(self, prot_config, callback_direction: Callable, callback_finish: Callable) -> None:
-        self.io = ioController.ioController(prot_config)
+    def __init__(self, port_config, callback_direction: Callable, callback_finish: Callable) -> None:
+        self.io = ioController.ioController(port_config)
         self.time_limit = 2.0
         self.stop_flag = 0
         self.status = LAEnum.LinearActuatorStatus.Idle.value

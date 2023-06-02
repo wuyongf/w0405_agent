@@ -25,14 +25,20 @@ class robotDBHandler(db.AzureDB):
         return self.Select(statement)
 
     def update_robot_battery(self, battery):
-        statement = f'UPDATE {self.database}.`robot.status` SET battery = {battery} WHERE ID = {self.robot_id};'
-        # print(statement)
-        self.Update(statement)
+        try: 
+            statement = f'UPDATE {self.database}.`robot.status` SET battery = {battery} WHERE ID = {self.robot_id};'
+            # print(statement)
+            self.Update(statement)
+        except:
+            print('[db_robot.update_robot_battery] error')
 
     def update_robot_position(self, x, y, theta):
-        statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta} WHERE ID = {self.robot_id};'
-        # print(statement)
-        self.Update(statement)
+        try: 
+            statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta},  modified_date = now() WHERE ID = {self.robot_id};'
+            # print(statement)
+            self.Update(statement)
+        except:
+            print('[db_robot.update_robot_position] error')
 
     def update_robot_map_id(self, map_id):
         if map_id is not None:

@@ -17,7 +17,11 @@ class LiftLevellingModule():
         self.cb_finish = self.callback_finish
         self.linear_actuator = LinearActuator.LinearActuator(port_config, self.cb_dir, self.cb_finish)
         self.pack_id = 0
+        self.task_id = 0
         self.status = MoEnum.LiftLevellingStatus.Idle
+
+    def set_task_id(self, id):
+        self.task_id = id
 
     def thread_get_status(self):
         while (True):
@@ -50,7 +54,7 @@ class LiftLevellingModule():
         self.status = MoEnum.LiftLevellingStatus.Executing
 
         # Create data pack
-        self.laser_distance.set_pack_id(self.laser_distance.create_data_pack(task_id=1))
+        self.laser_distance.set_pack_id(self.laser_distance.create_data_pack(task_id=self.task_id))
         print(f"pack created, pack_id = {self.laser_distance.pack_id}")
 
         # Set moving direction
