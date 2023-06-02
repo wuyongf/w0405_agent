@@ -69,8 +69,9 @@ class robotDBHandler(db.AzureDB):
         statement = f'SELECT EXISTS(SELECT * from {self.database}.`sys.mission` WHERE rm_mission_guid="{mission_id}")'
         return self.Select(statement)
     
-    def insert_new_mission_id(self,mission_id, type = NWEnums.MissionType):
-        statement = f'INSERT INTO {self.database}.`sys.mission` (rm_mission_guid, created_date, type) VALUES ("{mission_id}", now(), {type.value})'
+    def insert_new_mission_id(self,robot_id, mission_id, type = NWEnums.MissionType):
+        statement = f'INSERT INTO {self.database}.`sys.mission` (robot_id, rm_mission_guid, created_date, type) VALUES \
+                                                                ({robot_id}, "{mission_id}", now(), {type.value})'
         return self.Insert(statement)
 
     def get_latest_mission_id(self):

@@ -38,6 +38,7 @@ class IaqSensor():
 
 
     def get_data(self, datahex):
+
         co2 = (datahex[0] << 8 | datahex[1])
         tvoc = (datahex[2] << 8 | datahex[3])
         ch2o = (datahex[4] << 8 | datahex[5])
@@ -49,15 +50,15 @@ class IaqSensor():
         lux = (datahex[16] << 8 | datahex[17])
         mcu_temp = (datahex[18] << 8 | datahex[19]) / 100
         db = (datahex[20] << 8 | datahex[21])
-
-        return [co2, tvoc, ch2o, pm25, humi, temp, pm10, pm01, lux, mcu_temp, db]
+        # print(f'normal len: {len(list(datahex))}')
+        return [co2, tvoc, ch2o, pm25, humi, temp, pm10, pm01, lux, mcu_temp, db]       
 
     def data_insert(self, value):
-        print("dataInsert")
+        print("[iaq.py] dataInsert")
         self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items_insert, value, self.task_id)
 
     def data_stream(self, value):
-        print("dataStream")
+        print("[iaq.py] dataStream")
         self.nwdb.StreamIaqData("sensor.iaq.stream", self.column_items, value)
 
     def set_task_mode(self, e, taskid=0):
@@ -132,6 +133,8 @@ class IaqSensor():
                     # print(return_data_arr)
                     
                     rawdata = [data for i, data in enumerate(return_data_arr) if 4 <= i + 1 <= 25]
+                    
+                    if len(list(rawdata)) != 22: continue
                     result = self.get_data(rawdata)
                     # print(result)
                     
@@ -146,7 +149,7 @@ class IaqSensor():
                             result_insert = self.append_robot_position(result_insert)
                             self.data_check_stack(result)
                             self.data_insert(result_insert)
-                            print(f"Task ID: {self.task_id}")
+                            print(f"[iaq.py] Task ID: {self.task_id}")
 
                         # Stream to mySQL
                         self.data_stream(result)
@@ -159,8 +162,8 @@ class IaqSensor():
 
     def parse_json(self):
         obj = json.loads(self.status_summary())
-        print(obj["position"]["x"])
-        print(obj["position"]["y"])
+        # print(obj["position"]["x"])
+        # print(obj["position"]["y"])
         return obj
 
     def append_robot_position(self, array):
@@ -184,20 +187,20 @@ if __name__ == '__main__':
     # print((status_summary()["position"]["x"]))
     # iaq.set_task_id("")
     iaq.start()
-    # time.sleep(5)
+    # # time.sleep(5)
     iaq.set_task_mode(True, 6)
-    # 
-    time.sleep(10)
+    # # 
+    time.sleep(1800)
     # second argument (task id) is optional
     iaq.set_task_mode(False)
 
-    time.sleep(10)
+    # time.sleep(10)
 
-    iaq.set_task_mode(True, 6)
-    # 
-    time.sleep(10)
-    # second argument (task id) is optional
-    iaq.set_task_mode(False)
+    # iaq.set_task_mode(True, 6)
+    # # 
+    # time.sleep(10)
+    # # second argument (task id) is optional
+    # iaq.set_task_mode(False)
 
     
     # time.sleep(10)

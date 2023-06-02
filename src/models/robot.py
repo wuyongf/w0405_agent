@@ -37,6 +37,7 @@ class Robot:
         # self.modmodule_phone = Modules.PhoneDevice()
 
         ## robot baisc info
+        self.robot_id = self.nwdb.robot_id
         self.connection_status = 0
         self.mission_status = 0
 
@@ -183,7 +184,7 @@ class Robot:
             # # method 2: single task contains a point 'temp'
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
-            pose_name = 'temp'
+            pose_name = 'TEMP'
             self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
@@ -195,13 +196,13 @@ class Robot:
         except: return False
 
     def thread_check_mission_status(self, task_json, status_callback):
-        logging.debug('[check_mission_status] Starting...')
+        print('[goto.check_mission_status] Starting...')
         rm_task_data = RMSchema.Task(task_json)
         continue_flag = True
         while(continue_flag):
             time.sleep(2)
             if(self.rvapi.get_robot_is_moving()):
-                print('is moving...')
+                print('[goto.check_mission_status] robot is moving...')
                 time.sleep(1)
                 continue
             else:
@@ -209,7 +210,7 @@ class Robot:
                 time.sleep(1)
                 # check if arrive, callback
                 if(self.check_goto_has_arrived()): 
-                    print('flag arrive')
+                    print('[goto.check_mission_status] robot has arrived!')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
                 # # if error
                 # if(self.check_goto_has_error): 
@@ -217,9 +218,9 @@ class Robot:
                 #     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
                 # if cancelled
                 if(self.check_goto_is_cancelled()): 
-                    print('flag cancelled')
+                    print('[goto.check_mission_status] robot has cancelled moving task')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
-        logging.debug('[check_mission_status] Exiting...')
+        print('[goto.check_mission_status] Exiting...')
 
     def check_goto_has_arrived(self):
         return self.rvapi.get_task_is_completed()
@@ -252,7 +253,7 @@ class Robot:
         try: 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
 
-            self.nwdb.insert_new_mission_id(rm_mission_guid, NWEnum.MissionType.IAQ)
+            self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.IAQ)
             mission_id = self.nwdb.get_latest_mission_id()
 
             # mission_id = self.rmapi.get_mission_id(task_json['taskId'])

@@ -29,7 +29,7 @@ class TopModuleDBHandler(db.AzureDB):
 
     def StreamIaqData(self, table, key, value):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
-        print(statement)
+        print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
 
     def InsertIaqData(self, table, key, value, task_id):
@@ -37,7 +37,7 @@ class TopModuleDBHandler(db.AzureDB):
         # task_id
         # posX,Y
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id, robot_id) VALUES ({", ".join(map(str, value))}, now(), {task_id}, {self.robot_id});'
-        print(statement)
+        print(f'[db_top_module.InsertIaqData]: {statement}')
         self.Insert(statement)
 
     def GetUserRules(self):

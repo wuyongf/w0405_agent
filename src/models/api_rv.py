@@ -151,7 +151,7 @@ class RVAPI(api.AuthenticatedAPI):
         payload["taskId"] = str(uuid.uuid1())
         payload["taskItemList"] = [taskItemList_payload]
         data = json.dumps(payload)
-        print(data)
+        print(f'[post_new_navigation_task]: {data}')
         return self.post('/task/v1/move', json.dumps(payload))
 
 

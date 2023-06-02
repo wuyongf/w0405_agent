@@ -33,7 +33,41 @@ class AuthenticatedAPI:
             return response.json()
         except requests.exceptions.RequestException as error:
             print(f"Error: {error}")
-        
+    
+    # def get(self, endpoint):
+    #     url = self.base_url + endpoint
+    #     try:
+    #         response = requests.get(url, headers=self.headers)
+    #         if response.status_code == 200:
+    #             if not response.content:
+    #                 print("[AuthenticatedAPI]: Empty JSON response received.")
+    #                 return None
+    #             return response.json()
+    #         else:
+    #             print(f"Error: {response.status_code} {response.reason}")
+    #             return None
+    #     except requests.exceptions.RequestException as error:
+    #         print(f"Error: {error}")
+    #         return None
+
+
+    # def post(self, endpoint, json_data=None):
+    #     url = self.base_url + endpoint
+    #     try:
+    #         response = requests.post(url, headers=self.headers, json=json_data)
+    #         if response.status_code == 200:
+    #             if not response.content:
+    #                 print("[AuthenticatedAPI]: Empty JSON response received.")
+    #                 return None
+    #             return response.json()
+    #         else:
+    #             print(f"Error: {response.status_code} {response.reason}")
+    #             return None
+    #     except requests.exceptions.RequestException as error:
+    #         print(f"Error: {error}")
+    #         return None
+
+
     def put(self, endpoint, json = None):
         url = self.base_url + endpoint
         try:

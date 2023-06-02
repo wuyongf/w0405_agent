@@ -41,7 +41,9 @@ class ActiveMap:
         self.name = dct['name']
 
 class MapMetadata:
-    def __init__(self, dct):
+    def __init__(self, dct = None):
+        # if dct is None: return None
+        # print(dct)
         self.resolution = dct['resolution']
         self.width = dct['width']
         self.height = dct['height']
