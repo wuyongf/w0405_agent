@@ -38,11 +38,11 @@ class lift_leveling_detector:
     # rates_of_change = calculate_rate_of_change(result)
     # plot_original_and_rates(result, rates_of_change)
 
-    def check_constant_region(self, lst, range_value):
+    def find_constant_region(self, lst, range_value):
         for i in range(len(lst) - range_value + 1):
             region = lst[i:i+range_value]
             if len(set(region)) == 1:
-                return True
+                return i, i + range_value - 1
         return False
 
     # # Example usage
@@ -90,3 +90,4 @@ if __name__ == "__main__":
     list_dydx = lfd.calculate_rate_of_change(result)
     region_before_empty = lfd.extract_region(lst=list_dydx, i_start=lfd.empty_region[0]-50, i_end=lfd.empty_region[0])
     print(region_before_empty)
+    # lfd.find_constant_region(lst=region_before_empty, range_value=30)
