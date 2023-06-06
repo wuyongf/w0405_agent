@@ -1,6 +1,7 @@
 import threading
 import src.top_module.io_module.linear_actuator as LinearActuator
 import src.top_module.sensor.distance as LaserDistanceSensor
+import src.top_module.analysis.leveling_detection as LevelingDetection
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
 import src.top_module.enums.enums_linear_actuator as LAEnum
@@ -12,6 +13,7 @@ import time
 class LiftLevellingModule():
     def __init__(self, config, port_config):
         self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
+        self.lld = LevelingDetection.lift_leveling_detection()
         self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(config, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
@@ -80,7 +82,9 @@ if __name__ == "__main__":
 
     threading.Thread(target=ll.thread_get_status).start()
 
-    ll.start()
+    print(ll.nwdb.GetDistanceResult(side="left", pack_id=65, move_dir=2))
+
+    # ll.start()
 
     # # Create data pack
     # ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1))

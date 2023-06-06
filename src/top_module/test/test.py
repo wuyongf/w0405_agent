@@ -1,11 +1,9 @@
-import matplotlib.pyplot as plt
 
 # TODO: Loop the function 4 times (L,R,extent,retract), Return the biggest result
 #       Publish nomal level alert if one or more set of data fail
 #       Publish emergency level alert if all set of data fail
 #       Fail if the different between biggest and smallest result is > 2
 #       Push the data to the rule analysis system
-
 
 class lift_leveling_detector:
     def __init__(self) -> None:
@@ -22,19 +20,6 @@ class lift_leveling_detector:
                 rate = (numbers[i] - numbers[i-1]) / numbers[i-1]
                 rates.append(rate)
         return rates
-
-    def plot_original_and_rates(self, numbers, rates):
-        fig, axs = plt.subplots(2, 1, figsize=(8, 6))
-        # Plot original values
-        axs[0].plot(numbers)
-        axs[0].set_ylabel('Original Values')
-        # Plot rates of change
-        x = range(1, len(numbers))
-        axs[1].plot(x, rates)
-        axs[1].set_xlabel('Index')
-        axs[1].set_ylabel('Rate of Change')
-        plt.tight_layout()
-        plt.show()
 
     # Find the empty region between the floor and the lift
     def find_empty_region(self, lst, maxi):
