@@ -8,5 +8,6 @@ pyudev
 jproperties
 pygame
 ipykernel
+scipy
 
 # pip install -r requirements.txt

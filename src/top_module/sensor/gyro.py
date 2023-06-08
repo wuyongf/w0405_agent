@@ -17,6 +17,8 @@ import src.top_module.port as port
 #       6. get_rules
 #       7. check_stack
 
+#       Use Savitzky-Golay filter to filter the noise
+
 
 class gryo():
 
@@ -26,7 +28,7 @@ class gryo():
         self.baudrate = 115200
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.05  # Max: 200Hz, time interval = 0.005,  Default = 0.01sec, 100Hz
-        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
+        self.nwdb = NWDB.TopModuleDBHandler(config)
         print("SerialController initialized")
         self.acc = []
         self.gyro = []
@@ -233,5 +235,5 @@ if __name__ == '__main__':
     # gryo.collect_data()
     # gryo.start_collection()
     gryo.start()
-    time.sleep(2)
+    time.sleep(120)
     gryo.stop()

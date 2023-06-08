@@ -9,7 +9,7 @@ import datetime
 
 class TopModuleDBHandler(db.AzureDB):
     # init and connect to NWDB
-    def __init__(self, config, port_config):
+    def __init__(self, config):
         self.cfg = {
             'host': config.get('NWDB', 'host'),
             'user': config.get('NWDB', 'user'),
@@ -54,6 +54,10 @@ class TopModuleDBHandler(db.AzureDB):
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
+    
+    def UpdateDistanceResult(self, column: str, id: int, result: float):
+        statement = f'UPDATE {self.database}.`sensor.distance_sensor.datapack` SET {column} = "{result}" WHERE id = {id}'
+        self.Insert(statement)
 
     def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir):
         statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date, robot_id) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now(), {self.robot_id})'
@@ -67,7 +71,7 @@ class TopModuleDBHandler(db.AzureDB):
     # Get combined list of result
     def GetDistanceResult(self, side, pack_id, move_dir):
         result = []
-        for i in nwdb.GetDistanceChunk(side=side, pack_id=pack_id, move_dir=move_dir):
+        for i in self.GetDistanceChunk(side=side, pack_id=pack_id, move_dir=move_dir):
             result = result + list(i.values())[0].split(",")
         return result
 
@@ -91,10 +95,11 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
     
-    nwdb = TopModuleDBHandler(config, port_config)
+    nwdb = TopModuleDBHandler(config)
     
-    nwdb.CreateGyroDataPack(1,1)
-    nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
+    # nwdb.CreateGyroDataPack(1,1)
+    # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
+    
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())
     # print((nwdb.GetUserRules()[2]).get('type'))
@@ -114,5 +119,7 @@ if __name__ == '__main__':
 
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     # nwdb.Test()
+    
+    nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
 
     pass

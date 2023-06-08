@@ -4,7 +4,7 @@ import src.utils.methods as umethods
 
 class user_rules():
     def __init__(self, config, port_config):
-        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
+        self.nwdb = NWDB.TopModuleDBHandler(config)
 
     def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list

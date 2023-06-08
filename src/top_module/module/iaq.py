@@ -20,7 +20,7 @@ class IaqSensor():
         self.task_id = 0
         self.column_items_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta"]
         self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
-        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
+        self.nwdb = NWDB.TopModuleDBHandler(config)
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)
@@ -61,9 +61,9 @@ class IaqSensor():
         print("[iaq.py] dataStream")
         self.nwdb.StreamIaqData("sensor.iaq.stream", self.column_items, value)
 
-    def set_task_mode(self, e, taskid=0):
+    def set_task_mode(self, e, task_id=0):
         self.task_mode = e
-        self.task_id = taskid
+        self.task_id = task_id
         print(self.task_mode)
 
     def data_check_stack(self, dataset):

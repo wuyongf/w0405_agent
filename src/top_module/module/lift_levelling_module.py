@@ -12,8 +12,8 @@ import time
 
 class LiftLevellingModule():
     def __init__(self, config, port_config):
-        self.nwdb = NWDB.TopModuleDBHandler(config, port_config)
-        self.lld = LevelingDetection.lift_leveling_detection()
+        self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.lld = LevelingDetection.lift_leveling_detection(config)
         self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(config, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
@@ -50,6 +50,8 @@ class LiftLevellingModule():
         print("callback: finish")
         self.laser_distance.stop()
         self.status = MoEnum.LiftLevellingStatus.Finish
+        time.sleep(2)
+        self.lld.start_detection()
         # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
 
     def start(self):
@@ -57,11 +59,14 @@ class LiftLevellingModule():
 
         # Create data pack
         self.laser_distance.set_pack_id(self.laser_distance.create_data_pack(task_id=self.task_id))
-        print(f"pack created, pack_id = {self.laser_distance.pack_id}")
+        print(f"[lift_levelling_module.py] data pack created, pack_id = {self.laser_distance.pack_id}")
+
+        # Pass pack_id to leveling detector
+        self.lld.set_pack_id(self.laser_distance.pack_id)
 
         # Set moving direction
         self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
-        print(f"direction indicator set, move_dir = {self.laser_distance.move_dir}")
+        print(f"[lift_levelling_module.py] direction set, move_dir = {self.laser_distance.move_dir}")
 
         # Start laser distance Thread
         self.laser_distance.start()
@@ -82,9 +87,9 @@ if __name__ == "__main__":
 
     threading.Thread(target=ll.thread_get_status).start()
 
-    print(ll.nwdb.GetDistanceResult(side="left", pack_id=65, move_dir=2))
+    # print(ll.nwdb.GetDistanceResult(side="left", pack_id=64, move_dir=2))
 
-    # ll.start()
+    ll.start()
 
     # # Create data pack
     # ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1))

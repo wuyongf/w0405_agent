@@ -66,5 +66,6 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     lock = Locker(port_config)
     print(lock.sid)
+    lock.read_status()
     lock.unlock()
     # lock.read_status()  # return 'locked'/'unlocked'

@@ -1,3 +1,6 @@
+import time
+import src.utils.methods as umethods
+import src.top_module.db_top_module as NWDB
 
 # TODO: Loop the function 4 times (L,R,extent,retract), Return the biggest result
 #       Publish nomal level alert if one or more set of data fail
@@ -6,15 +9,22 @@
 #       Push the data to the rule analysis system
 
 class lift_leveling_detection:
-    def __init__(self):
-        # self.data = [488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 492, 492, 492, 500, 500, 509, 518, 518, 518, 518, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 519, 513, 505, 505, 495, 491, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 489, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 486, 469, 469, 469, 469, 469, 469, 469, 469, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 700, 490, 490, 490, 490, 490, 490, 490, 490, 490, 490, 490, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487,
-        #  487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 488, 492, 499, 510, 510, 510, 510, 512, 514, 514, 516, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 518, 515, 507, 507, 507, 498, 491, 489, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487, 487]
+    def __init__(self, config):
+        self.nwdb = NWDB.TopModuleDBHandler(config)
         self.data = []
         self.empty_region = []
         self.list_rate_of_change = []
+        self.pack_id = 0
+        self.result_stack = []
+
+    def set_pack_id(self, pack_id):
+        self.pack_id = pack_id
 
     def set_data(self, data):
         self.data = data
+        
+    def to_number_list(self, data):
+        return list(map(int, data))
 
     # Calculate the rate of change and return a list:
     def calculate_rate_of_change(self, numbers):
@@ -57,35 +67,73 @@ class lift_leveling_detection:
 
     # Run
     def level_detection(self):
-        self.empty_region = (self.find_empty_region(lst=self.data, maxi=50))
-        self.list_rate_of_change = self.calculate_rate_of_change(self.data)
+        # Convert the data list to list of number
+        self.data = self.to_number_list(self.data)
+        
+        try:
+            self.empty_region = (self.find_empty_region(lst=self.data, maxi=20))
+            self.list_rate_of_change = self.calculate_rate_of_change(self.data)
 
-        # Find the region before empty region
-        before_i_start = self.empty_region[0]-50
-        before_i_end = self.empty_region[0]
-        region_before_empty = self.extract_region(
-            lst=self.list_rate_of_change, i_start=before_i_start, i_end=before_i_end)
+            # Find the region before empty region
+            before_i_start = self.empty_region[0]-50
+            before_i_end = self.empty_region[0]
+            region_before_empty = self.extract_region(
+                lst=self.list_rate_of_change, i_start=before_i_start, i_end=before_i_end)
 
-        # Find the region after empty region
-        after_i_start = self.empty_region[1]
-        after_i_end = self.empty_region[1]+50
-        region_after_empty = self.extract_region(lst=self.list_rate_of_change, i_start=after_i_start, i_end=after_i_end)
+            # Find the region after empty region
+            after_i_start = self.empty_region[1]
+            after_i_end = self.empty_region[1]+50
+            region_after_empty = self.extract_region(lst=self.list_rate_of_change, i_start=after_i_start, i_end=after_i_end)
 
-        # Locate the index of the region before and after empty region
-        index_before_empty = self.find_constant_region(lst=region_before_empty, range_value=30) + before_i_start
-        index_after_empty = self.find_constant_region(lst=region_after_empty, range_value=30) + after_i_start
+            # Locate the index of the region before and after empty region
+            index_before_empty = self.find_constant_region(lst=region_before_empty, range_value=20) + before_i_start
+            index_after_empty = self.find_constant_region(lst=region_after_empty, range_value=20) + after_i_start
 
-        # Find the height before and after the empty
-        height_before_empty = self.data[index_before_empty]
-        height_after_empty = self.data[index_after_empty]
+            # Find the height before and after the empty
+            height_before_empty = self.data[index_before_empty]
+            height_after_empty = self.data[index_after_empty]
 
-        print(height_before_empty)
-        print(height_after_empty)
+            print(index_before_empty)
+            print(index_after_empty)
 
-        result = abs(height_before_empty - height_after_empty)
-        return result
+            result = abs(height_before_empty - height_after_empty)
+            print(f"[levelling_detection.py] result: {result}" )
+            return result
+        # Return -1 if fail to get
+        except:
+            return -1
+    
+    def start_detection(self):
+        side = ['left', 'right']
+        direction = [2, 3]
+        
+        # Find result for each side, extent and retract
+        for s in side:
+            for d in direction:
+                # print("[leveling_detection.py]" ,s, d)
+                # TODO: pack_id = self.pack_id
+                self.set_data(self.nwdb.GetDistanceResult(side=s, pack_id=self.pack_id, move_dir=d))
+                time.sleep(0.1)
+                result = self.level_detection()
+                self.result_stack.append(result)
+                
+        # Update result to nwdb
+        db_header = ["result_el", "result_rl", "result_er", "result_rr"]
+        for i,r in enumerate(self.result_stack):
+            self.nwdb.UpdateDistanceResult(column=db_header[i], id=self.pack_id, result=r)
+        
+                
+                
+                
+        
 
 
 if __name__ == "__main__":
-    lfd = lift_leveling_detection()
-    print(lfd.level_detection())
+    config = umethods.load_config('../../../conf/config.properties')    
+    lfd = lift_leveling_detection(config)
+    
+    # NOTE: Print the result by given data:
+    # print(lfd.level_detection())
+    lfd.set_pack_id(83)
+    
+    lfd.start_detection()
