@@ -28,9 +28,9 @@ class Locker():
                 time.sleep(self.time_interval)
                 len_return_data = self.ser.inWaiting()
             except serial.SerialException:
-                print("failed to send unlock command")
+                print("[locker.py] failed to send unlock command")
         else:
-            print("serial port is not open")
+            print("[locker.py] serial port is not open")
 
     def read_status(self):
         if self.ser and self.ser.is_open:
@@ -48,9 +48,9 @@ class Locker():
                         for counter, data in enumerate(return_data_arr):
                             if counter == 3:
                                 if data == 17:
-                                    print('locked')
+                                    print('[locker.py] Get status: Locked')
                                 if data == 0:
-                                    print('unlocked')
+                                    print('[locker.py] Get status: Unlocked')
                         return False
                     else:
                         print('no data return')
@@ -61,6 +61,7 @@ class Locker():
             print("serial port is not open")
 
 
+    
 if __name__ == '__main__':
     # example usage
     port_config = umethods.load_config('../../../conf/port_config.properties')
@@ -68,4 +69,7 @@ if __name__ == '__main__':
     print(lock.sid)
     lock.read_status()
     lock.unlock()
+    time.sleep(1)
+    lock.read_status()
+    
     # lock.read_status()  # return 'locked'/'unlocked'
