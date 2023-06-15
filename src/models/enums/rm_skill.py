@@ -1,0 +1,12 @@
+from enum import Enum
+
+class Skill(Enum):
+    RM_GOTO = 1
+    RM_LOCALIZE = 2
+    RV_FOLLOWME = 3
+    FUNC_IAQ_ON = 4
+    FUNC_IAQ_OFF = 5
+    FUNC_LIFTLEVLLING = 6
+    FUNC_DELIVERY_CASE_UNLOCK = 7
+    FUNC_DOOR_ACCESS_ON = 8
+    MISSION_DELIVERY = 9

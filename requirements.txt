@@ -10,4 +10,7 @@ pygame
 ipykernel
 scipy
 
+# for SMS
+twilio
+
 # pip install -r requirements.txt

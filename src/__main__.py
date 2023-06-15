@@ -15,7 +15,6 @@ import src.models.enums.nw as NWEnum
 
 def run_robot_agent():
 
-
     # Change to the desired directory
     directory = "~/dev/robot-agent-v2.0/"
     os.chdir(os.path.expanduser(directory))

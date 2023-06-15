@@ -1,8 +1,11 @@
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
-import src.models.schema.rv as RVSchema
 import src.models.enums.nw as NWEnums
+import src.models.schema.nw as NWSchema
+import src.models.schema.rm as RMSchema
+import src.models.schema.rv as RVSchema
+
 
 class robotDBHandler(db.AzureDB):
     # init and connect to NWDB
@@ -34,7 +37,7 @@ class robotDBHandler(db.AzureDB):
 
     def update_robot_position(self, x, y, theta):
         try: 
-            statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta},  modified_date = now() WHERE ID = {self.robot_id};'
+            statement = f'UPDATE {self.database}.`robot.status` SET pos_x = {x}, pos_y = {y}, pos_theta = {theta},  modified_date = "{self.now()}" WHERE ID = {self.robot_id};'
             # print(statement)
             self.Update(statement)
         except:
@@ -75,22 +78,55 @@ class robotDBHandler(db.AzureDB):
         statement = f'SELECT EXISTS(SELECT * from {self.database}.`sys.mission` WHERE rm_mission_guid="{mission_id}")'
         return self.Select(statement)
     
-    def insert_new_mission_id(self,robot_id, mission_id, type = NWEnums.MissionType):
+    def insert_new_mission_id(self,robot_id, mission_id, type = NWEnums.MissionType.IAQ):
         statement = f'INSERT INTO {self.database}.`sys.mission` (robot_id, rm_mission_guid, created_date, type) VALUES \
-                                                                ({robot_id}, "{mission_id}", now(), {type.value})'
+                                                                ({robot_id}, "{mission_id}", "{self.now()}", {type.value})'
         return self.Insert(statement)
 
     def get_latest_mission_id(self):
         statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`sys.mission`"
         return self.Select(statement)
+    
+    # DELIVERY
+    def get_available_delivery_id(self):
+        statement = f'SELECT ID FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'
+        return self.Select(statement)
+    
+    def configure_delivery_mission(self, available_delivery_id):
+        # mission_id = self.nwdb.get_single_value('sys.mission.delivery', 'mission_id', 'ID', available_delivery_id)
+        robot_id = self.nwdb.get_single_value('sys.mission.delivery', 'robot_id', 'ID', available_delivery_id)
+        sender_id = self.nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', available_delivery_id)
+        pos_origin_id = self.nwdb.get_single_value('sys.mission.delivery', 'pos_origin_id', 'ID', available_delivery_id)
+        receiver_id = self.nwdb.get_single_value('sys.mission.delivery', 'receiver_id', 'ID', available_delivery_id)
+        pos_destination_id = self.nwdb.get_single_value('sys.mission.delivery', 'pos_destination_id', 'ID', available_delivery_id)
+
+        return NWSchema.DeliveryMission(robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id)
+    
+    def get_delivery_position_detail(self, pos_id):
+        pos_layout_id = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
+        pos_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', pos_layout_id)
+        pos_name = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_name', 'ID', pos_id)
+        pos_x = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_x', 'ID', pos_id)
+        pos_y = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_y', 'ID', pos_id)
+        pos_theta = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_theta', 'ID', pos_id)
+        
+        return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
+        pass
+    
+    # BASIC METHOD
+    def get_single_value(self, table, target, condition, condition_value):
+        # statement = f'SELECT sender_id FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'
+        statement = f'SELECT {target} FROM {self.database}.`{table}` WHERE {condition} = {condition_value};'
+        return self.Select(statement)
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
 
-    # # position
+    # position
     # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}
-    # nwdb.UpdateRobotPosition(RVSchema.Pose(json))
+    # nwdb.update_robot_position(13,12,210)
 
     # # battery
     # nwdb.UpdateRobotBattery(12.22)
@@ -100,9 +136,16 @@ if __name__ == '__main__':
     # print(res)
 
     # mission_id: 9b73504f-b4de-4a75-98c8-468cf588c5f6
-    nwdb.insert_new_mission_id('9b73504f-b4de-4a75-98c8-468cf588c5f9', NWEnums.MissionType.IAQ)
-    res = nwdb.check_mission_id_exist('')
-    print(res)
+    # nwdb.insert_new_mission_id(1, '9b73504f-b4de-4a75-98c8-468cf588c5f0', NWEnums.MissionType.IAQ)
+    # res = nwdb.check_mission_id_exist('')
+    # print(res)
 
-    id = nwdb.get_latest_mission_id()
+    # id = nwdb.get_latest_mission_id()
+    # print(id)
+
+    # # delivery
+    id = nwdb.get_available_delivery_id()
     print(id)
+
+    sender_id = nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', id)
+    print(sender_id)

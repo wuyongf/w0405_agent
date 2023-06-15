@@ -17,7 +17,8 @@ logging.basicConfig(format='%(asctime)s - line:%(lineno)d - %(levelname)s - %(me
 
 """  Config for MQTT connection """  
 client_name = 'Job Update'
-mqtt_host = 'localhost'
+mqtt_host = 'localhost' 
+# mqtt_host = '192.168.1.33'
 mqtt_port = 1883
 job_update_topic = '/robot/job/update' 
 task_status_topic = '/robot/task/status'
@@ -31,7 +32,7 @@ if __name__ == "__main__":
         client.loop_start()
 
         """  Job update parameters (Example of robot going to Point A) """ 
-        job_name = "GOTO Point A"
+        job_name = "Delivery Mission"
         task_type = "RM-GOTO"
         map_id = "a41c914e-9097-41cb-9b4b-60fc8da8d66a"  # Replace it with actual value   
         position_name = "Point A"

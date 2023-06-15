@@ -12,10 +12,10 @@ import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
 import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
-# top module
-import src.top_module.enums.enums_module_status as MoEnum
-from src.top_module.module import lift_levelling_module as MoLiftLevelling
-from src.top_module.module import iaq as MoIAQ
+# # top module
+# import src.top_module.enums.enums_module_status as MoEnum
+# from src.top_module.module import lift_levelling_module as MoLiftLevelling
+# from src.top_module.module import iaq as MoIAQ
 
 class Robot:
     def __init__(self, config, port_config):
@@ -27,8 +27,8 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
 
         # # # module - models/sensors
-        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
-        self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
+        # self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
+        # self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
 
         # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
@@ -317,75 +317,21 @@ class Robot:
         pass
 
     def inspect_lift_levelling(self, task_json):
+        pass
+        # def get_status():
+        #     return self.mo_lift_levelling.get_status()
         
-        def get_status():
-            return self.mo_lift_levelling.get_status()
-        
-        self.mo_lift_levelling.start()
-        time.sleep(1)
+        # self.mo_lift_levelling.start()
+        # time.sleep(1)
 
-        while(get_status() == MoEnum.LiftLevellingStatus.Executing):
-            time.sleep(1)
+        # while(get_status() == MoEnum.LiftLevellingStatus.Executing):
+        #     time.sleep(1)
         
-        if(get_status() == MoEnum.LiftLevellingStatus.Finish):
-            return True
-        else:
-            return False
+        # if(get_status() == MoEnum.LiftLevellingStatus.Finish):
+        #     return True
+        # else:
+        #     return False
     
-    # DELIVERY
-    # def configure_delivery_mission(self, available_delivery_ID):
-
-    def new_delivery_mission(self):
-        
-        # check available delivery mission
-        id = self.nwdb.get_available_delivery_id()
-        if id == None:
-            print('There is no any available delivery misssion!!')
-            return
-        
-        # configure the delivery mission 
-        # a_delivery_mission: NWSchema
-        a_delivery_mission = self.nwdb.configure_delivery_mission(available_delivery_id=id)
-        print(a_delivery_mission.receiver_id)
-        print(f'[new_delivery_mission]: Get a delivery mission!!!')
-
-        #region Notify the receiver
-        #endregion
-
-        #region ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-        skill_config = umethods.load_config('../conf/rm_skill.properties')
-        #endregion
-        print(f'[new_delivery_mission]: Loaded Robot Skill...')
-        
-        # get sender info
-        # get origin location
-        # get receiver info
-        # get destination location
-
-        # pos_origin details
-        # pos_origin: RMSchema
-        pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
-        print(f'[new_delivery_mission]: get_delivery_position_detail...')
-
-        # get destination_id and then create a rm_guid first.
-
-        # Job-Delivery START
-        # TASK START
-        tasks = []
-        # configure task-01: create a new position on RM-Layout
-        self.rmapi.create_delivery_marker(pos_destination.mapId, pos_destination.x, pos_destination.y, pos_destination.heading)
-        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid()
-        # configure task-01: create a new task
-        goto_01 = self.rmapi.new_task(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.mapId,latest_marker_id)
-        tasks.append(goto_01)
-        # TASK END
-        print(f'[new_delivery_mission]: configure task end...')
-
-        self.rmapi.new_job(self.robot_id, pos_destination.mapId, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
-        print(f'[new_delivery_mission]: configure job end...')
-
-        pass    
 
 
 if __name__ == '__main__':
@@ -394,12 +340,10 @@ if __name__ == '__main__':
     
     robot = Robot(config,port_config)
 
-    # # get status
-    # robot.status_start(NWEnum.Protocol.RVAPI)
-    # while(True):
-    #     time.sleep(1)
-    #     print(robot.status_summary())
-    #     # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
-    #     # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
-
-    robot.new_delivery_mission()
+    # get status
+    robot.status_start(NWEnum.Protocol.RVAPI)
+    while(True):
+        time.sleep(1)
+        print(robot.status_summary())
+        # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
+        # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))

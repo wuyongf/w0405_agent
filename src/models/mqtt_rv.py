@@ -8,7 +8,7 @@ import src.models.schema.rv as RVSchema
 class RVMQTT():
     def __init__(self, config):
         self.broker_address = config.get('RV','localhost')
-        
+        # print(self.broker_address)
         self.subscriber = mqtt.Client("rv_mqtt_subscriber")
         self.subscriber.connect(self.broker_address)
         self.subscriber.on_message = self.__on_message

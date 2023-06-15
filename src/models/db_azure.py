@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import errorcode
 import time
 import threading
+import datetime
 
 class AzureDB():
     def __init__(self, cfg):
@@ -113,6 +114,10 @@ class AzureDB():
         finally:
             self.lock.release()
 
+    def now(self):
+        current_date = datetime.datetime.now()
+        formatted_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
+        return formatted_date
 
 if __name__ == '__main__':
 

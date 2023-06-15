@@ -1,8 +1,17 @@
-import src.models.api_authenticated as api
+import api_authenticated as api
 import json
 import requests
-import src.utils.methods as umethods
 import sys
+import configparser
+
+def load_config(config_addr):
+        # Load config file
+        configs = configparser.ConfigParser()
+        try:
+            configs.read(config_addr)
+        except:
+            print("Error loading properties file, check the correct directory")
+        return configs
 
 class RMAPI(api.AuthenticatedAPI):
     def __init__(self, config):
@@ -14,9 +23,7 @@ class RMAPI(api.AuthenticatedAPI):
             }
         super().__init__(base_url=self.base_url, headers=self.headers)
 
-        # robot
-        self.robot_guid = self.config.get('NWDB','robot_guid')
-    
+
     def __login(self):
         base_url = self.base_url
         endpoint = "/login"
@@ -31,61 +38,7 @@ class RMAPI(api.AuthenticatedAPI):
 
     def get_login_info(self):
         return self.get('/auth/loginInfo')
-
-    def list_maps(self):
-        payload = {}
-        payload["pageNo"] = 1
-        payload["pageSize"] = 10
-        payload["filter"] = []
-        payload["order"] = [{"column":"created_at", "type":"desc"}]
-        return self.post('/map/list', json.dumps(payload))
     
-    def list_missions(self):
-        payload = {}
-        payload["pageNo"] = sys.maxsize
-        payload["pageSize"] = sys.maxsize
-        payload["filter"] = []
-        payload["order"] = [{"column":"created_at", "type":"desc"}]
-        return self.post('/mission/list', json.dumps(payload))
-    
-    def create_mission(self):
-        payload = {}
-        payload["type"] = 1
-        payload["mode"] = 1
-        payload["layoutId"] = 'd3b4f645-023d-45e8-95df-3ef6465497e9'
-        payload["name"] = 'TestMission-Rev03'
-        payload["robotIds"] = ['2658a873-a0a6-4c3f-967f-d179c4073272']
-        payload['tasks'] = [
-        {
-            "skillId": "f8919eca-c5f2-4b33-8efd-d2222107cfba",
-            "layoutId": "d3b4f645-023d-45e8-95df-3ef6465497e6",
-            "order": 1,
-            "layoutMakerId": 1
-        }]
-        return self.post('/mission', json.dumps(payload))
-    
-    def delete_mission(self, mission_id):
-        return self.delete(f'/mission/{mission_id}')
-    
-    def get_mission_id(self, task_json):
-        # self.__init__()
-        json_data = self.list_missions()
-        # print(json_data)
-        if json_data is not None:
-            list_data = json_data['result']['list']
-            # print(list_data)
-            for mission in list_data:
-                # taskId == mission['tasks']['id']
-                if mission['tasks'] is None: continue
-                else:
-                    for task in mission['tasks']:
-                        if (task_json['taskId'] == task['id']):
-                            return mission['id']
-        else: 
-            print('[api_rm.get_mission_id]: cannot find the mission_id')
-            return None
-
-    # New job/mission - Delivery
     def list_robot_skill(self):
         # http://dev.robotmanager.io/api/v2/robot-skills
 
@@ -100,24 +53,6 @@ class RMAPI(api.AuthenticatedAPI):
             item_name = item['name']
             print(f'skill: {item_name}  skill_id: {item_id}')
     
-    def write_robot_skill_to_properties(self,robotId):
-        # http://dev.robotmanager.io/api/v2/robot-skills
-
-        # robotId = "2658a873-a0a6-4c3f-967f-d179c4073272" # "2658a873-a0a6-4c3f-967f-d179c4073272"
-        # robot-skills/get-by-robot/{robotId}
-        data = self.get(f'/robot-skills/get-by-robot/{robotId}')
-        results = data['result']
-
-        with open('./conf/rm_skill.properties', 'w') as config_file:
-            config_file.write('[RM-Skill]' + '\n')
-            # Iterate over each item and extract the "id" and "name"
-            for item in results:
-                item_id = item['id']
-                item_name = item['name']
-                item_name = item_name.replace(' ', '-')
-                config_file.write(f'{item_name} = {item_id}' + '\n')
-                # print(f'skill: {item_name}  skill_id: {item_id}')
-
     def list_layouts(self):
         payload = {}
         payload["pageNo"] = 1
@@ -146,7 +81,7 @@ class RMAPI(api.AuthenticatedAPI):
             item_position = item['position']
             print(f'marker: {item_name}  id: {item_id} position: {item_position}')
         return results
-    
+
     def create_layout_marker(self, layout_id, name):
         payload = {}
         payload["layoutId"] = layout_id
@@ -154,52 +89,48 @@ class RMAPI(api.AuthenticatedAPI):
         payload["position"] = {"x": 20,"y": 20,"z": 0}
         return self.post('/layout-markers', json.dumps(payload))
         pass
-    
+
     def delete_layout_marker(self, id):
         return self.delete(f'/layout-markers/{id}')
         pass
     
-    def new_job_configure_delivery(self, robot_id):
+    def list_maps(self):
+        payload = {}
+        payload["pageNo"] = 1
+        payload["pageSize"] = 10
+        payload["filter"] = []
+        payload["order"] = [{"column":"created_at", "type":"desc"}]
+        return self.post('/map/list', json.dumps(payload))
+    
+    def list_missions(self):
+        payload = {}
+        payload["pageNo"] = sys.maxsize
+        payload["pageSize"] = sys.maxsize
+        payload["filter"] = []
+        payload["order"] = [{"column":"created_at", "type":"desc"}]
+        return self.post('/mission/list', json.dumps(payload))
+    
+    def new_job(self):
         '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
         payload = {}
         payload["type"] = 1 # 1: job 2: mission
         payload["mode"] = 1 # 1:Execute immediately
-        payload["layoutId"] = ''
-        payload["name"] = 'Configure Delivery Mission'
-        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
+        payload["layoutId"] = 'ca0ac9aa-9910-4949-90d5-6efb525015b7'
+        payload["name"] = 'Delivery'
+        payload["robotIds"] = ['2658a873-a0a6-4c3f-967f-d179c4073272']
         payload['tasks'] = [
         {
-            "skillId": "354a542a-2227-4b74-be44-41cd7b6dcf2c",
+            "skillId": "0ea62ced-e193-4452-b1d1-7955379371a7",
             "layoutId": "ca0ac9aa-9910-4949-90d5-6efb525015b7",
             "order": 1,
             "layoutMakerId": 1
         }]
         return self.post('/mission', json.dumps(payload))
-
-    def new_job(self, robot_id, layout_id = '', tasks = [], job_name = 'New Job Demo'):
-        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
-        payload = {}
-        payload["type"] = 1 # 1: job 2: mission
-        payload["mode"] = 1 # 1:Execute immediately
-        payload["layoutId"] = layout_id
-        payload["name"] = job_name
-        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
-        payload['tasks'] = tasks
-        return self.post('/mission', json.dumps(payload))
-
-    # Delivery
-    def new_task(self, skill_id, layout_id, layoutMarkerId = 1, order = 1):
-
-        task = {
-            "skillId": skill_id,
-            "layoutId": layout_id,
-            "order": order,
-            "layoutMakerId": layoutMarkerId
-        }
-
-        return task
-
-        ## for delivery
+    
+    def delete_mission(self, mission_id):
+        return self.delete(f'/mission/{mission_id}')
+    
+    ## for delivery
     def create_delivery_marker(self, layout_id, x, y, heading):
         
         delivery_names = []
@@ -274,79 +205,35 @@ class RMAPI(api.AuthenticatedAPI):
             if "delivery" in item_name.lower():
                 self.delete_layout_marker(item_id)
 
-
+    
 if __name__ == '__main__':
-    config = umethods.load_config('../../conf/config.properties')
+    config = load_config('./config.properties')
     rmapi = RMAPI(config)
 
     # json_data = rmapi.new_job()
     # print(json_data)
     
     # rmapi.list_robot_skill()
-    
     # rmapi.list_layouts()
 
     # rmapi.create_layout_marker('ca0ac9aa-9910-4949-90d5-6efb525015b7', 'delivery-03')
     # rmapi.list_layout_markers('ca0ac9aa-9910-4949-90d5-6efb525015b7')
-    # rmapi.delete_layout_marker('5d22bc53-4c62-4757-9c2f-98d3cf2d8393')
+    # rmapi.delete_layout_marker()
     # rmapi.list_layout_markers()
 
-    # # Delivery
-    rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
+    # delivery
+    # rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
     # rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
-    # rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
     # rmapi.get_latest_delivery_marker_guid(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
 
-    # retrieve skills and get skill_config
-    rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-    skill_config = umethods.load_config('../conf/rm_skill.properties')
-    
-    # get destination_id and then create a rm_guid first.
+    # for delivery
+    # 1. get sender name.   get sender location    (6/F... Point_A)
+    # 2. get receiver name. get receiver location  (4/F... Point_C)
 
-    # initiate delivery mission
-    tasks = []
-    goto_01 = rmapi.new_task(config.get('RM-Skill','RM-GOTO'), )
-    tasks.append(goto_01)
-    
-    rmapi.new_job(robotId="2658a873-a0a6-4c3f-967f-d179c4073272", layout_id='', tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
-
-    # # Delivery End
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # json_data = rmapi.create_mission()
-    # print(json_data)
-
-    # ## list map
-    # json_data = rmapi.list_maps()
-    # print(json_data)
-
-    # taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
-
-    # # list missions and parse json
-    # json_data = rmapi.list_missions()
-    # print(json_data)
-
-    # # # get mission status
-    # # for i in range(len(list_data)):
-    # #     print(list_data[i]['status'])
-    
-    # # # get Mission(Job or Mission)
-    # # for i in range(len(list_data)):
-    # #     if(list_data[i]['type'] == 2):
-    # #         print(list_data[i])
-
+    # robot workflow:
+    # move to 6/F Point_A. Maybe need to access door.
+    # move to 6/F Lift Position. Call Lift.
+    # enter lift.
+    # switch to 4/F Map
+    # move ot 4/F Point_C. 
