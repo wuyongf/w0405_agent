@@ -25,7 +25,7 @@ simPath = [
 robotStatusJson = {
     "batteryPct": 100.0,
     "mapPose": {
-        "mapId": "d7355d44-df67-4d26-8d25-36928746b7ee",
+        "mapId": "1e28ee6e-2fc4-4d72-bed5-8d1a421783ff",
         "x": simPath[0]["x"],
         "y": simPath[0]["y"],
         "z": 0.0,

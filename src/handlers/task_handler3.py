@@ -70,6 +70,7 @@ class TaskHandler:
             return
         if task.scheduleType == 3:  # Resume
             self.robot.resume_current_task()
+            # self.execute_task(task_str)
             return
         if task.scheduleType == 2:  # Pause
             self.robot.pause_current_task()

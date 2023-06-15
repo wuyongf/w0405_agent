@@ -49,8 +49,10 @@ class Locker():
                             if counter == 3:
                                 if data == 17:
                                     print('[locker.py] Get status: Locked')
+                                    return True
                                 if data == 0:
                                     print('[locker.py] Get status: Unlocked')
+                                    return False
                         return False
                     else:
                         print('no data return')
@@ -60,16 +62,21 @@ class Locker():
         else:
             print("serial port is not open")
 
+    def is_closed(self):
+        return self.read_status()
 
     
 if __name__ == '__main__':
     # example usage
     port_config = umethods.load_config('../../../conf/port_config.properties')
     lock = Locker(port_config)
-    print(lock.sid)
-    lock.read_status()
+    # print(lock.sid)
+    # lock.read_status()
+    print(lock.is_closed())
+    time.sleep(1)
     lock.unlock()
     time.sleep(1)
-    lock.read_status()
+    print(lock.is_closed())
+    # lock.read_status()
     
     # lock.read_status()  # return 'locked'/'unlocked'
