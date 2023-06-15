@@ -94,21 +94,21 @@ class robotDBHandler(db.AzureDB):
     
     def configure_delivery_mission(self, available_delivery_id):
         # mission_id = self.nwdb.get_single_value('sys.mission.delivery', 'mission_id', 'ID', available_delivery_id)
-        robot_id = self.nwdb.get_single_value('sys.mission.delivery', 'robot_id', 'ID', available_delivery_id)
-        sender_id = self.nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', available_delivery_id)
-        pos_origin_id = self.nwdb.get_single_value('sys.mission.delivery', 'pos_origin_id', 'ID', available_delivery_id)
-        receiver_id = self.nwdb.get_single_value('sys.mission.delivery', 'receiver_id', 'ID', available_delivery_id)
-        pos_destination_id = self.nwdb.get_single_value('sys.mission.delivery', 'pos_destination_id', 'ID', available_delivery_id)
+        robot_id = self.get_single_value('sys.mission.delivery', 'robot_id', 'ID', available_delivery_id)
+        sender_id = self.get_single_value('sys.mission.delivery', 'sender_id', 'ID', available_delivery_id)
+        pos_origin_id = self.get_single_value('sys.mission.delivery', 'pos_origin_id', 'ID', available_delivery_id)
+        receiver_id = self.get_single_value('sys.mission.delivery', 'receiver_id', 'ID', available_delivery_id)
+        pos_destination_id = self.get_single_value('sys.mission.delivery', 'pos_destination_id', 'ID', available_delivery_id)
 
         return NWSchema.DeliveryMission(robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id)
     
     def get_delivery_position_detail(self, pos_id):
-        pos_layout_id = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
-        pos_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', pos_layout_id)
-        pos_name = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_name', 'ID', pos_id)
-        pos_x = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_x', 'ID', pos_id)
-        pos_y = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_y', 'ID', pos_id)
-        pos_theta = self.nwdb.get_single_value('data.sys.mission.delivery.location', 'pos_theta', 'ID', pos_id)
+        pos_layout_id = self.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
+        pos_layout_rm_guid = self.get_single_value('robot.map.layout', 'rm_guid', 'ID', pos_layout_id)
+        pos_name = self.get_single_value('data.sys.mission.delivery.location', 'pos_name', 'ID', pos_id)
+        pos_x = self.get_single_value('data.sys.mission.delivery.location', 'pos_x', 'ID', pos_id)
+        pos_y = self.get_single_value('data.sys.mission.delivery.location', 'pos_y', 'ID', pos_id)
+        pos_theta = self.get_single_value('data.sys.mission.delivery.location', 'pos_theta', 'ID', pos_id)
         
         return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
         pass
@@ -147,5 +147,5 @@ if __name__ == '__main__':
     id = nwdb.get_available_delivery_id()
     print(id)
 
-    sender_id = nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', id)
-    print(sender_id)
+    # sender_id = nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', id)
+    # print(sender_id)

@@ -185,16 +185,18 @@ class RMAPI(api.AuthenticatedAPI):
         payload["name"] = job_name
         payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
         payload['tasks'] = tasks
+        print(payload)
         return self.post('/mission', json.dumps(payload))
 
     # Delivery
-    def new_task(self, skill_id, layout_id, layoutMarkerId = 1, order = 1):
+    def new_task(self, skill_id, layout_id, layoutMarkerId = None, order = 1):
 
         task = {
             "skillId": skill_id,
             "layoutId": layout_id,
             "order": order,
-            "layoutMakerId": layoutMarkerId
+            "layoutMakerId": layoutMarkerId,
+            # "params": [{"paramKey": "positionName", "paramValue": "delivery-01"}]
         }
 
         return task
@@ -256,6 +258,7 @@ class RMAPI(api.AuthenticatedAPI):
 
         if len(delivery_markers) == 0:
             print('cannot find any delivery marker!')
+            return None
         else: 
             sorted_delivery_names = sorted(delivery_markers)
             numeric_values = [int(item.split('-')[1]) for item in sorted_delivery_names]
@@ -263,6 +266,7 @@ class RMAPI(api.AuthenticatedAPI):
             formatted_number = '{:02}'.format(largest_number)
             guid = delivery_markers[f'delivery-{formatted_number}']
             print(f'found latest delivery marker guid: {guid}')
+            return guid
 
     def delete_all_delivery_markers(self, layout_id):
         data = self.get(f'/layout-markers/{layout_id}')
@@ -274,10 +278,33 @@ class RMAPI(api.AuthenticatedAPI):
             if "delivery" in item_name.lower():
                 self.delete_layout_marker(item_id)
 
+    def new_job_demo(self):
+        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
+        payload = {}
+        payload["type"] = 1 # 1: job 2: mission
+        payload["mode"] = 1 # 1:Execute immediately
+        payload["layoutId"] = 'ca0ac9aa-9910-4949-90d5-6efb525015b7'
+        payload["name"] = 'Configure Delivery Mission'
+        payload["robotIds"] = ['2658a873-a0a6-4c3f-967f-d179c4073272'] # 2658a873-a0a6-4c3f-967f-d179c4073272
+        payload['tasks'] = [
+        {
+            "skillId": "f8919eca-c5f2-4b33-8efd-d2222107cfba",
+            "layoutId": "ca0ac9aa-9910-4949-90d5-6efb525015b7",
+            "order": 1,
+            "layoutMakerId": 'f8919eca-c5f2-4b33-8efd-d2222107cfba',
+            "params": [{"paramKey": "positionName", "paramValue": "delivery-01"}]
+        }]
+        print(payload)
+        return self.post('/mission', json.dumps(payload))
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
+
+    res = rmapi.list_maps()
+    print(res)
+    # rmapi.new_job_demo()
 
     # json_data = rmapi.new_job()
     # print(json_data)
@@ -291,26 +318,26 @@ if __name__ == '__main__':
     # rmapi.delete_layout_marker('5d22bc53-4c62-4757-9c2f-98d3cf2d8393')
     # rmapi.list_layout_markers()
 
-    # # Delivery
-    rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
-    # rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
-    # rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
-    # rmapi.get_latest_delivery_marker_guid(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    # # # Delivery
+    # rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
+    # # rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    # # rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    # # rmapi.get_latest_delivery_marker_guid(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
 
-    # retrieve skills and get skill_config
-    rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-    skill_config = umethods.load_config('../conf/rm_skill.properties')
+    # # retrieve skills and get skill_config
+    # rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
+    # skill_config = umethods.load_config('./conf/rm_skill.properties')
     
-    # get destination_id and then create a rm_guid first.
+    # # get destination_id and then create a rm_guid first.
 
-    # initiate delivery mission
-    tasks = []
-    goto_01 = rmapi.new_task(config.get('RM-Skill','RM-GOTO'), )
-    tasks.append(goto_01)
+    # # initiate delivery mission
+    # tasks = []
+    # goto_01 = rmapi.new_task(skill_config.get('RM-Skill','RM-GOTO'), )
+    # tasks.append(goto_01)
     
-    rmapi.new_job(robotId="2658a873-a0a6-4c3f-967f-d179c4073272", layout_id='', tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+    # rmapi.new_job(robotId="2658a873-a0a6-4c3f-967f-d179c4073272", layout_id='', tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
 
-    # # Delivery End
+    # # # Delivery End
 
 
 

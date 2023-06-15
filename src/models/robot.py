@@ -41,6 +41,7 @@ class Robot:
         self.ipc_ip_addr = config.get('IPC','localhost')
         self.surface_ip_addr = config.get('SURFACE','localhost')
         self.robot_id = self.nwdb.robot_id
+        self.robot_guid = self.nwdb.robot_guid
         self.robot_status = RMSchema.Status(0.0,0,RMSchema.mapPose())
         self.map_id = None
 
@@ -354,7 +355,7 @@ class Robot:
 
         #region ROBOT CONFIGURATION
         self.rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-        skill_config = umethods.load_config('../conf/rm_skill.properties')
+        skill_config = umethods.load_config('./conf/rm_skill.properties')
         #endregion
         print(f'[new_delivery_mission]: Loaded Robot Skill...')
         
@@ -373,16 +374,20 @@ class Robot:
         # Job-Delivery START
         # TASK START
         tasks = []
+        self.rmapi.delete_all_delivery_markers(pos_destination.mapId)
         # configure task-01: create a new position on RM-Layout
         self.rmapi.create_delivery_marker(pos_destination.mapId, pos_destination.x, pos_destination.y, pos_destination.heading)
-        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid()
+        print(f'layout_id: {pos_destination.mapId}')
+        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.mapId)
+        print(f'latest_marker_id: {latest_marker_id}')
         # configure task-01: create a new task
         goto_01 = self.rmapi.new_task(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.mapId,latest_marker_id)
         tasks.append(goto_01)
+        print(goto_01)
         # TASK END
         print(f'[new_delivery_mission]: configure task end...')
 
-        self.rmapi.new_job(self.robot_id, pos_destination.mapId, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+        self.rmapi.new_job(self.robot_guid , pos_destination.mapId, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
         print(f'[new_delivery_mission]: configure job end...')
 
         pass    
