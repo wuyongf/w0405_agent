@@ -108,7 +108,7 @@ class RMAPI(api.AuthenticatedAPI):
         data = self.get(f'/robot-skills/get-by-robot/{robotId}')
         results = data['result']
 
-        with open('./conf/rm_skill.properties', 'w') as config_file:
+        with open('./models/conf/rm_skill.properties', 'w') as config_file:
             config_file.write('[RM-Skill]' + '\n')
             # Iterate over each item and extract the "id" and "name"
             for item in results:

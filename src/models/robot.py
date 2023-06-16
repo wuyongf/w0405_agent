@@ -355,8 +355,9 @@ class Robot:
             #endregion
 
             #region ROBOT CONFIGURATION
-            self.rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-            skill_config = umethods.load_config('./conf/rm_skill.properties')
+            self.rmapi.write_robot_skill_to_properties(self.robot_guid)
+            print(f'[new_delivery_mission]: write Robot Skill...')
+            skill_config = umethods.load_config('./models/conf/rm_skill.properties')
             #endregion
             print(f'[new_delivery_mission]: Loaded Robot Skill...')
             
