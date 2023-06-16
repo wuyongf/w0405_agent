@@ -208,9 +208,9 @@ class RMAPI(api.AuthenticatedAPI):
             params = []
             param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
             param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
-            param_x = {"paramKey": "x", "paramValue": str(x)}
-            param_y = {"paramKey": "y", "paramValue": str(y)}
-            param_heading = {"paramKey": "heading", "paramValue": str(heading)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
             params = [param_map, param_name, param_x, param_y, param_heading]
             return params
             
