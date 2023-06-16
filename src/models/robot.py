@@ -336,63 +336,65 @@ class Robot:
     # DELIVERY
     # def configure_delivery_mission(self, available_delivery_ID):
 
-    def new_delivery_mission(self):
+    def new_delivery_mission(self, json):
         
-        # check available delivery mission
-        id = self.nwdb.get_available_delivery_id()
-        if id == None:
-            print('There is no any available delivery misssion!!')
-            return
-        
-        # configure the delivery mission 
-        # a_delivery_mission: NWSchema
-        a_delivery_mission = self.nwdb.configure_delivery_mission(available_delivery_id=id)
-        print(a_delivery_mission.receiver_id)
-        print(f'[new_delivery_mission]: Get a delivery mission!!!')
+        try:
+            # check available delivery mission
+            id = self.nwdb.get_available_delivery_id()
+            if id == None:
+                print('There is no any available delivery misssion!!')
+                return False
+            
+            # configure the delivery mission 
+            # a_delivery_mission: NWSchema
+            a_delivery_mission = self.nwdb.configure_delivery_mission(available_delivery_id=id)
+            print(a_delivery_mission.receiver_id)
+            print(f'[new_delivery_mission]: Get a delivery mission!!!')
 
-        #region Notify the receiver
-        #endregion
+            #region Notify the receiver
+            #endregion
 
-        #region ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
-        skill_config = umethods.load_config('./conf/rm_skill.properties')
-        #endregion
-        print(f'[new_delivery_mission]: Loaded Robot Skill...')
-        
-        # get sender info
-        # get origin location
-        # get receiver info
-        # get destination location
+            #region ROBOT CONFIGURATION
+            self.rmapi.write_robot_skill_to_properties(robotId="2658a873-a0a6-4c3f-967f-d179c4073272")
+            skill_config = umethods.load_config('./conf/rm_skill.properties')
+            #endregion
+            print(f'[new_delivery_mission]: Loaded Robot Skill...')
+            
+            # get sender info
+            # get origin location
+            # get receiver info
+            # get destination location
 
-        # pos_origin details
-        # pos_origin: RMSchema
-        pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
-        print(f'[new_delivery_mission]: get_delivery_position_detail...')
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
 
-        # get destination_id and then create a rm_guid first.
+            # get destination_id and then create a rm_guid first.
 
-        # Job-Delivery START
-        # TASK START
-        tasks = []
-        self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
-        # configure task-01: create a new position on RM-Layout
-        self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y, pos_destination.heading)
-        print(f'layout_id: {pos_destination.layout_guid}')
-        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
-        print(f'latest_marker_id: {latest_marker_id}')
-        # configure task-01: create a new task
-        goto = self.rmapi.task_goto(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.layout_guid, latest_marker_id, order=1,
-                                       map_id=pos_destination.map_guid, pos_name=pos_destination.pos_name,
-                                       x=pos_destination.x, y=pos_destination.y, heading=pos_destination.y)
-        tasks.append(goto)
-        print(goto)
-        # TASK END
-        print(f'[new_delivery_mission]: configure task end...')
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y, pos_destination.heading)
+            print(f'layout_id: {pos_destination.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.layout_guid, latest_marker_id, order=1,
+                                        map_id=pos_destination.map_guid, pos_name=pos_destination.pos_name,
+                                        x=pos_destination.x, y=pos_destination.y, heading=pos_destination.y)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
 
-        self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
-        print(f'[new_delivery_mission]: configure job end...') 
-
-        pass    
+            self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')   
+            
+            return True
+        except: return False
 
 
 if __name__ == '__main__':

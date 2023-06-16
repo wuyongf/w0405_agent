@@ -60,6 +60,18 @@ class TaskPublisher:
         return task_json
         pass
 
+    def task_DELIVERY_CONFIGURATION(self):
+        task_type = "DELIVERY-CONFIGURATION"
+        # map_id = self.robot.robot_status.mapPose.mapId
+        task_json = {
+            "taskId": str(uuid.uuid1()),
+            "taskType": task_type,
+            "parameters": {}
+        }
+        # task = json.dumps(task_json)
+        return task_json
+        pass
+
 
     def new_job(self, name, tasks):
         job_json = {
@@ -89,11 +101,11 @@ if __name__ == "__main__":
     ### new job
     # goto_1 = task_publisher.task_RM_GOTO('Point A', 93.149, 71.384, 50)
     # tasks = [goto_1]
-    led_on = task_publisher.task_RV_LEDON()
-    tasks = [led_on]
+    task01 = task_publisher.task_DELIVERY_CONFIGURATION()
+    tasks = [task01]
     print(tasks)
 
-    task_publisher.new_job('led_on', tasks)
+    task_publisher.new_job('delivery_configuration', tasks)
 
 
 

@@ -140,6 +140,13 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'DELIVERY-CONFIGURATION':
+            res = self.robot.new_delivery_mission(task_json)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
 
         if task.taskType == 'NW-BASIC-SLEEP1S':
             try:
