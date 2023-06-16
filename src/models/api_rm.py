@@ -190,13 +190,36 @@ class RMAPI(api.AuthenticatedAPI):
 
     # Delivery
     def new_task(self, skill_id, layout_id, layoutMarkerId = None, order = 1):
-
+            
         task = {
             "skillId": skill_id,
             "layoutId": layout_id,
             "order": order,
             "layoutMakerId": layoutMarkerId,
             # "params": [{"paramKey": "positionName", "paramValue": "delivery-01"}]
+        }
+
+        return task
+    
+    def task_goto(self, skill_id, layout_id, layoutMarkerId = None, order = 1, 
+                  map_id = None, pos_name = None, x = None, y = None, heading = None):
+        
+        def goto_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": str(x)}
+            param_y = {"paramKey": "y", "paramValue": str(y)}
+            param_heading = {"paramKey": "heading", "paramValue": str(heading)}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+            
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_id,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "params": goto_params(map_id, pos_name, x, y, heading)
         }
 
         return task

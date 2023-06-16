@@ -86,7 +86,6 @@ if __name__ == "__main__":
     task_publisher = TaskPublisher(robot)
     task_publisher.start()
 
-
     ### new job
     # goto_1 = task_publisher.task_RM_GOTO('Point A', 93.149, 71.384, 50)
     # tasks = [goto_1]

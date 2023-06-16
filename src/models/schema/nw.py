@@ -27,3 +27,14 @@ class DeliveryMission:
         self.pos_destination_id = pos_destination_id
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    
+class DeliveryPose:
+    def __init__(self, layout_guid = '', map_guid = '', pos_name = '', x = 0.0, y = 0.0, heading = 0.0):
+        self.layout_guid = layout_guid
+        self.map_guid = map_guid
+        self.pos_name = pos_name
+        self.x = x
+        self.y = y
+        self.heading = heading
+    def to_json(self):
+        return json.dumps(self.__dict__)

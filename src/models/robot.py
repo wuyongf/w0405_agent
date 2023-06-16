@@ -374,21 +374,23 @@ class Robot:
         # Job-Delivery START
         # TASK START
         tasks = []
-        self.rmapi.delete_all_delivery_markers(pos_destination.mapId)
+        self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
         # configure task-01: create a new position on RM-Layout
-        self.rmapi.create_delivery_marker(pos_destination.mapId, pos_destination.x, pos_destination.y, pos_destination.heading)
-        print(f'layout_id: {pos_destination.mapId}')
-        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.mapId)
+        self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y, pos_destination.heading)
+        print(f'layout_id: {pos_destination.layout_guid}')
+        latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
         print(f'latest_marker_id: {latest_marker_id}')
         # configure task-01: create a new task
-        goto_01 = self.rmapi.new_task(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.mapId,latest_marker_id)
-        tasks.append(goto_01)
-        print(goto_01)
+        goto = self.rmapi.task_goto(skill_config.get('RM-Skill','RM-GOTO'), pos_destination.layout_guid, latest_marker_id, order=1,
+                                       map_id=pos_destination.map_guid, pos_name=pos_destination.pos_name,
+                                       x=pos_destination.x, y=pos_destination.y, heading=pos_destination.y)
+        tasks.append(goto)
+        print(goto)
         # TASK END
         print(f'[new_delivery_mission]: configure task end...')
 
-        self.rmapi.new_job(self.robot_guid , pos_destination.mapId, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
-        print(f'[new_delivery_mission]: configure job end...')
+        self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+        print(f'[new_delivery_mission]: configure job end...') 
 
         pass    
 

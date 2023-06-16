@@ -103,15 +103,18 @@ class robotDBHandler(db.AzureDB):
         return NWSchema.DeliveryMission(robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id)
     
     def get_delivery_position_detail(self, pos_id):
-        pos_layout_id = self.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
-        pos_layout_rm_guid = self.get_single_value('robot.map.layout', 'rm_guid', 'ID', pos_layout_id)
+        layout_id = self.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
+        layout_rm_guid = self.get_single_value('robot.map.layout', 'rm_guid', 'ID', layout_id)
+        map_id = self.get_single_value('robot.map.layout', 'activated_map_id', 'ID', layout_id)
+        map_rm_guid = self.get_single_value('robot.map', 'rm_guid', 'ID', map_id)
         pos_name = self.get_single_value('data.sys.mission.delivery.location', 'pos_name', 'ID', pos_id)
         pos_x = self.get_single_value('data.sys.mission.delivery.location', 'pos_x', 'ID', pos_id)
         pos_y = self.get_single_value('data.sys.mission.delivery.location', 'pos_y', 'ID', pos_id)
         pos_theta = self.get_single_value('data.sys.mission.delivery.location', 'pos_theta', 'ID', pos_id)
         
-        return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
-        pass
+        return NWSchema.DeliveryPose(layout_rm_guid, map_rm_guid, pos_name, pos_x, pos_y, pos_theta)
+        # return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
+        # pass
     
     # BASIC METHOD
     def get_single_value(self, table, target, condition, condition_value):
