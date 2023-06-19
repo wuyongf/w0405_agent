@@ -140,6 +140,14 @@ class robotDBHandler(db.AzureDB):
     def get_delivery_status(self, id):
         statement = f'SELECT status FROM {self.database}.`sys.mission.delivery` WHERE ID = {id};'
         return self.Select(statement)
+    
+    def update_delivery_status(self, value, id):
+        try: 
+            statement = f'UPDATE {self.database}.`sys.mission.delivery` SET status = {value} WHERE ID = {id};'
+            # print(statement)
+            self.Update(statement)
+        except:
+            print('[db_robot.update_delivery_status] error')
 
     # BASIC METHOD
     def get_single_value(self, table, target, condition, condition_value):

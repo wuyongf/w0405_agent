@@ -522,8 +522,7 @@ class Robot:
 
                 # Check if the job is done (replace with your own condition)
                 delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(self.a_delivery_mission.ID))
-                if(delivery_status == NWEnum.DeliveryStatus.Active_ToReceiver or 
-                delivery_status == NWEnum.DeliveryStatus.Active_BackToSender):
+                if(delivery_status == NWEnum.DeliveryStatus.Active_ToReceiver):
                     return True 
 
                 # Wait for a short interval before checking again
@@ -553,33 +552,34 @@ class Robot:
 
     # Delivery Publisher
     def delivery_mission_publisher(self):
-        
-        res = self.get_available_delivery_mission()
-        if(not res):
-           return False
+
         a_delivery_mission = self.get_delivery_mission_detail()
 
         # to sender
         done = self.delivery_goto_sender(a_delivery_mission)
         if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender)
         done = self.wait_for_job_done(duration_min = 5) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # loading package
         done = self.delivery_wait_for_loading(a_delivery_mission)
         if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading)
         done = self.wait_for_job_done(duration_min = 15) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # to receiver
         done = self.delivery_goto_receiver(a_delivery_mission)
         if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver)
         done = self.wait_for_job_done(duration_min = 5) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # unloading package
         done = self.delivery_wait_for_unloading(a_delivery_mission)
         if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading)
         done = self.wait_for_job_done(duration_min = 15) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
