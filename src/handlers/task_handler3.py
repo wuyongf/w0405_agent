@@ -142,7 +142,24 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
         if task.taskType == 'DELIVERY-CONFIGURATION':
-            res = self.robot.new_delivery_mission(task_json)
+            # res = self.robot.new_delivery_mission(task_json)
+            # if (res):
+            #     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            # else:
+            #     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            thread = threading.Thread(target=self.robot.delivery_mission_publisher)
+            thread.start()
+            return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            
+        if task.taskType == 'DELIVERY-WAITLOADING':
+            res = self.robot.wait_for_loading_package()
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'DELIVERY-WAITUNLOADING':
+            res = self.robot.wait_for_unloading_package()
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:

@@ -16,6 +16,7 @@ import src.models.enums.nw as NWEnum
 import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module import lift_levelling_module as MoLiftLevelling
 from src.top_module.module import iaq as MoIAQ
+from src.top_module.module import locker as MoLocker
 
 class Robot:
     def __init__(self, config, port_config):
@@ -29,12 +30,11 @@ class Robot:
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
         self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
+        self.module_locker = MoLocker.Locker(port_config)
 
-        # self.module_laser = Modules.LaserDistanceSensor()
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
         # self.module_monitor = Modules.Monitor()
-        # self.module_locker = Modules.Locker()
         # self.modmodule_phone = Modules.PhoneDevice()
 
         ## robot baisc info
@@ -44,6 +44,17 @@ class Robot:
         self.robot_guid = self.nwdb.robot_guid
         self.robot_status = RMSchema.Status(0.0,0,RMSchema.mapPose())
         self.map_id = None
+        self.a_delivery_mission = None
+        self.robot_locker_is_closed = self.locker_is_closed()
+
+        ## delivery related
+        #region ROBOT CONFIGURATION
+        self.rmapi.write_robot_skill_to_properties(self.robot_guid)
+        # print(f'[new_delivery_mission]: write Robot Skill...')
+        self.skill_config = umethods.load_config('./models/conf/rm_skill.properties')
+        # print(f'[new_delivery_mission]: Loaded Robot Skill...')
+        #endregion
+        
 
     def sensor_start(self):
         self.iaq_start()
@@ -56,7 +67,7 @@ class Robot:
     def update_status(self, protocol): # update thread
         while True:  
             try:
-                # # rm status <--- rv statu
+                # # rm status <--- rv status
                 self.robot_status.state = 1 # todo: robot status
                 self.robot_status.mapPose.mapId = self.get_current_map_rm_guid()    # map
                 self.robot_status.batteryPct = self.get_battery_state(protocol)      # battery
@@ -65,6 +76,9 @@ class Robot:
                 self.robot_status.mapPose.x = pixel_x
                 self.robot_status.mapPose.y = pixel_y
                 self.robot_status.mapPose.heading = heading
+
+                # Modules
+                self.robot_locker_is_closed = self.locker_is_closed()
 
                 ## TO NWDB
                 self.map_id = self.get_current_map_id()
@@ -283,6 +297,8 @@ class Robot:
     def get_mission_status(self):
         pass 
 
+    # Module - IAQ
+
     def iaq_start(self):
         self.mo_iaq.start()
 
@@ -305,17 +321,10 @@ class Robot:
             return True
         except: return False
 
-    def inspect_lift_noise(self, task_json):
-        pass
+    # Module - IAQ - End
 
-    def inspect_lift_video(self, task_json):
-        pass
-
-    def inspect_lift_hegiht(self, task_json):
-        pass
-
-    def inspect_lift_vibration(self, task_json):
-        pass
+    # Module - Lift Inspection
+    # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
 
     def inspect_lift_levelling(self, task_json):
         
@@ -332,12 +341,272 @@ class Robot:
             return True
         else:
             return False
+        
+    # Module - Lift Inspection - End
     
     # DELIVERY
     # def configure_delivery_mission(self, available_delivery_ID):
+    def locker_unlock(self):
+        try:
+            self.module_locker.unlock()
+            time.sleep(0.2)
+            if(self.module_locker.is_closed() is not True): return True
+            return False
+        except:
+            return False
+        
+    def locker_is_closed(self):
+        try:
+            return self.module_locker.is_closed()
+        except:
+            return False
+
+    # Delivery Init
+    def get_available_delivery_mission(self):
+        try:
+            # check available delivery mission
+            id = self.nwdb.get_available_delivery_id()
+            if id == None:
+                print('There is no any available delivery misssion!!')
+                return False
+            
+            # configure the delivery mission 
+            # a_delivery_mission: NWSchema
+            self.a_delivery_mission = self.nwdb.configure_delivery_mission(available_delivery_id=id)
+            return True
+        except:
+            return False
+        
+    def get_delivery_mission_detail(self):
+        return self.a_delivery_mission
+
+    ## NEW JOB via RMAPI
+
+    def delivery_goto_sender(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            #region Notify the receiver
+            #endregion
+
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill','RM-GOTO'), pos_origin.layout_guid, latest_marker_id, order=1,
+                                        map_id=pos_origin.map_guid, pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x, y=pos_origin.y, heading=pos_origin.y)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , pos_origin.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')   
+            
+            return True
+        except: return False
+    
+    def delivery_goto_receiver(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            #region Notify the receiver
+            #endregion
+            
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y, pos_destination.heading)
+            print(f'layout_id: {pos_destination.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill','RM-GOTO'), pos_destination.layout_guid, latest_marker_id, order=1,
+                                        map_id=pos_destination.map_guid, pos_name=pos_destination.pos_name,
+                                        x=pos_destination.x, y=pos_destination.y, heading=pos_destination.y)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')   
+            
+            return True
+        except: return False
+
+    def delivery_wait_for_loading(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            #region Notify the receiver
+            #endregion
+            
+            # pos_origin details
+            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            print(f'[delivery_wait_for_loading]: get_pos_origin_detail...')
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []          
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-WAITLOADING'),
+                                       pos_origin.layout_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[delivery_wait_for_loading]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , pos_origin.layout_guid, tasks = tasks, job_name='DELIVERY-WAITLOADING')
+            print(f'[delivery_wait_for_loading]: configure job end...')   
+            
+            return True
+        except: return False
+
+    def delivery_wait_for_unloading(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:          
+            # pos_origin details
+            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            print(f'[delivery_wait_for_unloading]: get_pos_origin_detail...')
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []          
+            print(f'layout_id: {pos_destination.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-WAITUNLOADING'),
+                                       pos_destination.layout_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[delivery_wait_for_unloading]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-WAITUNLOADING')
+            print(f'[delivery_wait_for_unloading]: configure job end...')   
+            
+            return True
+        except: return False
+
+    # Delivery robot-skill details
+    def wait_for_loading_package(self):
+
+        try:
+            while True:
+                # Check if robot should open the locker.
+                locker_command = NWEnum.LockerCommand(self.nwdb.get_locker_command(self.a_delivery_mission.ID))
+                if(locker_command == NWEnum.LockerCommand.Unlock): 
+                    self.locker_unlock()
+                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value)
+
+                # Check if the job is done (replace with your own condition)
+                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(a_delivery_mission.ID))
+                if(delivery_status == NWEnum.DeliveryStatus.Active_ToReceiver or 
+                delivery_status == NWEnum.DeliveryStatus.Active_BackToSender):
+                    return True 
+
+                # Wait for a short interval before checking again
+                time.sleep(1)
+        except:
+            return False
+
+    def wait_for_unloading_package(self):
+        try:
+            while True:
+                # Check if robot should open the locker.
+                locker_command = NWEnum.LockerCommand(self.nwdb.get_locker_command(self.a_delivery_mission.ID))
+                if(locker_command == NWEnum.LockerCommand.Unlock): 
+                    self.locker_unlock()
+                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value)
+
+                # Check if the job is done (replace with your own condition)
+                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(a_delivery_mission.ID))
+                if(delivery_status == NWEnum.DeliveryStatus.Active_BackToChargingStation or 
+                delivery_status == NWEnum.DeliveryStatus.Active_BackToSender):
+                    return True 
+
+                # Wait for a short interval before checking again
+                time.sleep(1)
+        except:
+            return False
+
+    # Delivery Publisher
+    def delivery_mission_publisher(self, json):
+        
+        res = self.get_available_delivery_mission()
+        if(not res):
+           return False
+        a_delivery_mission = self.get_delivery_mission_detail()
+
+        # to sender
+        done = self.delivery_goto_sender(a_delivery_mission)
+        if not done: return False
+        done = self.wait_for_job_done(duration_min = 5) # wait for job is done
+        if not done: return False # stop assigning delivery mission
+
+        # loading package
+        done = self.delivery_wait_for_loading(a_delivery_mission)
+        if not done: return False
+        done = self.wait_for_job_done(duration_min = 15) # wait for job is done
+        if not done: return False # stop assigning delivery mission
+
+        # to receiver
+        done = self.delivery_goto_receiver(a_delivery_mission)
+        if not done: return False
+        done = self.wait_for_job_done(duration_min = 5) # wait for job is done
+        if not done: return False # stop assigning delivery mission
+
+        # unloading package
+        done = self.delivery_wait_for_unloading(a_delivery_mission)
+        if not done: return False
+        done = self.wait_for_job_done(duration_min = 15) # wait for job is done
+        if not done: return False # stop assigning delivery mission
+
+        # back to charging stataion
+
+        return True
+
+        ## Delivery Publisher Methods
+    
+    def wait_for_job_done(self, duration_min):
+        print(f'[delivery]: wait for job done... duration: {duration_min} minutes')
+        start_time = time.time()
+        while True:
+            # Check if the job is done (replace with your own condition)
+            if self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Completed:
+                return True
+
+            # Check if the specified duration has elapsed
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= (duration_min * 60):  # Convert minutes to seconds
+                return False
+
+            # Wait for a short interval before checking again
+            time.sleep(2)
 
     def new_delivery_mission(self, json):
-        
+
         try:
             # check available delivery mission
             id = self.nwdb.get_available_delivery_id()
@@ -389,7 +658,7 @@ class Robot:
             tasks.append(goto)
             print(goto)
             # TASK END
-            print(f'[new_delivery_mission]: configure task end...')
+            print(f'[new_delivery_mission]: configure task end...') 
 
             self.rmapi.new_job(self.robot_guid , pos_destination.layout_guid, tasks = tasks, job_name='DELIVERY-GOTO-DEMO')
             print(f'[new_delivery_mission]: configure job end...')   

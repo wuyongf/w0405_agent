@@ -3,6 +3,7 @@ import json
 import requests
 import src.utils.methods as umethods
 import sys
+import src.models.enums.rm as RMEnum
 
 class RMAPI(api.AuthenticatedAPI):
     def __init__(self, config):
@@ -320,13 +321,20 @@ class RMAPI(api.AuthenticatedAPI):
         print(payload)
         return self.post('/mission', json.dumps(payload))
 
+    def get_latest_mission_status(self):
+        json_data = self.list_missions()
+        # print(json_data)
+        list_data = json_data['result']['list']
+        value = list_data[0]['status']
+
+        return RMEnum.MissionStatus(value)
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    res = rmapi.list_maps()
-    print(res)
+    # res = rmapi.list_maps()
+    # print(res)
     # rmapi.new_job_demo()
 
     # json_data = rmapi.new_job()
@@ -362,22 +370,6 @@ if __name__ == '__main__':
 
     # # # Delivery End
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # json_data = rmapi.create_mission()
     # print(json_data)
 
@@ -387,13 +379,18 @@ if __name__ == '__main__':
 
     # taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
 
-    # # list missions and parse json
-    # json_data = rmapi.list_missions()
-    # print(json_data)
+    # list missions and parse json
+    json_data = rmapi.list_missions()
+    print(json_data)
 
-    # # # get mission status
-    # # for i in range(len(list_data)):
-    # #     print(list_data[i]['status'])
+    list_data = json_data['result']['list']
+
+    print(list_data[0]['status'])
+    res = rmapi.get_latest_mission_status()
+    print(res)
+    # # get mission status
+    # for i in range(len(list_data)):
+    #     print(list_data[i]['status'])
     
     # # # get Mission(Job or Mission)
     # # for i in range(len(list_data)):

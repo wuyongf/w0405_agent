@@ -54,6 +54,14 @@ class robotDBHandler(db.AzureDB):
     def update_robot_mission_status(self, mission_status):
         pass
 
+    def update_robot_locker_status(self, is_closed):
+        if is_closed is not None:
+            statement = f'UPDATE {self.database}.`robot.status` SET locker_closed = {is_closed} WHERE ID = {self.robot_id};'
+        else:
+            statement = f'UPDATE {self.database}.`robot.status` SET locker_closed = NULL WHERE ID = {self.robot_id};'
+        # print(statement)
+        self.Update(statement)
+
     # map (rv and rm)
     def get_map_amr_guid(self, rm_guid):
         statement = f'SELECT amr_guid FROM {self.database}.`robot.map` WHERE rm_guid = "{rm_guid}";'
@@ -94,13 +102,14 @@ class robotDBHandler(db.AzureDB):
     
     def configure_delivery_mission(self, available_delivery_id):
         # mission_id = self.nwdb.get_single_value('sys.mission.delivery', 'mission_id', 'ID', available_delivery_id)
+        ID = available_delivery_id
         robot_id = self.get_single_value('sys.mission.delivery', 'robot_id', 'ID', available_delivery_id)
         sender_id = self.get_single_value('sys.mission.delivery', 'sender_id', 'ID', available_delivery_id)
         pos_origin_id = self.get_single_value('sys.mission.delivery', 'pos_origin_id', 'ID', available_delivery_id)
         receiver_id = self.get_single_value('sys.mission.delivery', 'receiver_id', 'ID', available_delivery_id)
         pos_destination_id = self.get_single_value('sys.mission.delivery', 'pos_destination_id', 'ID', available_delivery_id)
 
-        return NWSchema.DeliveryMission(robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id)
+        return NWSchema.DeliveryMission(ID, robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id)
     
     def get_delivery_position_detail(self, pos_id):
         layout_id = self.get_single_value('data.sys.mission.delivery.location', 'layout_id', 'ID', pos_id)
@@ -115,7 +124,23 @@ class robotDBHandler(db.AzureDB):
         return NWSchema.DeliveryPose(layout_rm_guid, map_rm_guid, pos_name, pos_x, pos_y, pos_theta)
         # return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
         # pass
+
+    def get_locker_command(self, id):
+        statement = f'SELECT locker_command FROM {self.database}.`sys.mission.delivery` WHERE ID = {id};'
+        return self.Select(statement)
     
+    def update_locker_command(self, value, id):
+        try: 
+            statement = f'UPDATE {self.database}.`sys.mission.delivery` SET locker_command = {value} WHERE ID = {id};'
+            # print(statement)
+            self.Update(statement)
+        except:
+            print('[db_robot.update_locker_command] error')
+    
+    def get_delivery_status(self, id):
+        statement = f'SELECT status FROM {self.database}.`sys.mission.delivery` WHERE ID = {id};'
+        return self.Select(statement)
+
     # BASIC METHOD
     def get_single_value(self, table, target, condition, condition_value):
         # statement = f'SELECT sender_id FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'

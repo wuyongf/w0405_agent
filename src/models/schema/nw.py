@@ -19,7 +19,8 @@ class Position:
     
 # Delivery
 class DeliveryMission:
-    def __init__(self, robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id):
+    def __init__(self, ID, robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id):
+        self.ID = ID
         self.robot_id = robot_id
         self.sender_id = sender_id
         self.pos_origin_id = pos_origin_id

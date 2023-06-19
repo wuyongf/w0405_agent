@@ -27,8 +27,8 @@ class StatusHandler:
         # yf config
         self.robot = robot
 
-        # nwdb
-        self.map_id = 0
+        # # nwdb
+        # self.map_id = 0
 
     def start(self):
         # status
@@ -40,19 +40,21 @@ class StatusHandler:
     def __update_status(self): # update thread
         while True:  
             try:
-                # # rm status <--- rv statu
-                self.rm_status.state = 1 # todo: robot status
 
-                self.rm_mapPose.mapId = self.robot.get_current_map_rm_guid()    # map
-                self.rm_status.batteryPct = self.robot.get_battery_state(NWEnum.Protocol.RVAPI)      # battery
-                pixel_x, pixel_y, heading = self.robot.get_current_pose(NWEnum.Protocol.RVAPI)       # current pose
-                # print(pixel_x, pixel_y, heading)
-                self.rm_mapPose.x = pixel_x
-                self.rm_mapPose.y = pixel_y
-                self.rm_mapPose.heading = heading
+                pass
+                # # # rm status <--- rv statu
+                # self.rm_status.state = 1 # todo: robot status
 
-                ## TO NWDB
-                self.map_id = self.robot.get_current_map_id()
+                # self.rm_mapPose.mapId = self.robot.get_current_map_rm_guid()    # map
+                # self.rm_status.batteryPct = self.robot.get_battery_state(NWEnum.Protocol.RVAPI)      # battery
+                # pixel_x, pixel_y, heading = self.robot.get_current_pose(NWEnum.Protocol.RVAPI)       # current pose
+                # # print(pixel_x, pixel_y, heading)
+                # self.rm_mapPose.x = pixel_x
+                # self.rm_mapPose.y = pixel_y
+                # self.rm_mapPose.heading = heading
+
+                # ## TO NWDB
+                # self.map_id = self.robot.get_current_map_id()
 
             except HTTPError as http_err:
                 logging.getLogger('').exception(http_err)
@@ -78,6 +80,7 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_position(self.robot.robot_status.mapPose.x, self.robot.robot_status.mapPose.y, self.robot.robot_status.mapPose.heading)
                 self.robot.nwdb.update_robot_map_id(self.robot.map_id)
                 self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
+                self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
 
