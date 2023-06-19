@@ -518,10 +518,10 @@ class Robot:
                 locker_command = NWEnum.LockerCommand(self.nwdb.get_locker_command(self.a_delivery_mission.ID))
                 if(locker_command == NWEnum.LockerCommand.Unlock): 
                     self.locker_unlock()
-                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value)
+                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value, self.a_delivery_mission.ID)
 
                 # Check if the job is done (replace with your own condition)
-                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(a_delivery_mission.ID))
+                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(self.a_delivery_mission.ID))
                 if(delivery_status == NWEnum.DeliveryStatus.Active_ToReceiver or 
                 delivery_status == NWEnum.DeliveryStatus.Active_BackToSender):
                     return True 
@@ -538,10 +538,10 @@ class Robot:
                 locker_command = NWEnum.LockerCommand(self.nwdb.get_locker_command(self.a_delivery_mission.ID))
                 if(locker_command == NWEnum.LockerCommand.Unlock): 
                     self.locker_unlock()
-                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value)
+                    self.nwdb.update_locker_command(NWEnum.LockerCommand.Null.value, self.a_delivery_mission.ID)
 
                 # Check if the job is done (replace with your own condition)
-                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(a_delivery_mission.ID))
+                delivery_status = NWEnum.DeliveryStatus(self.nwdb.get_delivery_status(self.a_delivery_mission.ID))
                 if(delivery_status == NWEnum.DeliveryStatus.Active_BackToChargingStation or 
                 delivery_status == NWEnum.DeliveryStatus.Active_BackToSender):
                     return True 
@@ -552,7 +552,7 @@ class Robot:
             return False
 
     # Delivery Publisher
-    def delivery_mission_publisher(self, json):
+    def delivery_mission_publisher(self):
         
         res = self.get_available_delivery_mission()
         if(not res):

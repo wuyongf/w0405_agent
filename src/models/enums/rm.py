@@ -11,3 +11,4 @@ class MissionStatus(Enum):
     Paused = 3
     Scheduled = 4
     Activated = 5
+    Failed = 6
