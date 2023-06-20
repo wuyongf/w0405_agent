@@ -506,7 +506,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-WAITLOADING'),
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-LOADING-PACKAGE'),
                                        pos_origin.layout_guid)
             tasks.append(task)
             print(task)
@@ -532,7 +532,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-WAITUNLOADING'),
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill','DELIVERY-UNLOADING-PACKAGE'),
                                        pos_destination.layout_guid)
             tasks.append(task)
             print(task)
@@ -600,35 +600,35 @@ class Robot:
         # to sender
         done = self.delivery_goto_sender(a_delivery_mission)
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
         done = self.wait_for_job_done(duration_min = 5) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # loading package
         done = self.delivery_wait_for_loading(a_delivery_mission)
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
         done = self.wait_for_job_done(duration_min = 15) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # to receiver
         done = self.delivery_goto_receiver(a_delivery_mission)
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
         done = self.wait_for_job_done(duration_min = 5) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # unloading package
         done = self.delivery_wait_for_unloading(a_delivery_mission)
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value, self.a_delivery_mission.ID)
         done = self.wait_for_job_done(duration_min = 15) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
         # back to charging stataion
         time.sleep(2)
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null)
-        self.delivery_clear_positions()
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
+        self.delivery_clear_positions(self.a_delivery_mission)
         return True
 
         ## Delivery Publisher Methods
