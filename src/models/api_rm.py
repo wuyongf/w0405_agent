@@ -351,7 +351,7 @@ if __name__ == '__main__':
 
     # # # Delivery
     # rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
-    # # rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
     # # rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
     # # rmapi.get_latest_delivery_marker_guid(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
 

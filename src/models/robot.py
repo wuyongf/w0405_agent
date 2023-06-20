@@ -545,6 +545,12 @@ class Robot:
             return True
         except: return False
 
+    def delivery_clear_positions(self, a_delivery_mission: NWSchema.DeliveryMission):
+        pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+        pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+        self.rmapi.delete_all_delivery_markers(layout_id=pos_origin.layout_guid)
+        self.rmapi.delete_all_delivery_markers(layout_id=pos_destination.layout_guid)
+
     # Delivery robot-skill details
     def wait_for_loading_package(self):
 
@@ -622,6 +628,7 @@ class Robot:
         # back to charging stataion
         time.sleep(2)
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null)
+        self.delivery_clear_positions()
         return True
 
         ## Delivery Publisher Methods
