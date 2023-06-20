@@ -183,6 +183,39 @@ class Robot:
         pass
 
     # robot skills
+    def charging(self, task_json, status_callback):
+        try:
+            # step 0. init. clear current task
+            self.cancel_current_task()
+            # step 1. get rm_map_id, rv_map_name, map_metadata
+            # print('step1')
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
+            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            # step 2. transformation. rm2rv
+            # print('step2')
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
+            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
+            # step3. rv. create point base on rm. localization.
+            # method 1: navigation
+            # self.rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            # while(self.rvapi.get_navigation_result() is None): time.sleep(1) # check if it has arrived
+            # # method 2: single task contains a point 'temp'
+            # print('step3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            pose_name = 'TEMP'
+            time.sleep(1)
+            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            time.sleep(1)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
+
+            thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
+            thread.setDaemon(True)
+            thread.start()
+
+            return True
+        except: return False
+
     def localize(self, task_json):
         try:
             # step 0. init. clear current task
@@ -245,6 +278,9 @@ class Robot:
 
             return True
         except: return False
+
+    def thread_check_charging_status(self, task_json, status_callback):
+        pass
 
     def thread_check_mission_status(self, task_json, status_callback):
         print('[goto.check_mission_status] Starting...')
@@ -584,7 +620,8 @@ class Robot:
         if not done: return False # stop assigning delivery mission
 
         # back to charging stataion
-
+        time.sleep(2)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null)
         return True
 
         ## Delivery Publisher Methods

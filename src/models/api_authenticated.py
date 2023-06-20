@@ -87,8 +87,9 @@ class AuthenticatedAPI:
         try:
             response = requests.delete(url, headers=self.headers)
             response.raise_for_status()
-            if response.headers['Content-Length'] == '0': 
-                print("[AuthenticatedAPI]: Empty JSON response received.") 
+            content_length = response.headers.get('Content-Length')
+            if content_length is not None and content_length == '0':
+                print("[AuthenticatedAPI]: Empty JSON response received.")
                 return None
             return response.json()
         except requests.exceptions.RequestException as error:

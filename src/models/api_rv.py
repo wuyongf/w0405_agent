@@ -188,13 +188,30 @@ class RVAPI(api.AuthenticatedAPI):
         if(on): return self.put('/baseControl/v1/manual/ON')
         else: return self.put('/baseControl/v1/manual/OFF')
 
+    # Docking
+    def post_charging(self, upperLimit, duration_min, shutdownAfterCharging = False):
+        """
+        upperLimit: 0-100
+        """
+        payload = {}
+        payload["upperLimit"] = upperLimit
+        payload["duration"] = duration_min
+        payload["shutdownAfterCharging"] = shutdownAfterCharging
+        print(json.dumps(payload))
+        return self.post('/docking/v1/charging', json.dumps(payload))
+    
+    def delete_charging(self):
+        return self.delete(f'/docking/v1/charging')
+    
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
-    res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
+    rvapi.delete_charging()
+
+    # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
 
     # while(True):
     #     time.sleep(1)
