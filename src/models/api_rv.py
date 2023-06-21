@@ -203,12 +203,21 @@ class RVAPI(api.AuthenticatedAPI):
     def delete_charging(self):
         return self.delete(f'/docking/v1/charging')
     
+    def get_charging_feedback(self):
+            json_data = self.get('/docking/v1/charging/feedback')
+            # json_data = self.get('/task/v1/status')
+            if json_data is None: return json_data
+            return json_data["chargingStatus"]
+    
 if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
+    # res = rvapi.get_charging_feedback()
+    # print(res)
+    # rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
     rvapi.delete_charging()
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)

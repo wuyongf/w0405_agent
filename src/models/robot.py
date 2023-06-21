@@ -170,56 +170,23 @@ class Robot:
             return None
     
     # basic robot control
-    def cancel_current_task(self):
+    def cancel_moving_task(self):
         self.rvapi.delete_current_task() # rv
         return
     
-    def pause_current_task(self):
+    def pause_robot_task(self):
         self.rvapi.pause_robot_task() # rv
         return
     
-    def resume_current_task(self):
+    def resume_robot_task(self):
         self.rvapi.resume_robot_task() #rv
         pass
 
     # robot skills
-    def charging(self, task_json, status_callback):
-        try:
-            # step 0. init. clear current task
-            self.cancel_current_task()
-            # step 1. get rm_map_id, rv_map_name, map_metadata
-            # print('step1')
-            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
-            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
-            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
-            # step 2. transformation. rm2rv
-            # print('step2')
-            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
-            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
-            # step3. rv. create point base on rm. localization.
-            # method 1: navigation
-            # self.rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
-            # while(self.rvapi.get_navigation_result() is None): time.sleep(1) # check if it has arrived
-            # # method 2: single task contains a point 'temp'
-            # print('step3')
-            self.rvapi.delete_all_waypoints(rv_map_name)
-            pose_name = 'TEMP'
-            time.sleep(1)
-            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
-            time.sleep(1)
-            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
-
-            thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
-            thread.setDaemon(True)
-            thread.start()
-
-            return True
-        except: return False
-
     def localize(self, task_json):
         try:
             # step 0. init. clear current task
-            self.cancel_current_task()
+            self.cancel_moving_task()
             # step 1. parse task json
             # print('step 1')
             rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
@@ -249,7 +216,7 @@ class Robot:
     def goto(self, task_json, status_callback):
         try:
             # step 0. init. clear current task
-            self.cancel_current_task()
+            self.cancel_moving_task()
             # step 1. get rm_map_id, rv_map_name, map_metadata
             # print('step1')
             rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
@@ -260,10 +227,6 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x, rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x, rm_map_metadata.y, rm_map_metadata.heading)
             # step3. rv. create point base on rm. localization.
-            # method 1: navigation
-            # self.rvapi.post_navigation_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
-            # while(self.rvapi.get_navigation_result() is None): time.sleep(1) # check if it has arrived
-            # # method 2: single task contains a point 'temp'
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
             pose_name = 'TEMP'
@@ -279,8 +242,27 @@ class Robot:
             return True
         except: return False
 
+
+
     def thread_check_charging_status(self, task_json, status_callback):
-        pass
+        print('[charging.check_mission_status] Starting...')
+        rm_task_data = RMSchema.Task(task_json)
+        continue_flag = True
+        while(continue_flag):
+            time.sleep(2)
+            status = self.rvapi.get_charging_feedback()
+
+            if(status == 'NOT_CHARGING'):
+                continue_flag = False
+                time.sleep(1)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
+            
+            if(status == 'PRE_CHARGING' or status == 'CHARGING' or status == 'POST_CHARGING'):
+                print('[charging.check_mission_status] robot is charging...')
+                time.sleep(1)
+                continue
+
+        print('[charging.check_mission_status] Exiting...')
 
     def thread_check_mission_status(self, task_json, status_callback):
         print('[goto.check_mission_status] Starting...')
@@ -442,7 +424,7 @@ class Robot:
             # configure task-01: create a new task
             goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill','RM-GOTO'), pos_origin.layout_guid, latest_marker_id, order=1,
                                         map_id=pos_origin.map_guid, pos_name=pos_origin.pos_name,
-                                        x=pos_origin.x, y=pos_origin.y, heading=pos_origin.y)
+                                        x=pos_origin.x, y=pos_origin.y, heading=pos_origin.heading)
             tasks.append(goto)
             print(goto)
             # TASK END
@@ -478,7 +460,7 @@ class Robot:
             # configure task-01: create a new task
             goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill','RM-GOTO'), pos_destination.layout_guid, latest_marker_id, order=1,
                                         map_id=pos_destination.map_guid, pos_name=pos_destination.pos_name,
-                                        x=pos_destination.x, y=pos_destination.y, heading=pos_destination.y)
+                                        x=pos_destination.x, y=pos_destination.y, heading=pos_destination.heading)
             tasks.append(goto)
             print(goto)
             # TASK END
@@ -625,13 +607,13 @@ class Robot:
         done = self.wait_for_job_done(duration_min = 15) # wait for job is done
         if not done: return False # stop assigning delivery mission
 
-        # back to charging stataion
+        # back to charging stataion: 1. goto 2. charging
         time.sleep(2)
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
         self.delivery_clear_positions(self.a_delivery_mission)
         return True
 
-        ## Delivery Publisher Methods
+    ## Delivery Publisher Methods
     
     def wait_for_job_done(self, duration_min):
         print(f'[delivery]: wait for job done... duration: {duration_min} minutes')
@@ -650,7 +632,6 @@ class Robot:
             time.sleep(2)
 
     def new_delivery_mission(self, json):
-
         try:
             # check available delivery mission
             id = self.nwdb.get_available_delivery_id()
@@ -710,6 +691,95 @@ class Robot:
             return True
         except: return False
 
+    # Charging
+    
+    def charging_mission_publisher(self, task_json, status_callback):
+
+        done = self.assgin_job_CHARGING_GOTO(task_json)
+        if not done: return False
+        done = self.wait_for_job_done(duration_min = 5) # wait for job is done
+        if not done: return False # stop assigning delivery mission
+
+        done = self.assign_job_CHARGING_START(task_json, status_callback)
+        if not done: return False
+
+        return True
+    
+    def assgin_job_CHARGING_GOTO(self, task_json):
+        try:
+            # Job START
+            # TASK START
+            tasks = []
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            layout_guid = self.rmapi.get_layout_guid(rm_map_metadata.mapId)
+            layout_marker_guid = self.rmapi.get_layout_marker_guid(layout_guid, rm_map_metadata.positionName)
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill','RM-GOTO'), layout_guid, layout_marker_guid, order=1,
+                                        map_id=rm_map_metadata.mapId, pos_name=rm_map_metadata.positionName,
+                                        x=rm_map_metadata.x, y=rm_map_metadata.y, heading=rm_map_metadata.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_goto_mission]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , layout_guid, tasks = tasks, job_name='CHARGING-GOTO-DEMO')
+            print(f'[new_goto_mission]: configure job end...')   
+            
+            return True
+        except: return False
+
+    def assign_job_CHARGING_START(self, task_json, status_callback):
+        try:
+            # Job START
+            # TASK START
+            tasks = []
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            layout_guid = self.rmapi.get_layout_guid(rm_map_metadata.mapId)
+            layout_marker_guid = self.rmapi.get_layout_marker_guid(layout_guid, rm_map_metadata.positionName)
+            # configure task-01: create a new task
+            charging = self.rmapi.task_goto(self.skill_config.get('RM-Skill','CHARGING'), layout_guid, layout_marker_guid, order=1,
+                                        map_id=rm_map_metadata.mapId, pos_name=rm_map_metadata.positionName,
+                                        x=rm_map_metadata.x, y=rm_map_metadata.y, heading=rm_map_metadata.heading)
+            tasks.append(charging)
+            print(charging)
+            # TASK END
+            print(f'[new_goto_mission]: configure task end...') 
+
+            self.rmapi.new_job(self.robot_guid , layout_guid, tasks = tasks, job_name='CHARGING-GOTO-DEMO')
+            print(f'[new_goto_mission]: configure job end...')   
+            
+            return True
+        except: return False
+
+    def charging_start(self, task_json, status_callback):
+        try:
+            # step 0. init. clear current task
+            self.cancel_moving_task()
+
+            time.sleep(1)
+            self.rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
+
+            thread = threading.Thread(target=self.thread_check_charging_status, args=(task_json, status_callback))
+            thread.setDaemon(True)
+            thread.start()
+
+            return True
+        except: return False
+
+    def charging_stop(self, task_json, status_callback):
+        try:
+            # stop charging
+            self.rvapi.delete_charging()
+
+            # get charging status. if NOT_CHARGING
+            while(self.rvapi.get_charging_feedback() is not 'NOT_CHARGING'):
+                time.sleep(1)
+            
+            # goto charging position.
+            self.goto(task_json, status_callback)
+
+            return True
+        except: return False
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
