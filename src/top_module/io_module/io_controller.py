@@ -10,7 +10,8 @@ import src.top_module.port as port
 class ioController():
 
     def __init__(self, port_config):
-        self.sid = port_config.get('IO', 'sid')
+        # self.sid = port_config.get('IO', 'sid')
+        self.sid = 'AK05W9U4'
         self.port = port.port().port_match(self.sid)
         # self.port = "/dev/ttyUSB1"
         self.baudrate = '38400'

@@ -27,4 +27,4 @@ class ServoMotor():
 if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     servo = ServoMotor(port_config)
-    servo.servo_flip(duration=0.4)
+    servo.servo_flip(duration=0.2)

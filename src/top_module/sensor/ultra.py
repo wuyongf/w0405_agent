@@ -13,7 +13,8 @@ import src.top_module.port as port
 class ultra:
 
     def __init__(self, prot_config) -> None:
-        self.sid = prot_config.get('ULTRA', 'sid')
+        # self.sid = prot_config.get('ULTRA', 'sid')
+        self.sid = "MI7XNGVG"
         self.port = port.port().port_match(self.sid)
         self.baudrate = 9600
         self.ser = serial.Serial(self.port, self.baudrate)
