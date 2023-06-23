@@ -64,24 +64,51 @@ class TaskHandler:
         task = RMSchema.Task(json.loads(task_str))
         if task is None:
             return print('[task_handler] Error: RM task is not assign correctly')
-
+        
+        if task.scheduleType == 1:  # Abort
+            self.cancel_task(task_str)
+            return
+        if task.scheduleType == 2:  # Pause
+            self.pause_task(task_str)
+            return
+        if task.scheduleType == 3:  # Resume
+            self.resume_task(task_str)
+            return
         if task.scheduleType == 4:  # Start
             self.execute_task(task_str)
             return
-        if task.scheduleType == 3:  # Resume
-            self.robot.resume_current_task()
-            # self.execute_task(task_str)
-            return
-        if task.scheduleType == 2:  # Pause
-            self.robot.pause_current_task()
-            return
-        if task.scheduleType == 1:  # Abort
-            self.robot.cancel_current_task()
-            return
+
+    def cancel_task(self, task_str):
+        task_json = json.loads(task_str)
+        print(f'[task_handler.cancel_task]: {task_json["taskId"]}')
+        try:
+            task = RMSchema.Task(json.loads(task_str))
+            if task is None:
+                return print('[execute_task] Error: RM task is not assign correctly')
+        except:
+            return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'CHARGING':
+            self.robot.charging_stop()
+        else:
+            self.robot.cancel_moving_task()
+        pass
+
+    def pause_task(self, task_str):
+        task_json = json.loads(task_str)
+        print(f'[task_handler.pause_task]: {task_json["taskId"]}')
+        self.robot.rvapi.pause_robot_task()
+        pass
+
+    def resume_task(self, task_str):
+        task_json = json.loads(task_str)
+        print(f'[task_handler.resume_task]: {task_json["taskId"]}')
+        self.robot.rvapi.resume_robot_task()
+        pass
 
     def execute_task(self, task_str):
         task_json = json.loads(task_str)
-        print(task_json['taskId'])
+        print(f'[task_handler.execute_task]: {task_json["taskId"]}')
         try:
             task = RMSchema.Task(json.loads(task_str))
             if task is None:
@@ -158,6 +185,21 @@ class TaskHandler:
             
         if task.taskType == 'DELIVERY-UNLOADING-PACKAGE':
             res = self.robot.wait_for_unloading_package()
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'CHARGING-CONFIGURATION':
+            res = True
+            if (res):
+                threading.Thread(target=self.robot.charging_mission_publisher, args=(task_json, self.task_status_callback)).start()
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+        if task.taskType == 'CHARGING':
+            res = self.robot.charging_start(task_json, self.task_status_callback)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:

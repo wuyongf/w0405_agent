@@ -328,6 +328,30 @@ class RMAPI(api.AuthenticatedAPI):
         value = list_data[0]['status']
 
         return RMEnum.MissionStatus(value)
+    
+    def get_layout_guid(self, map_guid):
+        data = self.list_maps()
+        results = data['result']['list']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_layout_id = item['layout']['id']
+            if item_id == map_guid:
+                return item_layout_id
+
+    def get_layout_marker_guid(self, layout_guid, position_name):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/layout-markers/{layout_guid}')
+
+        results = data['result']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_name = item['name']
+            if position_name == item_name:
+                return item_id
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -337,12 +361,20 @@ if __name__ == '__main__':
     # print(res)
     # rmapi.new_job_demo()
 
+    # res = rmapi.get_layout_guid(map_guid='1e28ee6e-2fc4-4d72-bed5-8d1a421783ff')
+    # print(res) # 76186080-1adb-4542-b2be-4a5b112a6b86
+
+    # rmapi.list_layout_markers('76186080-1adb-4542-b2be-4a5b112a6b86')
+    res = rmapi.get_layout_marker_guid('76186080-1adb-4542-b2be-4a5b112a6b86','P0')
+    print(res)  #210626fe-917c-480a-bdf0-3b5012d4a1b2
+
     # json_data = rmapi.new_job()
     # print(json_data)
     
     # rmapi.list_robot_skill()
     
-    # rmapi.list_layouts()
+    # res = rmapi.list_layouts()
+    # print(res)
 
     # rmapi.create_layout_marker('ca0ac9aa-9910-4949-90d5-6efb525015b7', 'delivery-03')
     # rmapi.list_layout_markers('ca0ac9aa-9910-4949-90d5-6efb525015b7')
@@ -351,7 +383,7 @@ if __name__ == '__main__':
 
     # # # Delivery
     # rmapi.create_delivery_marker(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7', x=20, y=20, heading=0)
-    rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
+    # rmapi.delete_all_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
     # # rmapi.get_delivery_markers(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
     # # rmapi.get_latest_delivery_marker_guid(layout_id='ca0ac9aa-9910-4949-90d5-6efb525015b7')
 
@@ -379,15 +411,15 @@ if __name__ == '__main__':
 
     # taskId = '732411b8-dded-40b0-a8d3-ca501bd21267'
 
-    # list missions and parse json
-    json_data = rmapi.list_missions()
-    print(json_data)
+    # # list missions and parse json
+    # json_data = rmapi.list_missions()
+    # print(json_data)
 
-    list_data = json_data['result']['list']
+    # list_data = json_data['result']['list']
 
-    print(list_data[0]['status'])
-    res = rmapi.get_latest_mission_status()
-    print(res)
+    # print(list_data[0]['status'])
+    # res = rmapi.get_latest_mission_status()
+    # print(res)
     # # get mission status
     # for i in range(len(list_data)):
     #     print(list_data[i]['status'])
