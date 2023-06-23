@@ -106,7 +106,7 @@ class ThermalCam:
                     pygame.display.update()
                     clock.tick()
                 except pygame.error:
-                    pass
+                    continue
 
             print(clock.get_fps())
 
@@ -114,7 +114,15 @@ class ThermalCam:
                 if event.type == pygame.KEYDOWN:
                     image = pygame.image.load(io.BytesIO(img), "jpg")
                     if image is not None:
-                        pygame.image.save(image, os.path.join(self.save_folder, str(time.time()) + ".jpg"))
+
+                        if event.key == pygame.K_d:
+                            pygame.image.save(image, os.path.join(self.save_folder, "dry", str(time.time()) + ".jpg"))
+
+                        if event.key == pygame.K_w:
+                            pygame.image.save(image, os.path.join(self.save_folder, "wet", str(time.time()) + ".jpg"))
+
+                        if event.key == pygame.K_a:
+                            pygame.image.save(image, os.path.join(self.save_folder, "other", str(time.time()) + ".jpg"))
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
