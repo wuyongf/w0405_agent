@@ -1,4 +1,7 @@
+import cv2 as cv
 import io
+import matplotlib.pyplot as plt
+import numpy as np
 import pygame
 import rpc
 import serial
@@ -13,6 +16,7 @@ class ThermalCam:
         # Comment the below line if openmv deivce port changed
         self.interface = rpc.rpc_usb_vcp_master(port)
         self.save_folder = "/home/nw/Desktop/Images"
+        self.image_path = None
         self.debug = debug
 
         if not os.path.exists(self.save_folder):
@@ -133,10 +137,25 @@ class ThermalCam:
         if not os.path.exists(self.save_folder):
             os.mkdir(self.save_folder)
 
-    def save_image(self, image):
-        if not self.debug:
+    def save_image(self):
+        image = self.get_frame_buffer_call_back()
+        if image is not None:
             image = Image.open(io.BytesIO(image))
-            image.save(os.path.join(self.save_folder, str(time.time()) + ".jpg"))
+            self.image_path = os.path.join(self.save_folder, str(time.time()) + ".jpg")
+            image.save(self.image_path)
+            return self.image_path
+        else:
+            return None
+    
+    def gray_to_heatmap(self, path):
+        colormap = plt.get_cmap('inferno')
+        img = cv.imread(path, cv.IMREAD_GRAYSCALE)
+        img = (img - img.min()) / (img.max() - img.min())
+        heatmap = (colormap(img) * 2**8).astype(np.uint8)[:,:,:3]
+        heatmap = cv.cvtColor(heatmap, cv.COLOR_RGB2BGR)
+        path = path.replace(".jpg", "_color.jpg")
+        cv.imwrite(path, heatmap)
+        return path
 
 if __name__ == '__main__':
     camera = ThermalCam(debug=True)
