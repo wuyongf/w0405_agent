@@ -156,6 +156,15 @@ class robotDBHandler(db.AzureDB):
         return self.Select(statement)
 
 
+    # UI Handler
+    def update_ui_display_status(self, robot_id, ui_flag, mission_type, status):
+        try: 
+            statement = f'UPDATE {self.database}.`ui.display.status` SET ui_flag = {ui_flag}, mission_type = {mission_type}, status = {status} WHERE robot_id = {robot_id};'
+            self.Update(statement)
+        except:
+            print('[db_robot.update_ui_display_status] error')
+
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
@@ -182,6 +191,7 @@ if __name__ == '__main__':
     # # delivery
     id = nwdb.get_available_delivery_id()
     print(id)
+    # nwdb.update_ui_display_status(robot_id=1, ui_flag=1, mission_type=2, status=5)
 
     # sender_id = nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', id)
     # print(sender_id)

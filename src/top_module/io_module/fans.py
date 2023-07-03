@@ -21,10 +21,10 @@ class fans():
             self.io.y_control(self.io.y7_on)
 
     def all_fan(self, set):
-        if set == 0:
+        if set == 1:
             self.io.y_control(self.io.y6_off)
             self.io.y_control(self.io.y7_off)
-        if set == 1:
+        if set == 0:
             self.io.y_control(self.io.y6_on)
             self.io.y_control(self.io.y7_on)        
 
