@@ -27,6 +27,8 @@ class Robot:
         self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
+        self.config = config
+        self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
         self.nwmqtt.start()
 
@@ -354,6 +356,10 @@ class Robot:
         
         # TODO: 
         try:
+            # Need to create new instance everytime start thread 
+            # Otherwise will case error [RuntimeError: threads can only be started once]
+            self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.config, self.port_config)
+            
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
             mission_id = self.nwdb.get_latest_mission_id()

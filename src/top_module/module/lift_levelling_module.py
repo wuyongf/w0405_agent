@@ -78,6 +78,11 @@ class LiftLevellingModule():
 
         # Start linear actuator Thread
         self.linear_actuator.start()
+        
+        self.laser_distance.run_thread.join()
+        self.linear_actuator.run_thread.join()
+        
+        
 
 
 if __name__ == "__main__":
@@ -87,10 +92,14 @@ if __name__ == "__main__":
     ll = LiftLevellingModule(config, port_config)
     # ll.pack_id = ll.create_data_pack(task_id=0)
 
-    # threading.Thread(target=ll.thread_get_status).start()
+    # threading.Thread(target=ll.thread_get_status).start()4
 
     # print(ll.nwdb.GetDistanceResult(side="left", pack_id=64, move_dir=2))
 
+    ll.start()
+    time.sleep(35)
+    ll = LiftLevellingModule(config, port_config)
+    
     ll.start()
     
     # ll.start()

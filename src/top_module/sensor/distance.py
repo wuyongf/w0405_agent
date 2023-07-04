@@ -181,7 +181,6 @@ class LaserDistanceSensor():
             
     def start(self):
         self.run_thread.start()
-        self.run_thread.join()
         time.sleep(0.1)
         print("Start Thread")
         
@@ -209,7 +208,7 @@ if __name__ == '__main__':
     # #******************** move_dir cannot be argument
     # # laser.set_thread(1,1,laser.move_dir)
     laser.start()
-    time.sleep(5)
+    time.sleep(50)
     # laser.run_thread.join()
     # laser.start()
     # laser.set_move_dir(1)

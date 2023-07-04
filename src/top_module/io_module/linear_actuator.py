@@ -83,6 +83,7 @@ class LinearActuator():
     def extend_retract(self, callback_direction, callback_finish):
         self.status = 1
         self.stop_flag = 0
+        self.stopAll()
         while not self.stop_event.is_set():
             self.motion_extend()
             time.sleep(1)
@@ -105,11 +106,11 @@ class LinearActuator():
 
     def start(self):
         self.run_thread.start()
-        self.run_thread.join()
 
     def stop(self):
         self.stop_event.set()
         self.stopAll()
+        
 
 
 if __name__ == '__main__':
@@ -118,9 +119,9 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     la = LinearActuator(port_config, cb, cb)
     # print(la.io.x_get(0))
-    la.set_time_limit(30.0)
-    la.motion_retract()
-    time.sleep(6)
+    # la.set_time_limit(30.0)
+    # la.motion_retract()
+    # time.sleep(6)
     # la.motion_extend()
     # la.start()
     # time.sleep(2)

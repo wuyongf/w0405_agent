@@ -36,14 +36,29 @@ class lift_leveling_detection:
         return rates
 
     # Find the empty region between the floor and the lift
+    # def find_empty_region(self, lst, maxi):
+    #     start_index = None
+    #     end_index = None
+    #     for i in range(len(lst)):
+    #         if lst[i] > 600:
+    #             if start_index is None:
+    #                 start_index = i
+    #             end_index = i
+    #     if end_index - start_index < maxi:
+    #         return None
+    #     return [start_index, end_index]
     def find_empty_region(self, lst, maxi):
         start_index = None
         end_index = None
+        if len(lst) == 0:
+            return None
         for i in range(len(lst)):
             if lst[i] > 600:
                 if start_index is None:
                     start_index = i
                 end_index = i
+        if end_index is None:
+            return None
         if end_index - start_index < maxi:
             return None
         return [start_index, end_index]
