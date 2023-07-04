@@ -44,7 +44,7 @@ class Locker():
                     if len_return_data:
                         return_data = self.ser.read(len_return_data)
                         return_data_arr = list(bytearray(return_data))
-                        print(return_data_arr)
+                        # print(return_data_arr)
                         for counter, data in enumerate(return_data_arr):
                             if counter == 3:
                                 if data == 17:

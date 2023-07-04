@@ -6,6 +6,7 @@ import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
 import src.models.mqtt_rv2 as RVMQTT2
 import src.models.api_rm as RMAPI
+import src.models.mqtt_nw as NWMQTT
 import src.models.db_robot as RobotDB
 import src.models.trans_rvrm as Trans
 import src.models.schema.rm as RMSchema
@@ -23,9 +24,11 @@ class Robot:
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rmapi = RMAPI.RMAPI(config)
+        self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.T = Trans.RVRMTransform()
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
+        self.nwmqtt.start()
 
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
@@ -349,8 +352,17 @@ class Robot:
         def get_status():
             return self.mo_lift_levelling.get_status()
         
-        self.mo_lift_levelling.start()
-        time.sleep(1)
+        # TODO: 
+        try:
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
+            mission_id = self.nwdb.get_latest_mission_id()
+        
+            self.mo_lift_levelling.set_task_id(id = mission_id)
+            self.mo_lift_levelling.start()
+            time.sleep(1)
+            
+        except: return False
 
         while(get_status() == MoEnum.LiftLevellingStatus.Executing):
             time.sleep(1)

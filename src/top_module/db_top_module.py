@@ -31,6 +31,11 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
         print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
+        
+    def DeleteLastStreamIaqData(self):
+        statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
+        print(f'[db_top_module.StreamIaqData]: {statement}')
+        self.Delete(statement)
 
     def InsertIaqData(self, table, key, value, task_id):
         # map_name
@@ -120,6 +125,7 @@ if __name__ == '__main__':
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     # nwdb.Test()
     
-    nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
+    # nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
+    nwdb.DeleteLastStreamIaqData()
 
     pass

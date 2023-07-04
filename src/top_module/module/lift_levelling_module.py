@@ -21,6 +21,7 @@ class LiftLevellingModule():
         self.pack_id = 0
         self.task_id = 0
         self.status = MoEnum.LiftLevellingStatus.Idle
+        self.run_flag = 0
 
     def set_task_id(self, id):
         self.task_id = id
@@ -53,6 +54,7 @@ class LiftLevellingModule():
         time.sleep(2)
         self.lld.start_detection()
         # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
+        self.linear_actuator.stop()
 
     def start(self):
         self.status = MoEnum.LiftLevellingStatus.Executing
@@ -85,11 +87,13 @@ if __name__ == "__main__":
     ll = LiftLevellingModule(config, port_config)
     # ll.pack_id = ll.create_data_pack(task_id=0)
 
-    threading.Thread(target=ll.thread_get_status).start()
+    # threading.Thread(target=ll.thread_get_status).start()
 
     # print(ll.nwdb.GetDistanceResult(side="left", pack_id=64, move_dir=2))
 
     ll.start()
+    
+    # ll.start()
 
     # # Create data pack
     # ll.laser_distance.set_pack_id(ll.laser_distance.create_data_pack(task_id=1))

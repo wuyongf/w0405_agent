@@ -105,6 +105,7 @@ class LinearActuator():
 
     def start(self):
         self.run_thread.start()
+        self.run_thread.join()
 
     def stop(self):
         self.stop_event.set()
