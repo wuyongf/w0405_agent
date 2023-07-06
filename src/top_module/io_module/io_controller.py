@@ -19,7 +19,14 @@ class ioController():
         self.time_interval = 0.1
         print("SerialController initialized")
 
-        self.read = [0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x31, 0xCA]  # get y1 status (Relay Status)
+        self.y0_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x31, 0xCA]  # get y1 status (Relay Status)
+        self.y1_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x02, 0x71, 0xCB]
+        self.y2_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x03, 0xB0, 0x0B]
+        self.y3_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x04, 0xF1, 0xC9]
+        self.y4_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x05, 0x30, 0x09]
+        self.y5_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x06, 0x70, 0x08]
+        self.y6_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x07, 0xB1, 0xC8]
+        self.y7_get = [0x01, 0x04, 0x00, 0x00, 0x00, 0x08, 0xF1, 0xCC]
         self.y0_on = [0x01, 0x06, 0x00, 0x00, 0x00, 0x01, 0x48, 0x0A]  # linear actuator front
         self.y0_off = [0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x89, 0xCA]
         self.y1_on = [0x01, 0x06, 0x00, 0x01, 0x00, 0x01, 0x19, 0xCA]  # linear actuator back
@@ -74,6 +81,17 @@ class ioController():
 
     def x_get(self, x):
         return int(self.get_inputStatus(x))
+
+    def y_get(self, y):
+        send_data = serial.to_bytes(y)
+        self.ser.write(send_data)
+        time.sleep(self.time_interval)
+        len_return_data = self.ser.inWaiting()
+        if len_return_data:
+            return_data = self.ser.read(len_return_data)
+            return_data_arr = bytearray(return_data)
+            io_status = return_data_arr[5]
+            return io_status
 
     def linear_actuator(self, action):
         # Extension Motion
@@ -154,7 +172,7 @@ if __name__ == '__main__':
     # io.y_control(io.y0_off)
     
     # io.y_control(io.y2_on)
-    io.phone_servo(0.4)
+    # io.phone_servo(0.4)
     # io.y_init()
 
     # io.y_control(io.y7_on)
@@ -168,3 +186,15 @@ if __name__ == '__main__':
     # io.fan('ventilation','on')      # ventilation fan on
     # io.fan('ventilation','off')     # ventilation fan off
     # print(io.get_inputStatus(1) )          # Status of X0 - X7, High = 1 / Low = 0
+    # print(f'y0 = {io.y_get(io.y0_get)}')
+    # print(f'y1 = {io.y_get(io.y1_get)}')
+    # print(f'y2 = {io.y_get(io.y2_get)}')
+    # print(f'y3 = {io.y_get(io.y3_get)}')
+    # print(f'y4 = {io.y_get(io.y4_get)}')
+    # print(f'y5 = {io.y_get(io.y5_get)}')
+    # io.y_control(io.y5_on)
+    # print(f'y5 = {io.y_get(io.y5_get)}')
+    # io.y_control(io.y5_off)
+    # print(f'y5 = {io.y_get(io.y5_get)}')
+    print(f'y6 = {io.y_get(io.y6_get)}')
+    print(f'y7 = {io.y_get(io.y7_get)}')

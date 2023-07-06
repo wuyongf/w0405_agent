@@ -89,6 +89,7 @@ class AccessControl():
                         self.ultra.stop_check_distance()
                         print("DOOR OPENED")
                         break
+        
 
         # for loop (5) times:
         #   set init distance()    

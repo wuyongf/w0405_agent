@@ -29,8 +29,36 @@ class fans():
             self.io.y_control(self.io.y6_on)
             self.io.y_control(self.io.y7_on)
 
+    def get_status(self, fan):
+        status = None
+        if fan == 'iaq':
+            if self.io.y_get(self.io.y6_get) == 0:
+                status = 'on'
+                return status
+            elif self.io.y_get(self.io.y6_get) == 1:
+                status = 'off'
+                return status
+        elif fan == 'cooling':
+            if self.io.y_get(self.io.y7_get) == 0:
+                status = 'on'
+                return status
+            elif self.io.y_get(self.io.y7_get) == 1:
+                status = 'off'
+                return status
+
+    def test(self, fan):
+        if fan == 'iaq':
+            print(self.io.y_get(self.io.y6_get))
+            print(self.io.y_get(self.io.y7_get))
+        if fan == 'cooling':
+            # print(f'iaq:{self.io.y_get(self.io.y6_get)}')
+            print(f'cooling:{self.io.y_get(self.io.y7_get)}')
 
 if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     fan = fans(port_config)
-    fan.all_fan(1)
+    fan.all_fan('off')
+    # time.sleep(2)
+    # fan.test('iaq')
+    time.sleep(2)
+    fan.test('cooling')

@@ -790,7 +790,7 @@ class Robot:
             self.rvapi.delete_charging()
 
             # get charging status. if NOT_CHARGING
-            while(self.rvapi.get_charging_feedback() is not 'NOT_CHARGING'):
+            while(self.rvapi.get_charging_feedback() != 'NOT_CHARGING'):
                 time.sleep(1)
             
             # goto charging position.

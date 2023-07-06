@@ -15,12 +15,10 @@ class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
         # Comment the below line if openmv deivce port changed
         self.interface = rpc.rpc_usb_vcp_master(port)
-        self.save_folder = "/home/nw/Desktop/Images"
         self.image_path = None
         self.debug = debug
 
-        if not os.path.exists(self.save_folder):
-            os.mkdir(self.save_folder)
+        self.set_save_folder("/home/nw/Desktop/Images")
 
         # Uncomment the below lines if openmv deivce port changed
         #
@@ -41,7 +39,7 @@ class ThermalCam:
         #
         # interface = rpc.rpc_network_master(slave_ip="xxx.xxx.xxx.xxx", my_ip="", port=0x1DBA)
 
-    def get_frame_buffer_call_back(self, pixformat_str="sensor.RGB565", framesize_str="sensor.QQVGA", cutthrough=True, silent=True):
+    def __get_frame_buffer_call_back(self, pixformat_str="sensor.RGB565", framesize_str="sensor.QQVGA", cutthrough=True, silent=True):
         if not silent: print("Getting Remote Frame...")
 
         result = self.interface.call("jpeg_image_snapshot", "%s,%s" % (pixformat_str, framesize_str))
@@ -102,7 +100,7 @@ class ThermalCam:
         clock = pygame.time.Clock()
 
         while(True):
-            img = self.get_frame_buffer_call_back()
+            img = self.__get_frame_buffer_call_back()
 
             if img is not None:
                 try:
@@ -118,15 +116,16 @@ class ThermalCam:
                 if event.type == pygame.KEYDOWN:
                     image = pygame.image.load(io.BytesIO(img), "jpg")
                     if image is not None:
+                        filename = time.strftime("%Y%m%d %H:%M:%S", time.localtime()) + " gray.jpg"
 
                         if event.key == pygame.K_d:
-                            pygame.image.save(image, os.path.join(self.save_folder, "dry", str(time.time()) + ".jpg"))
+                            pygame.image.save(image, os.path.join(self.save_folder, "dry", filename))
 
                         if event.key == pygame.K_w:
-                            pygame.image.save(image, os.path.join(self.save_folder, "wet", str(time.time()) + ".jpg"))
+                            pygame.image.save(image, os.path.join(self.save_folder, "wet", filename))
 
                         if event.key == pygame.K_a:
-                            pygame.image.save(image, os.path.join(self.save_folder, "other", str(time.time()) + ".jpg"))
+                            pygame.image.save(image, os.path.join(self.save_folder, "other", filename))
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -136,26 +135,35 @@ class ThermalCam:
         self.save_folder = path
         if not os.path.exists(self.save_folder):
             os.mkdir(self.save_folder)
+        
+        if not self.debug:
+            datestring = time.strftime("%Y%m%d", time.localtime())
+            self.save_folder = os.path.join(self.save_folder, datestring)
+            if not os.path.exists(self.save_folder):
+                os.mkdir(self.save_folder)
 
-    def save_image(self):
-        image = self.get_frame_buffer_call_back()
+    def capture_image(self):
+        image = self.__get_frame_buffer_call_back()
         if image is not None:
+            filename = time.strftime("%Y%m%d %H:%M:%S", time.localtime()) + " gray.jpg"
+            filepath = os.path.join(self.save_folder, filename)
+
             image = Image.open(io.BytesIO(image))
-            self.image_path = os.path.join(self.save_folder, str(time.time()) + ".jpg")
-            image.save(self.image_path)
-            return self.image_path
+            image.save(filepath)
+            return filepath
         else:
             return None
     
-    def gray_to_heatmap(self, path):
+    def gray_to_heatmap(self, filepath):
         colormap = plt.get_cmap('inferno')
-        img = cv.imread(path, cv.IMREAD_GRAYSCALE)
-        img = (img - img.min()) / (img.max() - img.min())
-        heatmap = (colormap(img) * 2**8).astype(np.uint8)[:,:,:3]
+        gray = cv.imread(filepath, cv.IMREAD_GRAYSCALE)
+        gray = (gray - gray.min()) / (gray.max() - gray.min())
+        heatmap = (colormap(gray) * 2**8).astype(np.uint8)[:,:,:3]
         heatmap = cv.cvtColor(heatmap, cv.COLOR_RGB2BGR)
-        path = path.replace(".jpg", "_color.jpg")
-        cv.imwrite(path, heatmap)
-        return path
+
+        filepath = filepath.replace("gray", "rainbow")
+        cv.imwrite(filepath, heatmap)
+        return filepath
 
 if __name__ == '__main__':
     camera = ThermalCam(debug=True)
