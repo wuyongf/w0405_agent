@@ -59,6 +59,10 @@ class Robot:
         self.skill_config = umethods.load_config('./models/conf/rm_skill.properties')
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
         #endregion
+
+        ## nw-door-agent
+        self.door_agent_start = False
+        self.door_agent_finish = False
         
 
     def sensor_start(self):
@@ -173,6 +177,16 @@ class Robot:
             else: return None
         except:
             return None
+
+    def get_current_layout_id(self):
+        try:
+            map_id = self.get_current_map_id()
+            if map_id is None: return None
+            layout_id = robot.nwdb.get_single_value('robot.map.layout', 'ID', 'activated_map_id', map_id)
+            return layout_id
+        
+        except:
+            return None
     
     # basic robot control
     def cancel_moving_task(self):
@@ -244,6 +258,8 @@ class Robot:
             thread.setDaemon(True)
             thread.start()
 
+            
+
             return True
         except: return False
 
@@ -270,6 +286,9 @@ class Robot:
         print('[charging.check_mission_status] Exiting...')
 
     def thread_check_mission_status(self, task_json, status_callback):
+        
+        self.door_agent_start = True # door-agent logic
+
         print('[goto.check_mission_status] Starting...')
         rm_task_data = RMSchema.Task(task_json)
         continue_flag = True
@@ -286,6 +305,7 @@ class Robot:
                 if(self.check_goto_has_arrived()): 
                     print('[goto.check_mission_status] robot has arrived!')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
+                    
                 # # if error
                 # if(self.check_goto_has_error): 
                 #     print('flag error') # throw error log
@@ -294,6 +314,8 @@ class Robot:
                 if(self.check_goto_is_cancelled()): 
                     print('[goto.check_mission_status] robot has cancelled moving task')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
+
+                self.door_agent_finish = True # door-agent logic
         print('[goto.check_mission_status] Exiting...')
 
     def check_goto_has_arrived(self):

@@ -154,6 +154,12 @@ class robotDBHandler(db.AzureDB):
         # statement = f'SELECT sender_id FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'
         statement = f'SELECT {target} FROM {self.database}.`{table}` WHERE {condition} = {condition_value};'
         return self.Select(statement)
+    
+    def get_values(self, table, target, condition, condition_value):
+        statement = f'SELECT {target} FROM {self.database}.`{table}` WHERE {condition} = {condition_value};'
+        result = self.SelectAll(statement)
+        values = [row[target] for row in result]  # Extract the values from the result rows
+        return values
 
 
     # UI Handler
@@ -168,6 +174,30 @@ class robotDBHandler(db.AzureDB):
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
+
+    from src.models.schema.nw import Door
+    # doors
+    result = nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', 3)
+    print(result)
+
+    layout_id = 3
+    # get door_ids from NWDB
+    door_ids =  nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', layout_id)
+    
+    # Assume door_ids is a list of door IDs retrieved from the database
+    door_list = []
+    for door_id in door_ids:
+        # Fetch the remaining properties from the database based on the door ID
+        layout_id = nwdb.get_single_value('data.robot.map.layout.door.location', 'layout_id', 'ID', door_id)
+        name = nwdb.get_single_value('data.robot.map.layout.door.location', 'name', 'ID', door_id)
+        pos_x = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_x', 'ID', door_id)
+        pos_y = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_y', 'ID', door_id)
+        pos_heading = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_heading', 'ID', door_id)
+        # Create a Door object and append it to the list
+        door = Door(layout_id, name, pos_x, pos_y, pos_heading)
+        door_list.append(door)
+
+    print(door_list[0])
 
     # position
     # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}
@@ -189,9 +219,9 @@ if __name__ == '__main__':
     # print(id)
 
     # # delivery
-    id = nwdb.get_available_delivery_id()
-    print(id)
-    nwdb.update_ui_display_status( ui_flag=1, mission_type=2, status=5)
+    # id = nwdb.get_available_delivery_id()
+    # print(id)
+    # nwdb.update_ui_display_status( ui_flag=1, mission_type=2, status=5)
 
     # sender_id = nwdb.get_single_value('sys.mission.delivery', 'sender_id', 'ID', id)
     # print(sender_id)

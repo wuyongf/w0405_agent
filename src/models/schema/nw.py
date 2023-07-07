@@ -39,3 +39,17 @@ class DeliveryPose:
         self.heading = heading
     def to_json(self):
         return json.dumps(self.__dict__)
+    
+
+# Door
+
+class Door:
+    def __init__(self, layout_id, name, pos_x, pos_y, pos_heading, is_closed = True):
+        self.layout_id = layout_id
+        self.name = name
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.pos_heading = pos_heading
+        self.is_closed = is_closed
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)

@@ -131,7 +131,6 @@ if __name__ == "__main__":
     i = 0
 
 
-    
     publisher.loop_start()
     subscriber.loop_start()
 
