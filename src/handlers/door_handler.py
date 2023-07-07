@@ -10,7 +10,7 @@ class NWDoorAgent:
         self.doors = []
 
         # door buffer
-        self.door_radius = 20 # 20 pixel == 100 cm
+        self.door_radius = 32 # 20 pixel == 100 cm
 
         # logic: nw-door-agent
         self.start_check_flag = True
@@ -45,13 +45,16 @@ class NWDoorAgent:
         pass
 
     def end(self):
+        print(f'[door_handler.end]: self.global_check_flag = False...')
         self.global_check_flag = False
+        self.detail_check_flag = False
         pass
 
     def global_check(self):
         while(self.start_check_flag):
 
             while(self.global_check_flag):
+
                 # check if continue
                 if(self.start_check_flag is False or  self.global_check_flag is False): break
                 
@@ -59,6 +62,8 @@ class NWDoorAgent:
                 for index, door in enumerate(self.doors):
                     distance = math.sqrt((self.robot.robot_status.mapPose.x - door.pos_x) ** 2 + (self.robot.robot_status.mapPose.y - door.pos_y) ** 2)
                     if distance < self.door_radius: # 20 pixel == 100 cm
+                        print(f'[door_handler.global_check]: find target dooor...')
+                        print(f'[door_handler.global_check]: pause robot...')
                         # robot
                         self.robot.pause_robot_task()
                         # logic 
@@ -76,7 +81,7 @@ class NWDoorAgent:
                 # try to open the door
                 try:
                     print(f'[door_handler.detail_check] try to open the door...')
-                    time.sleep(3)
+                    time.sleep(10)
                     # door_is_open = self.robot.open_door()
                     door_is_open = True
                 except:
@@ -87,13 +92,13 @@ class NWDoorAgent:
                     # self.robot.phone_start_rotating()
                     self.robot.resume_robot_task()
 
-                    self.check_door_distance(door_index, break_loop_distance=30)
+                    self.check_door_distance(self.doors, door_index, break_loop_distance=40)
                     # self.robot.phone_stop_rotating()
 
                     # logic
                     self.detail_check_flag = False
-                    self.global_check_flag = True
-                break
+                    # self.global_check_flag = True
+            
             time.sleep(1)
 
     # Door
@@ -102,9 +107,10 @@ class NWDoorAgent:
 
         # get RV activated map --> get NWDB corresponding layout_id
         layout_id = self.robot.get_current_layout_id()
+        print(f'current layout_id: {layout_id}')
 
         # get door_ids from NWDB
-        door_ids =  self.robot.nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', layout_id)
+        door_ids =  self.robot.nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', int(layout_id))
         
         # Assume door_ids is a list of door IDs retrieved from the database
         self.doors.clear()
@@ -122,13 +128,15 @@ class NWDoorAgent:
             self.doors.append(door)
         return self.doors
 
-    def check_door_distance(self, index, break_loop_distance):
+    def check_door_distance(self, doors, index, break_loop_distance):
         
         while(True):
 
-            distance = math.sqrt((self.robot.robot_status.mapPose.x - self.doors[index].pos_x) ** 2 + (self.robot.robot_status.mapPose.y - self.doors[index].pos_y) ** 2)
+            distance = math.sqrt((self.robot.robot_status.mapPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.mapPose.y - doors[index].pos_y) ** 2)
 
             if(distance >= break_loop_distance): break
+
+            if(self.detail_check_flag is False): break
             
             time.sleep(0.2)
 

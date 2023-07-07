@@ -129,7 +129,7 @@ class TaskHandler:
         if task.taskType == 'RM-GOTO':
             res = self.robot.goto(task_json, self.task_status_callback)
             if (res):
-                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+                return 
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
 

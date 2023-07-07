@@ -101,7 +101,7 @@ class RMAPI(api.AuthenticatedAPI):
             item_name = item['name']
             print(f'skill: {item_name}  skill_id: {item_id}')
     
-    def write_robot_skill_to_properties(self,robotId):
+    def write_robot_skill_to_properties(self,robotId, skill_config_path):
         # http://dev.robotmanager.io/api/v2/robot-skills
 
         # robotId = "2658a873-a0a6-4c3f-967f-d179c4073272" # "2658a873-a0a6-4c3f-967f-d179c4073272"
@@ -109,7 +109,7 @@ class RMAPI(api.AuthenticatedAPI):
         data = self.get(f'/robot-skills/get-by-robot/{robotId}')
         results = data['result']
 
-        with open('./models/conf/rm_skill.properties', 'w') as config_file:
+        with open(skill_config_path, 'w') as config_file:
             config_file.write('[RM-Skill]' + '\n')
             # Iterate over each item and extract the "id" and "name"
             for item in results:

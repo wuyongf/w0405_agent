@@ -20,7 +20,7 @@ from src.top_module.module import iaq as MoIAQ
 from src.top_module.module import locker as MoLocker
 
 class Robot:
-    def __init__(self, config, port_config):
+    def __init__(self, config, port_config, skill_config_path):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rmapi = RMAPI.RMAPI(config)
@@ -54,9 +54,9 @@ class Robot:
 
         ## delivery related
         #region ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(self.robot_guid)
+        self.rmapi.write_robot_skill_to_properties(self.robot_guid, skill_config_path)
         # print(f'[new_delivery_mission]: write Robot Skill...')
-        self.skill_config = umethods.load_config('./models/conf/rm_skill.properties')
+        self.skill_config = umethods.load_config(skill_config_path)
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
         #endregion
 
@@ -182,7 +182,7 @@ class Robot:
         try:
             map_id = self.get_current_map_id()
             if map_id is None: return None
-            layout_id = robot.nwdb.get_single_value('robot.map.layout', 'ID', 'activated_map_id', map_id)
+            layout_id = self.nwdb.get_single_value('robot.map.layout', 'ID', 'activated_map_id', map_id)
             return layout_id
         
         except:
@@ -824,8 +824,9 @@ class Robot:
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
+    skill_config_path = './conf/rm_skill.properties'
     
-    robot = Robot(config,port_config)
+    robot = Robot(config,port_config,skill_config_path)
 
     # # get status
     # robot.status_start(NWEnum.Protocol.RVAPI)
@@ -835,4 +836,7 @@ if __name__ == '__main__':
     #     # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
     #     # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
 
-    robot.new_delivery_mission()
+    # robot.new_delivery_mission()
+
+    layout_id = robot.get_current_layout_id()
+    print(f'current layout_id: {layout_id}')

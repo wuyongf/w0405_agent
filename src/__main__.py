@@ -9,7 +9,8 @@ import subprocess
 import src.utils.methods as umethods
 import handlers.status_handler as status_handler
 import handlers.remote_control_handler as remote_control_handler
-import src.handlers.task_handler as task_handler
+import handlers.task_handler as task_handler
+from handlers.door_handler import NWDoorAgent
 import src.models.robot as Robot
 import src.models.enums.nw as NWEnum
 
@@ -45,9 +46,10 @@ if __name__ == '__main__':
     # # Loading config files
     config = umethods.load_config('../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
+    skill_config_path = './models/conf/rm_skill.properties'
 
     # Robot
-    robot = Robot.Robot(config, port_config)
+    robot = Robot.Robot(config, port_config, skill_config_path)
     robot.status_start(NWEnum.Protocol.RVMQTT)
     robot.sensor_start()
 
@@ -62,6 +64,9 @@ if __name__ == '__main__':
     # Remote Control Handler
     remote_control_handler = remote_control_handler.RemoteControlHandler(config)
     remote_control_handler.start()
+
+    # NW Door Agent
+    nw_door_agent = NWDoorAgent(robot)
 
     # Successfully started the app
     print('main finished')
