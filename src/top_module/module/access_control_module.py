@@ -20,6 +20,7 @@ class AccessControl():
         self.init_distance = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.try_open_door,)
+        self.flag_flip_loop = 0
         
     def get_status(self):
         return self.door_status
@@ -54,6 +55,18 @@ class AccessControl():
     def start_check_distance(self):
         self.ultra.start_check_distance()
     
+    def flip_loop(self):
+        while True:
+            while self.flag_flip_loop:
+                self.servo_flip()
+                time.sleep(1)
+                
+        pass
+        
+    def set_flip_loop_flag(self, e: bool): 
+        self.flag_flip_loop = e
+    
+    
     def try_open_door(self):
         self.ultra.start()
         # self.start()
@@ -65,6 +78,7 @@ class AccessControl():
                 print('[access_control_module.py] Mission Fail!')
                 self.ultra.stop_check_distance()
                 self.ultra.stop()
+                return False
                 break
             # Get the initial distance
             if self.door_status == MoEnum.AccessControlStatus.Opened:
@@ -87,8 +101,11 @@ class AccessControl():
                     if self.ultra.get_door_status():
                         self.set_status(MoEnum.AccessControlStatus.Opened)
                         self.ultra.stop_check_distance()
+                        self.ultra.stop()
                         print("DOOR OPENED")
-                        break
+                        # break
+                        return True
+        return False
         
 
         # for loop (5) times:
@@ -110,7 +127,28 @@ if __name__ == "__main__":
     port_config = umethods.load_config('../../../conf/port_config.properties')
 
     ac = AccessControl(config, port_config)
-    ac.start()
-    time.sleep(5)
+    
+    # ======== Start Open door========
+    # ac.start()
+    # print(ac.try_open_door())
+    # ====================================
+    
+    
+    # time.sleep(5)
     print(ac.get_status())
+    
+    # # ======== Flip Phone Loop =========
+    # Usage: 
+    # Start thread
+    thread = threading.Thread(target=ac.flip_loop,)
+    thread.start()
+    time.sleep(2)
+    # Start flip
+    ac.set_flip_loop_flag(True)
+    time.sleep(5)
+    # Stop flip
+    ac.set_flip_loop_flag(False)
+    # # ====================================
+    
+    
     # ac.get_door_status()

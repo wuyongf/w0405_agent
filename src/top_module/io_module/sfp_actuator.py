@@ -27,4 +27,4 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     actuator = sfp_actuator(port_config)
     actuator.action('up')
-    actuator.action('down')
+    # actuator.action('down')
