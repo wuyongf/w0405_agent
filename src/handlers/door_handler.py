@@ -10,7 +10,8 @@ class NWDoorAgent:
         self.doors = []
 
         # door buffer
-        self.door_radius = 32 # 20 pixel == 100 cm
+        self.door_radius = 50 # 20 pixel == 100 cm
+        self.break_loop_distance = 60 
 
         # logic: nw-door-agent
         self.start_check_flag = True
@@ -79,10 +80,11 @@ class NWDoorAgent:
             if(self.detail_check_flag):
                 door_index = self.door_index
                 # try to open the door
+                door_is_open = False
                 try:
                     print(f'[door_handler.detail_check] try to open the door...')
 
-                    res = robot.mo_access_control.try_open_door()
+                    res = self.robot.mo_access_control.try_open_door()
                     # door_is_open = self.robot.open_door()
                     door_is_open = res
                 except:
@@ -90,11 +92,11 @@ class NWDoorAgent:
                     pass
                 if(door_is_open):
                     print(f'[door_handler.detail_check] door is openned...')
-
                     self.robot.mo_access_control.set_flip_loop_flag(True)
+                    time.sleep(5)
                     self.robot.resume_robot_task()
 
-                    self.check_door_distance(self.doors, door_index, break_loop_distance=40)
+                    self.check_door_distance(self.doors, door_index, break_loop_distance=self.break_loop_distance)
                     self.robot.mo_access_control.set_flip_loop_flag(False)
 
                     # logic

@@ -69,7 +69,7 @@ class Robot:
 
     def sensor_start(self):
         self.mo_iaq.start()
-        self.mo_access_control.start()
+        # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
     
     def status_start(self, protocol: NWEnum.Protocol):

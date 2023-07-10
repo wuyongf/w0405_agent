@@ -22,7 +22,7 @@ class AccessControl():
         self.run_thread = threading.Thread(target=self.try_open_door,)
         self.flag_flip_loop = 0
         # yf
-        self.thread_flip_loop = threading.Thread(target=self.flip_loop,)
+        self.thread_flip_loop = threading.Thread(target=self.flip_loop,).start()
         
     def get_status(self):
         return self.door_status
@@ -120,7 +120,6 @@ class AccessControl():
 
     def start(self): # Start Looping
         self.run_thread.start()
-        self.thread_flip_loop.start()
         
     def stop(self) :
         self.stop_event.set()  
@@ -133,21 +132,21 @@ if __name__ == "__main__":
     ac = AccessControl(config, port_config)
     
     # ======== Start Open door========
-    ac.start()
-    # print(ac.try_open_door())
+    # ac.start()
+    print(ac.try_open_door())
     # ====================================
     
     
     # time.sleep(5)
-    print(ac.get_status())
+    # print(ac.get_status())
     
     # # ======== Flip Phone Loop =========
     # Usage: 
     # Start flip
-    ac.set_flip_loop_flag(True)
-    time.sleep(15)
-    # Stop flip
-    ac.set_flip_loop_flag(False)
+    # ac.set_flip_loop_flag(True)
+    # time.sleep(15)
+    # # Stop flip
+    # ac.set_flip_loop_flag(False)
     # # ====================================
     
     
