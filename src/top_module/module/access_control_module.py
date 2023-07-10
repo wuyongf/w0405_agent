@@ -21,9 +21,12 @@ class AccessControl():
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.try_open_door,)
         self.flag_flip_loop = 0
+        # yf
+        self.thread_flip_loop = threading.Thread(target=self.flip_loop,).start()
         
     def get_status(self):
         return self.door_status
+
     
     def check_door_status(self):
         while not self.stop_event.is_set():
@@ -139,13 +142,9 @@ if __name__ == "__main__":
     
     # # ======== Flip Phone Loop =========
     # Usage: 
-    # Start thread
-    thread = threading.Thread(target=ac.flip_loop,)
-    thread.start()
-    time.sleep(2)
     # Start flip
     ac.set_flip_loop_flag(True)
-    time.sleep(5)
+    time.sleep(15)
     # Stop flip
     ac.set_flip_loop_flag(False)
     # # ====================================
