@@ -168,6 +168,21 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
+        if task.taskType == 'FUNC-LIFTVIBRATION-ON':
+            res = self.robot.lift_vibration_on(task_json)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'FUNC-LIFTVIBRATION-OFF':
+            res = self.robot.lift_vibration_off(task_json)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+            
+            
         if task.taskType == 'DELIVERY-CONFIGURATION':
             res = self.robot.get_available_delivery_mission()
             if (res):

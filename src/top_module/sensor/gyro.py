@@ -20,7 +20,7 @@ import src.top_module.port as port
 #       Use Savitzky-Golay filter to filter the noise
 
 
-class gryo():
+class Gyro():
 
     def __init__(self,config, port_config):
         self.sid = port_config.get('GYRO', 'sid')
@@ -205,7 +205,7 @@ class gryo():
                             # clear data stack
                             collected_data = []
                     
-                    print(collected_data)
+                    # print(collected_data)
 
     def print_data(self):
         print(datetime.now())
@@ -231,9 +231,9 @@ if __name__ == '__main__':
     # Example usage:
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    gryo = gryo(config, port_config)
-    # gryo.collect_data()
-    # gryo.start_collection()
-    gryo.start()
-    time.sleep(120)
-    gryo.stop()
+    gyro = Gyro(config, port_config)
+    # gyro.collect_data()
+    # gyro.start_collection()
+    gyro.start()
+    time.sleep(2)
+    gyro.stop()

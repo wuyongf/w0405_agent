@@ -19,6 +19,7 @@ from src.top_module.module import lift_levelling_module as MoLiftLevelling
 from src.top_module.module import iaq as MoIAQ
 from src.top_module.module import locker as MoLocker
 from src.top_module.module.access_control_module import AccessControl as MoAccessControl
+from src.top_module.sensor.gyro import Gyro as MoGyro
 
 class Robot:
     def __init__(self, config, port_config, skill_config_path):
@@ -38,6 +39,7 @@ class Robot:
         self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
         self.mo_locker = MoLocker.Locker(port_config)
         self.mo_access_control = MoAccessControl(config, port_config)
+        self.mo_gyro = MoGyro(config, port_config)
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -370,6 +372,28 @@ class Robot:
 
     # Module - Lift Inspection
     # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
+    
+    def lift_vibration_on(self, task_json):
+        # try: 
+            self.mo_gyro = MoGyro(self.config, self.port_config)
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
+            mission_id = self.nwdb.get_latest_mission_id()
+            
+            print(f'mission_id: {mission_id}')
+            
+            self.mo_gyro.set_task_id(id = mission_id)
+            time.sleep(0.3)
+            self.mo_gyro.start()
+            
+            return True
+        # except: return False
+        
+    def lift_vibration_off(self, task_json):
+        try: 
+            self.mo_gyro.stop()
+            return True
+        except: return False
 
     def inspect_lift_levelling(self, task_json):
         
@@ -839,4 +863,5 @@ if __name__ == '__main__':
     # robot.new_delivery_mission()
 
     layout_id = robot.get_current_layout_id()
+    
     print(f'current layout_id: {layout_id}')
