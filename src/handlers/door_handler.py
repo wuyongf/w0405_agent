@@ -81,23 +81,34 @@ class NWDoorAgent:
                 # try to open the door
                 try:
                     print(f'[door_handler.detail_check] try to open the door...')
-                    time.sleep(10)
+
+                    res = robot.mo_access_control.try_open_door()
                     # door_is_open = self.robot.open_door()
-                    door_is_open = True
+                    door_is_open = res
                 except:
+                    print(f'[door_handler.detail_check] try to open the door except. something wrong...')
                     pass
                 if(door_is_open):
                     print(f'[door_handler.detail_check] door is openned...')
 
-                    # self.robot.phone_start_rotating()
+                    self.robot.mo_access_control.set_flip_loop_flag(True)
                     self.robot.resume_robot_task()
 
                     self.check_door_distance(self.doors, door_index, break_loop_distance=40)
-                    # self.robot.phone_stop_rotating()
+                    self.robot.mo_access_control.set_flip_loop_flag(False)
 
                     # logic
                     self.detail_check_flag = False
                     # self.global_check_flag = True
+                else:
+                    # logic
+                    self.detail_check_flag = False
+
+                    # info
+                    print(f'[door_handler.detail_check] cannot open the door...')
+                    # robot should cancel current mission
+                    # robot should report the status
+                    # robot should return to charging station
             
             time.sleep(1)
 

@@ -18,6 +18,7 @@ import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module import lift_levelling_module as MoLiftLevelling
 from src.top_module.module import iaq as MoIAQ
 from src.top_module.module import locker as MoLocker
+from src.top_module.module.access_control_module import AccessControl as MoAccessControl
 
 class Robot:
     def __init__(self, config, port_config, skill_config_path):
@@ -35,7 +36,8 @@ class Robot:
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
         self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti = 2)
-        self.module_locker = MoLocker.Locker(port_config)
+        self.mo_locker = MoLocker.Locker(port_config)
+        self.mo_access_control = MoAccessControl(config, port_config)
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -66,7 +68,8 @@ class Robot:
         
 
     def sensor_start(self):
-        self.iaq_start()
+        self.mo_iaq.start()
+        self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
     
     def status_start(self, protocol: NWEnum.Protocol):
@@ -344,9 +347,6 @@ class Robot:
 
     # Module - IAQ
 
-    def iaq_start(self):
-        self.mo_iaq.start()
-
     def iaq_on(self, task_json):
         try: 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
@@ -406,16 +406,16 @@ class Robot:
     # def configure_delivery_mission(self, available_delivery_ID):
     def locker_unlock(self):
         try:
-            self.module_locker.unlock()
+            self.mo_locker.unlock()
             time.sleep(0.2)
-            if(self.module_locker.is_closed() is not True): return True
+            if(self.mo_locker.is_closed() is not True): return True
             return False
         except:
             return False
         
     def locker_is_closed(self):
         try:
-            return self.module_locker.is_closed()
+            return self.mo_locker.is_closed()
         except:
             return False
 
