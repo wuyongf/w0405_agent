@@ -73,7 +73,7 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'SELECT `distance_chunk_{side}` FROM {self.database}.`sensor.distance_sensor.datachunk` WHERE pack_id = "{pack_id}" AND move_dir = "{move_dir}";'
         return self.SelectAll(statement)
 
-    # Get combined list of result
+    # Get laser distance list
     def GetDistanceResult(self, side, pack_id, move_dir):
         result = []
         for i in self.GetDistanceChunk(side=side, pack_id=pack_id, move_dir=move_dir):
@@ -93,6 +93,22 @@ class TopModuleDBHandler(db.AzureDB):
     # Insert Gyro Data Chunk
     def InsertGyroChunk(self, pack_id, accel_z):
         statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", now())'
+        self.Insert(statement)
+        
+    # Get raw data set of gyro chunk
+    def GetGyroChunk(self, pack_id):
+        statement = f'SELECT `accel_z` FROM {self.database}.`sensor.gyro.datachunk` WHERE pack_id = "{pack_id}"'
+        return self.SelectAll(statement)
+        
+    # Get Gyro data list
+    def GetGyroResult(self, pack_id):
+        result = []
+        for i in self.GetGyroChunk(pack_id=pack_id):
+            result = result + list(i.values())[0].split(",")
+        return result
+    
+    def UpdateGyroResult(self, column: str, id: int, result: str):
+        statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" WHERE id = {id}'
         self.Insert(statement)
 
 
@@ -125,7 +141,11 @@ if __name__ == '__main__':
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     # nwdb.Test()
     
+    # print(nwdb.GetDistanceChunk(pack_id=65, side='left', move_dir=2))
+    print(nwdb.GetGyroResult(21))
+    nwdb.UpdateGyroResult(id=21, column='result_denoise', result='test')
+    
     # nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
-    nwdb.DeleteLastStreamIaqData()
+    # nwdb.DeleteLastStreamIaqData()
 
     pass

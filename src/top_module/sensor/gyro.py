@@ -5,6 +5,7 @@ import src.top_module.db_top_module as NWDB
 from datetime import datetime
 import src.utils.methods as umethods
 import src.top_module.port as port
+import src.top_module.analysis.gyro_after_processing as GAP
 # Voltage = 5V
 
 # todo:
@@ -29,6 +30,7 @@ class Gyro():
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.05  # Max: 200Hz, time interval = 0.005,  Default = 0.01sec, 100Hz
         self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.gap = GAP.gyro_after_processing(config)
         print("SerialController initialized")
         self.acc = []
         self.gyro = []
@@ -55,6 +57,7 @@ class Gyro():
         self.run_thread.start()
         
     def stop(self) :
+        # self.gap.after_processing(self.pack_id)
         self.stop_event.set()
 
     def get_acc(self, datahex):
@@ -235,5 +238,5 @@ if __name__ == '__main__':
     # gyro.collect_data()
     # gyro.start_collection()
     gyro.start()
-    time.sleep(2)
+    time.sleep(10)
     gyro.stop()
