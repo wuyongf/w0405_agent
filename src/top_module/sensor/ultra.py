@@ -38,6 +38,9 @@ class ultra:
         self.data_list_FR = []
         self.check_flag = False
         self.door_is_opened = False
+        
+        self.check_door_counter = 0
+        self.check_door_type = None
          
     def start(self): # Start Looping
         self.run_thread.start()
@@ -136,26 +139,64 @@ class ultra:
         self.check_flag = True
         
     def check_distance(self):
-        # TODO: algorithm to define distance 
-        try:
-            if (self.result[0] - self.init_distance[0] > 100 or self.result[1] - self.init_distance[1] > 100 or 
-                self.result[0] - self.init_distance[0] < -100 or self.result[1] - self.init_distance[1] < -100):
-                pass
+        # algorithm to check door status using ultra sensor
+        # will compare current distance with init distance
+        try:           
+            # case: if distance far away
+            if self.result[0] - self.init_distance[0] > 100 or self.result[1] - self.init_distance[1] > 100:
+                print("[ultra.py] checking door: far")
+                # if prevous type is not far, reset counter
+                if self.check_door_type != 'far':
+                    # reset counter
+                    self.check_door_type = 'far'
+                    self.check_door_counter = 0
+                else:
+                    self.check_door_counter += 1
+                            
+            elif self.result[0] - self.init_distance[0] < -100 or self.result[1] - self.init_distance[1] < -100:
+                print("[ultra.py] checking door: close")
+                # if prevous type is not close, reset counter
+                if self.check_door_type != 'close':
+                    # reset counter
+                    self.check_door_type = 'close'
+                    self.check_door_counter = 0
+                else:
+                    self.check_door_counter += 1
+                
+            else:
+                # reset counter
+                self.check_door_type = None
+                self.check_door_counter = 0
             
-            if self.result[0] - self.init_distance[0] > 100:
-                print("FL is too far away")
+            # if counter >= 4, set door status is open
+            if self.check_door_counter >= 4:
                 self.door_is_opened = True
-            if self.result[1] - self.init_distance[1] > 100:
-                print("FR is too far away")
-                self.door_is_opened = True
-            if self.result[0] - self.init_distance[0] < -100:
-                print("FL is too close")
-                self.door_is_opened = True
-            if self.result[1] - self.init_distance[1] < -100:
-                print("FR is too close")
-                self.door_is_opened = True
+                
         except:
             pass
+        
+    # def check_distance(self):
+    #     # TODO: algorithm to define distance
+    #     try:
+    #         counter = 0
+    #         if (self.result[0] - self.init_distance[0] > 100 or self.result[1] - self.init_distance[1] > 100 or 
+    #             self.result[0] - self.init_distance[0] < -100 or self.result[1] - self.init_distance[1] < -100):
+    #             pass
+            
+    #         if self.result[0] - self.init_distance[0] > 100:
+    #             print("FL is too far away")
+    #             self.door_is_opened = True
+    #         if self.result[1] - self.init_distance[1] > 100:
+    #             print("FR is too far away")
+    #             self.door_is_opened = True
+    #         if self.result[0] - self.init_distance[0] < -100:
+    #             print("FL is too close")
+    #             self.door_is_opened = True
+    #         if self.result[1] - self.init_distance[1] < -100:
+    #             print("FR is too close")
+    #             self.door_is_opened = True
+    #     except:
+    #         pass
 
     def stop_check_distance(self):
         self.check_flag = False

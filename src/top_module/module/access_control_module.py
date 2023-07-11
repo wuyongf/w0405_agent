@@ -78,7 +78,7 @@ class AccessControl():
         for i in range(3):
             if i >=2:
                 self.set_status(MoEnum.AccessControlStatus.Error)
-                print('[access_control_module.py] Mission Fail!')
+                print('[access_control_module.py] check init distance fail')
                 self.ultra.stop_check_distance()
                 self.ultra.stop()
                 return False
@@ -87,6 +87,7 @@ class AccessControl():
             if self.door_status == MoEnum.AccessControlStatus.Opened:
                 self.ultra.stop()
                 break
+            print('[access_control_module.py] try get init distance')
             self.get_init_distance()
             time.sleep(1)
             # Start checking distance (distance between robot and door)
@@ -105,7 +106,8 @@ class AccessControl():
                         self.set_status(MoEnum.AccessControlStatus.Opened)
                         self.ultra.stop_check_distance()
                         self.ultra.stop()
-                        print("DOOR OPENED")
+                        print('[access_control_module.py] door opened')
+                        # print("DOOR OPENED")
                         # break
                         return True
         return False
