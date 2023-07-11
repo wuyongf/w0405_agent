@@ -62,7 +62,7 @@ if __name__ == '__main__':
     task_handler.start()
 
     # Remote Control Handler
-    remote_control_handler = remote_control_handler.RemoteControlHandler(config)
+    remote_control_handler = remote_control_handler.RemoteControlHandler(robot)
     remote_control_handler.start()
 
     # NW Door Agent

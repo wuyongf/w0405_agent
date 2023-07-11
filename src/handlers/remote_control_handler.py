@@ -19,7 +19,7 @@ import src.models.enums.rm as RMEnum
 import src.models.mqtt_rv_joystick as RVJoyStick
 
 class RemoteControlHandler:
-    def __init__(self, config):
+    def __init__(self, robot: Robot.Robot):
         # RM-MQTT
         self.subscriber = mqtt.Client("remote_control_subscriber")
         self.subscriber.connect('localhost') 
@@ -32,7 +32,7 @@ class RemoteControlHandler:
         self.subscriber.message_callback_add("/rm/move", self.on_message_move)
 
         # RV-Joystick
-        self.joystick = RVJoyStick.RVJoyStick(config)
+        self.joystick = robot.rvjoystick
 
         # # yf config
         # self.robot = Robot.Robot(config)

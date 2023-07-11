@@ -5,6 +5,7 @@ import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
 import src.models.mqtt_rv2 as RVMQTT2
+from src.models.mqtt_rv_joystick import RVJoyStick  
 import src.models.api_rm as RMAPI
 import src.models.mqtt_nw as NWMQTT
 import src.models.db_robot as RobotDB
@@ -25,6 +26,7 @@ class Robot:
     def __init__(self, config, port_config, skill_config_path):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
+        self.rvjoystick = RVJoyStick(config)
         self.rmapi = RMAPI.RMAPI(config)
         self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
         self.nwdb = RobotDB.robotDBHandler(config)

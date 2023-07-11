@@ -4,7 +4,7 @@ import src.models.robot as Robot
 import src.utils.methods as umethods
 from src.models.schema.nw import Door
 
-class NWDoorAgent:
+class NWLiftAgent:
     def __init__(self, robot: Robot.Robot):
         self.robot = robot
         self.doors = []
@@ -161,9 +161,7 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../conf/port_config.properties')
     robot = Robot.Robot(config,port_config)
 
-    door_handler = NWDoorAgent(robot)
+    lift_handler = NWLiftAgent(robot)
     # status_handler.start()
 
-    result = door_handler.list_doors()
-    print(result)
-    # door_handler.end()
+    
