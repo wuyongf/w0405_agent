@@ -11,11 +11,13 @@
 # Python 3.9.15
 # definition.py
 
+
 class BatteryState:
     def __init__(self, dct):
         self.robotId = dct['robotId']
         self.percentage = dct['percentage']
         self.powerSupplyStatus = dct['powerSupplyStatus']
+
 
 class Pose:
     def __init__(self, dct):
@@ -24,6 +26,7 @@ class Pose:
         self.x = dct['x']
         self.y = dct['y']
         self.angle = dct['angle']
+
 
 class Waypoint:
     def __init__(self):
@@ -34,14 +37,16 @@ class Waypoint:
         self.y = 0.0
         self.angle = 0.0
 
+
 class ActiveMap:
     def __init__(self, dct):
         self.robotId = dct['robotId']
         self.id = dct['id']
         self.name = dct['name']
 
+
 class MapMetadata:
-    def __init__(self, dct = None):
+    def __init__(self, dct=None):
         # if dct is None: return None
         # print(dct)
         self.resolution = dct['resolution']
@@ -51,12 +56,20 @@ class MapMetadata:
         self.y = dct['y']
         self.angle = dct['angle']
 
+
 class Mode:
     def __init__(self, dct):
         self.robotId = dct['robotId']
         self.state = dct['state']
         self.followMeStandalone = dct['followMeStandalone']
         self.manual = dct['manual']
+
+
+class FollowMe:
+    def __init__(self, dct):
+        self.robotId = dct['robotId']
+        self.pairingState = dct['pairingState']
+
 
 class MQTTJoyStick:
     def __init__(self, object):
@@ -65,6 +78,7 @@ class MQTTJoyStick:
         # self.className = "com.rvautotech.fobo.amr.dto.JoystickDTO"
         self.message = object
 
+
 class MQTTTopic:
     def __init__(self, id, topicName, className, object):
         self.id = id
@@ -72,8 +86,9 @@ class MQTTTopic:
         self.className = className
         self.object = object
 
+
 class MQTTObjJoyStick:
-    def __init__(self, upDown, leftRight, turboOn = False):
+    def __init__(self, upDown, leftRight, turboOn=False):
         self.upDown = upDown
         self.leftRight = leftRight
         self.turboOn = turboOn
