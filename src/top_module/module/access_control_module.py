@@ -21,6 +21,7 @@ class AccessControl():
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.try_open_door,)
         self.flag_flip_loop = 0
+        self.port_config = port_config
         # yf
         self.thread_flip_loop = threading.Thread(target=self.flip_loop,).start()
         
@@ -70,29 +71,37 @@ class AccessControl():
         self.flag_flip_loop = e
     
     
+    def init(self):
+        self.door_status = MoEnum.AccessControlStatus.Closed
+        self.init_distance = []
+    
     def try_open_door(self):
+        self.init()
+        self.ultra = UltraSound.ultra(self.port_config)
         self.ultra.start()
         # self.start()
         time.sleep(1)
         
         for i in range(3):
             if i >=2:
-                self.set_status(MoEnum.AccessControlStatus.Error)
+                # Fail to get init distance
                 print('[access_control_module.py] check init distance fail')
+                self.set_status(MoEnum.AccessControlStatus.Error)
                 self.ultra.stop_check_distance()
                 self.ultra.stop()
                 return False
                 break
-            # Get the initial distance
             if self.door_status == MoEnum.AccessControlStatus.Opened:
+                # USELESS
                 self.ultra.stop()
                 break
+            # Try to get the initial distance
             print('[access_control_module.py] try get init distance')
             self.get_init_distance()
-            time.sleep(1)
+            time.sleep(0.5)
             # Start checking distance (distance between robot and door)
             self.start_check_distance()
-            time.sleep(1)
+            time.sleep(0.5)
             
             for i in range(3):
                 if i > 3 or self.door_status == MoEnum.AccessControlStatus.Opened:
@@ -135,7 +144,15 @@ if __name__ == "__main__":
     
     # ======== Start Open door========
     # ac.start()
-    print(ac.try_open_door())
+    # print(ac.try_open_door())
+    if ac.try_open_door():
+        print('pass1')
+        time.sleep(5)
+        if ac.try_open_door():
+            print('pass2')
+            pass
+            
+        
     # ====================================
     
     

@@ -72,7 +72,7 @@ class lift_leveling_detection:
                 # return int(round(((i + range_value - 1)+i)/2, 0))
                 return i + int(round(range_value/2))
         print('fail')
-        return -1
+        return -9999
 
     # Extract region from a list
     def extract_region(self, lst, i_start, i_end):
@@ -103,8 +103,8 @@ class lift_leveling_detection:
             region_after_empty = self.extract_region(lst=self.list_rate_of_change, i_start=after_i_start, i_end=after_i_end)
             print(region_after_empty)
             # Locate the index of the region before and after empty region
-            index_before_empty = self.find_constant_region(lst=region_before_empty, range_value=20) + before_i_start
-            index_after_empty = self.find_constant_region(lst=region_after_empty, range_value=20) + after_i_start
+            index_before_empty = self.find_constant_region(lst=region_before_empty, range_value=7) + before_i_start
+            index_after_empty = self.find_constant_region(lst=region_after_empty, range_value=7) + after_i_start
 
             # Find the height before and after the empty
             height_before_empty = self.data[index_before_empty]
@@ -151,6 +151,6 @@ if __name__ == "__main__":
     
     # NOTE: Print the result by given data:
     # print(lfd.level_detection())
-    lfd.set_pack_id(87)
+    lfd.set_pack_id(82)
     
     lfd.start_detection()

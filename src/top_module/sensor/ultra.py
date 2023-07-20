@@ -169,7 +169,7 @@ class ultra:
                 self.check_door_counter = 0
             
             # if counter >= 4, set door status is open
-            if self.check_door_counter >= 4:
+            if self.check_door_counter >= 3:
                 self.door_is_opened = True
                 
         except:

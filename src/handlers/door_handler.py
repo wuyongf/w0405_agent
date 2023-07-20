@@ -10,8 +10,8 @@ class NWDoorAgent:
         self.doors = []
 
         # door buffer
-        self.door_radius = 50 # 20 pixel == 100 cm
-        self.break_loop_distance = 60 
+        self.door_radius = 35 # 20 pixel == 100 cm
+        self.break_loop_distance = 50 
 
         # logic: nw-door-agent
         self.start_check_flag = True
@@ -83,6 +83,7 @@ class NWDoorAgent:
                 door_index = self.door_index
                 # try to open the door
                 door_is_open = False
+
                 try:
                     print(f'[door_handler.detail_check] try to open the door...')
 

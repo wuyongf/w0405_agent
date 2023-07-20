@@ -1,15 +1,9 @@
-import cv2 as cv
-import io
-import matplotlib.pyplot as plt
+import cv2
 import numpy as np
-import pygame
 import rpc
-import serial
-import serial.tools.list_ports
 import struct
 import os
 import time
-from PIL import Image
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
@@ -22,6 +16,7 @@ class ThermalCam:
 
         # Uncomment the below lines if openmv deivce port changed
         #
+        # import serial.tools.list_ports
         # print("Available Ports:")
         # for port, desc, hwid in serial.tools.list_ports.comports():
         #     print("{} : {} [{}]".format(port, desc, hwid))
@@ -90,6 +85,9 @@ class ThermalCam:
         return None
 
     def stream_video_in_window(self, width=640, height=480):
+        import pygame
+        import io
+
         pygame.init()
 
         try:
@@ -132,37 +130,38 @@ class ThermalCam:
                     quit()
 
     def set_save_folder(self, path):
-        self.save_folder = path
-        if not os.path.exists(self.save_folder):
-            os.mkdir(self.save_folder)
-        
-        if not self.debug:
+        if not os.path.exists(path):
+            print("Please make sure the directory exists for saving thermal image data.")
+        else:
             datestring = time.strftime("%Y%m%d", time.localtime())
-            self.save_folder = os.path.join(self.save_folder, datestring)
-            if not os.path.exists(self.save_folder):
-                os.mkdir(self.save_folder)
+            self.save_folder = os.path.join(path, datestring)
+            os.makedirs(self.save_folder, exist_ok=True)
+
+            if self.debug:
+                os.makedirs(os.path.join(self.save_folder, "dry"), exist_ok=True)
+                os.makedirs(os.path.join(self.save_folder, "wet"), exist_ok=True)
+                os.makedirs(os.path.join(self.save_folder, "other"), exist_ok=True)
 
     def capture_image(self):
         image = self.__get_frame_buffer_call_back()
         if image is not None:
-            filename = time.strftime("%Y%m%d %H:%M:%S", time.localtime()) + " gray.jpg"
+            filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " grayscale.jpg"
             filepath = os.path.join(self.save_folder, filename)
 
-            image = Image.open(io.BytesIO(image))
-            image.save(filepath)
+            image = np.asarray(image, dtype="uint8")
+            image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
+            cv2.imwrite(filepath, image)
             return filepath
         else:
             return None
     
     def gray_to_heatmap(self, filepath):
-        colormap = plt.get_cmap('inferno')
-        gray = cv.imread(filepath, cv.IMREAD_GRAYSCALE)
-        gray = (gray - gray.min()) / (gray.max() - gray.min())
-        heatmap = (colormap(gray) * 2**8).astype(np.uint8)[:,:,:3]
-        heatmap = cv.cvtColor(heatmap, cv.COLOR_RGB2BGR)
+        gray = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+        cv2.normalize(gray, gray, 0, 255, cv2.NORM_MINMAX)
+        heatmap = cv2.applyColorMap(gray, cv2.COLORMAP_INFERNO)
 
         filepath = filepath.replace("gray", "rainbow")
-        cv.imwrite(filepath, heatmap)
+        cv2.imwrite(filepath, heatmap)
         return filepath
 
 if __name__ == '__main__':
