@@ -140,6 +140,27 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
 
+        if task.taskType == 'RV-FOLLOWME-MODE':
+            res = self.robot.follow_me_mode(task)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'RV-FOLLOWME-PAIR':
+            res = self.robot.follow_me_pair(task)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'RV-FOLLOWME-UNPAIR':
+            self.robot.follow_me_unpair(task)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
         if task.taskType == 'RV-LEDOFF':
             res = self.robot.led_off(task)
             if (res):
