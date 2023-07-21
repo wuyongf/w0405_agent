@@ -133,7 +133,7 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
 
-        if task.taskType == 'RV-LEDON':
+        if task.taskType == 'RV-LEDON': 
             res = self.robot.led_on(task)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
