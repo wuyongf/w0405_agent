@@ -2,13 +2,18 @@ import numpy as np
 from scipy.signal import savgol_filter
 import src.utils.methods as umethods
 import src.top_module.db_top_module as NWDB
+import src.top_module.analysis.user_rules as rule
 
 
 # TODO: function to pull from db, filtering, split into chunk and update
 
 class gyro_after_processing:
-    def __init__(self, config) -> None:
-        self.nwdb = NWDB.TopModuleDBHandler(config)
+    def __init__(self, modb, status_summary) -> None:
+        # self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
+        
+        self.header_list_insert = ['lift_vibration']
+        self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
         self.pack_id = 0
     
     def set_pack_id(self, pack_id):
@@ -27,22 +32,28 @@ class gyro_after_processing:
         return rates
     
     def after_processing(self, pack_id):
-        raw_data = self.nwdb.GetGyroResult(pack_id)
-        print(raw_data)
+        raw_data = self.modb.GetGyroResult(pack_id)
+        # print(raw_data)
+        
         denoise_data = self.noise_filtering(raw_data)
+        wrapped_list = [[item] for item in denoise_data]
+        self.user_rules.check_stack(wrapped_list)
+        
+        # print(wrapped_list)
+        
         list_to_str = ','.join([str(elem) for elem in denoise_data])
-        self.nwdb.UpdateGyroResult(id=pack_id, column='result_denoise', result=list_to_str)
+        self.modb.UpdateGyroResult(id=pack_id, column='result_denoise', result=list_to_str)
 
 if __name__ == "__main__":
     config = umethods.load_config('../../../conf/config.properties')
     gap = gyro_after_processing(config)
     
-    # result = gap.nwdb.GetGyroResult(21)
+    # result = gap.modb.GetGyroResult(21)
     # data = gap.noise_filtering(result)
     # list_to_str = ','.join([str(elem) for elem in data])
     # print(list_to_str)
     # # print((gap.noise_filtering(result)))
-    # gap.nwdb.UpdateGyroResult(id=21, column='result_denoise', result=list_to_str)
+    # gap.modb.UpdateGyroResult(id=21, column='result_denoise', result=list_to_str)
     
     gap.after_processing(18)
 

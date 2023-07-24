@@ -9,10 +9,13 @@ from src.models.mqtt_rv_joystick import RVJoyStick
 import src.models.api_rm as RMAPI
 import src.models.mqtt_nw as NWMQTT
 import src.models.db_robot as RobotDB
+import src.top_module.db_top_module as TopModuleDB
 import src.models.trans_rvrm as Trans
+# Schema
 import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
 import src.models.schema.rv as RVSchema
+# Enum
 import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
 # top module
@@ -32,6 +35,7 @@ class Robot:
         self.rmapi = RMAPI.RMAPI(config)
         self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
         self.nwdb = RobotDB.robotDBHandler(config)
+        self.modb = TopModuleDB.TopModuleDBHandler(config)
         self.T = Trans.RVRMTransform()
         self.config = config
         self.port_config = port_config
@@ -40,10 +44,10 @@ class Robot:
 
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
-        self.mo_iaq = MoIAQ.IaqSensor(config, port_config, self.status_summary, Ti=2)
+        self.mo_iaq = MoIAQ.IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
         self.mo_locker = MoLocker.Locker(port_config)
         self.mo_access_control = MoAccessControl(config, port_config)
-        self.mo_gyro = MoGyro(config, port_config)
+        self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -117,10 +121,11 @@ class Robot:
         y = self.robot_status.mapPose.y
         theta = self.robot_status.mapPose.heading
         map_id = self.map_id
+        map_rm_guid = self.get_current_map_rm_guid()
 
         # 3) convert to json
         pos = NWSchema.Position(x, y, theta)
-        status = NWSchema.Status(battery, pos, map_id)
+        status = NWSchema.Status(battery, pos, map_id, map_rm_guid)
         return status.to_json()
 
     # robot status
@@ -171,9 +176,14 @@ class Robot:
             return '00000000-0000-0000-0000-000000000000'
 
     def get_current_mapPose(self):
-        pixel_x, pixel_y, heading = self.get_current_pose()
-        mapId = self.get_current_map_rm_guid()
-        return RMSchema.mapPose(mapId, pixel_x, pixel_y, heading)
+        # pixel_x, pixel_y, heading = self.get_current_pose()
+        # mapId = self.get_current_map_rm_guid()
+        map_id = self.map_id
+        x = self.robot_status.mapPose.x
+        y = self.robot_status.mapPose.y
+        theta = self.robot_status.mapPose.heading
+        
+        return RMSchema.mapPose(map_id, x, y, theta)
 
     def get_current_map_id(self):
         try:
@@ -388,7 +398,7 @@ class Robot:
 
     def lift_vibration_on(self, task_json):
         # try:
-        self.mo_gyro = MoGyro(self.config, self.port_config)
+        self.mo_gyro = MoGyro(self.modb, self.config, self.port_config, self.status_summary)
         rm_mission_guid = self.rmapi.get_mission_id(task_json)
         self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
         mission_id = self.nwdb.get_latest_mission_id()
@@ -906,14 +916,14 @@ class Robot:
             return False
 
     # Follow Me
-    def follow_me_mode(self, task: RMSchema.task):
+    def follow_me_mode(self):
         try:
             self.rvapi.change_mode_followme()
             return True
         except:
             return False
 
-    def follow_me_pair(self, task: RMSchema.task):
+    def follow_me_pair(self):
         # call pairing api
         self.rvapi.post_followme_pair()
         # wait for a sec
@@ -933,8 +943,9 @@ class Robot:
                 print("failed to pair")
         print("pairing time out")
 
-    def is_paired(self, task: RMSchema.task):
-        state = RVSchema.FollowMe(pairingState)
+    def is_paired(self):
+        self.rvapi.get_followme_pairing_status()
+        # state = RVSchema.FollowMe
         if state == "paired":
             print("paired")
             return True
@@ -944,7 +955,7 @@ class Robot:
             print("unpaired")
             return False
 
-    def follow_me_unpair(self, task: RMSchema.task):
+    def follow_me_unpair(self):
         self.rvapi.post_followme_unpair()
         time.sleep(1)
         if self.is_paired() != True:
@@ -970,10 +981,11 @@ if __name__ == '__main__':
 
     # robot.new_delivery_mission()
 
-    robot.follow_me_mode()
-    # robot.follow_me_pair()
+    # robot.follow_me_mode()
+    robot.follow_me_pair()
     # robot.follow_me_unpair()
 
     layout_id = robot.get_current_layout_id()
 
     print(f'current layout_id: {layout_id}')
+    

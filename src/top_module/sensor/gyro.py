@@ -6,6 +6,7 @@ from datetime import datetime
 import src.utils.methods as umethods
 import src.top_module.port as port
 import src.top_module.analysis.gyro_after_processing as GAP
+
 # Voltage = 5V
 
 # todo:
@@ -23,15 +24,19 @@ import src.top_module.analysis.gyro_after_processing as GAP
 
 class Gyro():
 
-    def __init__(self,config, port_config):
+    def __init__(self, modb, config, port_config, status_summary):
         self.sid = port_config.get('GYRO', 'sid')
         self.port = port.port().port_match(self.sid)
         self.baudrate = 115200
         self.ser = serial.Serial(self.port, self.baudrate)
         self.time_interval = 0.05  # Max: 200Hz, time interval = 0.005,  Default = 0.01sec, 100Hz
-        self.nwdb = NWDB.TopModuleDBHandler(config)
-        self.gap = GAP.gyro_after_processing(config)
+        # self.modb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
+        self.gap = GAP.gyro_after_processing(self.modb, status_summary)
         print("SerialController initialized")
+        
+        self.status_summary = status_summary
+        
         self.acc = []
         self.gyro = []
         self.angle = []
@@ -41,6 +46,7 @@ class Gyro():
         self.pack_id = 0
         self.task_id = 0
         self.lift_id = 0
+        
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.start_collection)
 
@@ -57,7 +63,7 @@ class Gyro():
         self.run_thread.start()
         
     def stop(self) :
-        # self.gap.after_processing(self.pack_id)
+        self.gap.after_processing(self.pack_id)
         self.stop_event.set()
 
     def get_acc(self, datahex):
@@ -149,12 +155,12 @@ class Gyro():
 
     def create_data_pack(self, task_id, lift_id):
         # TODO: task_id
-        return self.nwdb.CreateGyroDataPack(task_id=task_id, lift_id=lift_id)
+        return self.modb.CreateGyroDataPack(task_id=task_id, lift_id=lift_id)
 
     def insert_data(self, data):
         print("[gyro.py] dataInsert")
         list_to_str = ','.join([str(elem) for elem in data])
-        self.nwdb.InsertGyroChunk(pack_id=self.pack_id, accel_z=list_to_str)
+        self.modb.InsertGyroChunk(pack_id=self.pack_id, accel_z=list_to_str)
 
     def collect_data(self):
         if self.ser and self.ser.is_open:

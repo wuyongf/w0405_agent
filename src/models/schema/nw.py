@@ -2,10 +2,11 @@ import json
 import uuid
 
 class Status:
-    def __init__(self, battery, position, map_id):
+    def __init__(self, battery, position, map_id, map_rm_guid):
         self.battery = battery
         self.position = position
         self.map_id = map_id
+        self.map_rm_guid = map_rm_guid
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
     

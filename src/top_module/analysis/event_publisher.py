@@ -12,15 +12,33 @@ import src.models.db_robot as MODB
 import src.models.schema.rm as RMSchema
 import src.models.enums.rm as RMEnum
 
-class EventHandler:
-    def __init__(self, modb, config, mq_host, get_mapPose):
+class EventPublisher:
+    # def __init__(self, modb, config, mq_host, get_mapPose):
+    def __init__(self, mq_host, status_summary):
         # rm - mqtt
         self.mq_publisher = mqtt.Client("event_publisher")
         self.mq_publisher.connect(mq_host) 
-        self.get_mapPose = get_mapPose
+        self.status_summary = status_summary
+        self.pos_x = 0
+        self.pos_y = 0
+        self.pos_theta = 0
+        self.map_rm_guid = ''
+        
+        # self.get_mapPose = get_mapPose
         # yf config
         # self.robot = Robot.Robot(config, port_config, self.skill_config_path)
         # self.modb = MODB.robotDBHandler(config)
+
+    def get_robot_post(self):
+        # self.pos_x = pos_x
+        # self.pos_y = pos_y
+        # self.pos_theta = pos_theta
+        # self.map_rm_guid = map_rm_guid
+        obj = json.loads(self.status_summary())
+        self.pos_x = obj["position"]["x"]
+        self.pos_y = obj["position"]["y"]
+        self.pos_theta = obj["position"]["theta"]
+        self.map_rm_guid = obj["map_rm_guid"]
 
     def start(self):
         self.mq_publisher.loop_start()
@@ -34,14 +52,19 @@ class EventHandler:
 
     def add_title(self, title):
         self.title  = title
+        
     def add_severity(self, severity):
         self.severity = severity
+        
     def add_description(self, description):
         self.description = description
+        
     def add_mapPose(self):
+        self.get_robot_post()
         # self.mapPose = RMSchema.mapPose(mapId='277c7d6f-2041-4000-9a9a-13f162c9fbfc')
+        self.mapPose = RMSchema.mapPose(x=self.pos_x, y=self.pos_y, heading=self.pos_theta, mapId=self.map_rm_guid)
         # self.mapPose = self.robot.get_current_mapPose()
-        self.mapPose = self.get_mapPose()
+        # self.mapPose = self.get_mapPose()
     def add_medias(self, medias):
         self.medias = medias
         
@@ -56,13 +79,22 @@ class EventHandler:
         medias.append(RMSchema.Meida(event_img_path, 1, "Front Right"))
         self.add_medias(medias)
         
+    def publish_test(self):
+        self.add_title('event_test_rev06')
+        self.add_severity(1)
+        self.add_description('This is an event test')
+        self.add_mapPose()
+        self.add_empty_medias()
+
+        self.publish()
+        
 if __name__ == "__main__":
 
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
     modb = MODB.robotDBHandler(config)
     
-    event_handler = EventHandler(modb, config, "localhost")
+    event_handler = EventPublisher("localhost", "")
     event_handler.start()
 
     root_path = os.path.abspath('../../')

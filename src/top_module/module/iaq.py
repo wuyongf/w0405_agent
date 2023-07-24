@@ -4,11 +4,11 @@ import threading
 import json
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
-import src.top_module.rules as rule
+import src.top_module.analysis.user_rules as rule
 import src.top_module.port as port
 
 class IaqSensor():
-    def __init__(self, config, port_config, status_summary, Ti):
+    def __init__(self, modb, config, port_config, status_summary, Ti):
         self.sid = port_config.get('IAQ', 'sid')
         self.port = port.port().port_match(self.sid)
         self.bandwidth = '9600'
@@ -18,13 +18,15 @@ class IaqSensor():
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
         self.task_id = 0
-        self.column_items_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta"]
-        self.column_items = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
-        self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.header_list_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta", "map_id"]
+        self.header_list = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
+        # self.modb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)
         self.status_summary = status_summary
+        self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
 
 
     def run(self):
@@ -55,22 +57,29 @@ class IaqSensor():
 
     def data_insert(self, value):
         print("[iaq.py] dataInsert")
-        self.nwdb.InsertIaqData("sensor.iaq.history", self.column_items_insert, value, self.task_id)
+        self.modb.InsertIaqData("sensor.iaq.history", self.header_list_insert, value, self.task_id)
 
     def data_stream(self, value):
         print("[iaq.py] dataStream")
-        self.nwdb.StreamIaqData("sensor.iaq.stream", self.column_items, value)
-        self.nwdb.DeleteLastStreamIaqData()
+        self.modb.StreamIaqData("sensor.iaq.stream", self.header_list, value)
+        self.modb.DeleteLastStreamIaqData()
 
     def set_task_mode(self, e, task_id=0):
+        # self.event_publisher.publish_test()
+        # print(self.status_summary())
+        
         self.task_mode = e
         self.task_id = task_id
         print(self.task_mode)
 
+    
+
     def data_check_stack(self, dataset):
         self.data_stack.append(dataset)
-        if len(self.data_stack) >= 5:
-            self.check_stack(self.data_stack)
+        if len(self.data_stack) >= 20:
+            # self.check_stack(self.data_stack)
+            # NOTE: *** Check the data with user define rules ***
+            self.user_rules.check_stack(self.data_stack)
             # clear the stack
             self.data_stack.clear()
 
@@ -78,9 +87,9 @@ class IaqSensor():
         return [i.get(column) for i in dataset]
 
     # NOTE: *** Check the data with user define rules ***
-    def check_stack(self, data_stack):
+    # def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list
-        rules_list = self.nwdb.GetUserRules()
+        rules_list = self.modb.GetUserRules()
         print(rules_list)
         rules_type_list = self.get_rules_column(rules_list, "data_type")
         rules_threshold_list = self.get_rules_column(rules_list, "threshold")
@@ -91,7 +100,7 @@ class IaqSensor():
             for row_num, data_type in enumerate(rules_type_list):
                 try:
                     # Compare with rules_type_list, find the index of data
-                    col_idx = self.column_items.index(data_type)
+                    col_idx = self.header_list.index(data_type)
                     threshold = rules_threshold_list[row_num]
                     limit_type = rules_limit_type_list[row_num]
                     name = rules_name_list[row_num]
@@ -172,25 +181,26 @@ class IaqSensor():
         array.append(obj["position"]["x"])
         array.append(obj["position"]["y"])
         array.append(obj["position"]["theta"])
+        array.append(obj["map_id"])
         return array
 
 
 if __name__ == '__main__':
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
+    modb = NWDB.TopModuleDBHandler(config)
 
     def status_summary():
         status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null}'
         return status
 
-    iaq = IaqSensor(config, port_config, status_summary, 2)
-    # iaq.parse_json()
-    # print((status_summary()["position"]["x"]))
+    iaq = IaqSensor(modb, config, port_config, status_summary, 2)
+    print(iaq.parse_json())
     # iaq.set_task_id("")
     iaq.start()
     # # time.sleep(5)
-    # iaq.set_task_mode(True, 6)
-    iaq.set_task_mode(False)
+    iaq.set_task_mode(True, task_id = 999)
+    # iaq.set_task_mode(False)
     # # 
     time.sleep(1800)
     # second argument (task id) is optional
