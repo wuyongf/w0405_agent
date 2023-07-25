@@ -1,6 +1,7 @@
 import time
 import src.utils.methods as umethods
 import src.top_module.db_top_module as NWDB
+import src.top_module.analysis.user_rules as rule
 
 # TODO: Loop the function 4 times (L,R,extent,retract), Return the biggest result
 #       Publish nomal level alert if one or more set of data fail
@@ -9,8 +10,11 @@ import src.top_module.db_top_module as NWDB
 #       Push the data to the rule analysis system
 
 class lift_leveling_detection:
-    def __init__(self, config):
-        self.nwdb = NWDB.TopModuleDBHandler(config)
+    def __init__(self, modb, config, status_summary):
+        # self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
+        self.header_list_insert = ['lift_leveling']
+        self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
         self.data = []
         self.empty_region = []
         self.list_rate_of_change = []
@@ -35,18 +39,6 @@ class lift_leveling_detection:
                 rates.append(rate)
         return rates
 
-    # Find the empty region between the floor and the lift
-    # def find_empty_region(self, lst, maxi):
-    #     start_index = None
-    #     end_index = None
-    #     for i in range(len(lst)):
-    #         if lst[i] > 600:
-    #             if start_index is None:
-    #                 start_index = i
-    #             end_index = i
-    #     if end_index - start_index < maxi:
-    #         return None
-    #     return [start_index, end_index]
     def find_empty_region(self, lst, maxi):
         start_index = None
         end_index = None
@@ -88,7 +80,7 @@ class lift_leveling_detection:
         
         try:
             self.empty_region = (self.find_empty_region(lst=self.data, maxi=20))
-            print( self.empty_region)
+            # print( self.empty_region)
             self.list_rate_of_change = self.calculate_rate_of_change(self.data)
 
             # Find the region before empty region
@@ -101,7 +93,7 @@ class lift_leveling_detection:
             after_i_start = self.empty_region[1]
             after_i_end = self.empty_region[1]+50
             region_after_empty = self.extract_region(lst=self.list_rate_of_change, i_start=after_i_start, i_end=after_i_end)
-            print(region_after_empty)
+            # print(region_after_empty)
             # Locate the index of the region before and after empty region
             index_before_empty = self.find_constant_region(lst=region_before_empty, range_value=7) + before_i_start
             index_after_empty = self.find_constant_region(lst=region_after_empty, range_value=7) + after_i_start
@@ -110,8 +102,8 @@ class lift_leveling_detection:
             height_before_empty = self.data[index_before_empty]
             height_after_empty = self.data[index_after_empty]
 
-            print(index_before_empty)
-            print(index_after_empty)
+            # print(index_before_empty)
+            # print(index_after_empty)
 
             result = abs(height_before_empty - height_after_empty)
             print(f"[levelling_detection.py] result: {result}" )
@@ -129,28 +121,53 @@ class lift_leveling_detection:
             for d in direction:
                 # print("[leveling_detection.py]" ,s, d)
                 # TODO: pack_id = self.pack_id
-                self.set_data(self.nwdb.GetDistanceResult(side=s, pack_id=self.pack_id, move_dir=d))
+                self.set_data(self.modb.GetDistanceResult(side=s, pack_id=self.pack_id, move_dir=d))
                 time.sleep(0.1)
                 result = self.level_detection()
                 self.result_stack.append(result)
                 
-        # Update result to nwdb
+        print(f"[levelling_detection.py] result: {self.result_stack}" )
+        
+        result_avg = self.get_result_avg(self.result_stack)
+        wrapped_item = [[result_avg]]
+        self.user_rules.check_stack(wrapped_item)
+        
+        
+        # Update result to modb
         db_header = ["result_el", "result_rl", "result_er", "result_rr"]
         for i,r in enumerate(self.result_stack):
-            self.nwdb.UpdateDistanceResult(column=db_header[i], id=self.pack_id, result=r)
+            self.modb.UpdateDistanceResult(column=db_header[i], id=self.pack_id, result=r)
+            self.result_stack = []
+        self.modb.UpdateDistanceResult(column='result_avg', id=self.pack_id, result=result_avg)
         
                 
                 
-                
-        
+    def get_result_avg(self, resultlist): 
+        sumlist = []
+        for obj in resultlist:
+            if obj != -1:
+                sumlist.append(obj)
+        if len(sumlist) > 0:
+            sum_value = sum(sumlist) / len(sumlist)
+            if 0 <= sum_value < 20:
+                return sum_value
+        return -1
+            
 
 
 if __name__ == "__main__":
-    config = umethods.load_config('../../../conf/config.properties')    
-    lfd = lift_leveling_detection(config)
+    def status_summary():
+        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null, "map_rm_guid: `277c7d6f-2041-4000-9a9a-13f162c9fbfc`"}'
+        return status
+    
+    config = umethods.load_config('../../../conf/config.properties')
+    port_config = umethods.load_config('../../../conf/port_config.properties')
+    modb = NWDB.TopModuleDBHandler(config, status_summary)
+    
+    lfd = lift_leveling_detection(modb, config ,status_summary)
     
     # NOTE: Print the result by given data:
     # print(lfd.level_detection())
-    lfd.set_pack_id(82)
+    lfd.set_pack_id(105)
     
     lfd.start_detection()

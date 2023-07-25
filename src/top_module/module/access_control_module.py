@@ -11,8 +11,9 @@ import src.top_module.enums.enums_module_status as MoEnum
 #                        Robot stuck at door position if the result remain 0 and the door keeps open
 
 class AccessControl():
-    def __init__(self, config, port_config):
-        self.nwdb = NWDB.TopModuleDBHandler(config)
+    def __init__(self, modb, config, port_config):
+        # self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
         self.servo_motor = ServoMotor.ServoMotor(port_config)
         self.ultra = UltraSound.ultra(port_config)
         self.servo_duration = 0.4
@@ -139,8 +140,13 @@ class AccessControl():
 if __name__ == "__main__":
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
+    def status_summary():
+        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null, "map_rm_guid: `277c7d6f-2041-4000-9a9a-13f162c9fbfc`"}'
+        return status
+    modb = NWDB.TopModuleDBHandler(config, status_summary)
 
-    ac = AccessControl(config, port_config)
+
+    ac = AccessControl(modb, config, port_config)
     
     # ======== Start Open door========
     # ac.start()

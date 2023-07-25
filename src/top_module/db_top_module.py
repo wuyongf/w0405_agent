@@ -1,4 +1,5 @@
 import time
+import json
 import mysql.connector
 import src.models.db_azure as db
 import src.utils.methods as umethods
@@ -9,7 +10,7 @@ import datetime
 
 class TopModuleDBHandler(db.AzureDB):
     # init and connect to NWDB
-    def __init__(self, config):
+    def __init__(self, config, status_summary):
         self.cfg = {
             'host': config.get('NWDB', 'host'),
             'user': config.get('NWDB', 'user'),
@@ -19,9 +20,21 @@ class TopModuleDBHandler(db.AzureDB):
             'ssl_ca': config.get('NWDB', 'ssl_ca')}
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
-
+        self.status_summary = status_summary
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = self.GetRobotId()
+        
+    def get_robot_summary(self):
+        # (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
+        
+        obj = json.loads(self.status_summary())
+        pos_x = obj["position"]["x"]
+        pos_y = obj["position"]["y"]
+        pos_theta = obj["position"]["theta"]
+        map_id = obj["map_id"]
+        map_rm_guid = obj["map_rm_guid"]
+        return (pos_x, pos_y, pos_theta, map_id, map_rm_guid)
+
 
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
@@ -29,12 +42,12 @@ class TopModuleDBHandler(db.AzureDB):
 
     def StreamIaqData(self, table, key, value):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
-        print(f'[db_top_module.StreamIaqData]: {statement}')
+        # print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
         
     def DeleteLastStreamIaqData(self):
         statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
-        print(f'[db_top_module.StreamIaqData]: {statement}')
+        # print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Delete(statement)
 
     def InsertIaqData(self, table, key, value, task_id):
@@ -55,7 +68,8 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date) VALUES ("{task_id}", now())'
+        (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
@@ -85,7 +99,8 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id) VALUES ("{task_id}", now(), {self.robot_id}, "{lift_id}")'
+        (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {lift_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
@@ -107,8 +122,8 @@ class TopModuleDBHandler(db.AzureDB):
             result = result + list(i.values())[0].split(",")
         return result
     
-    def UpdateGyroResult(self, column: str, id: int, result: str):
-        statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" WHERE id = {id}'
+    def UpdateGyroResult(self, column: str, id: int, result: str, result_min, result_max):
+        statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" , result_min = {result_min}, result_max = {result_max} WHERE id = {id}'
         self.Insert(statement)
 
 

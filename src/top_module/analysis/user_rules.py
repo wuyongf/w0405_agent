@@ -26,11 +26,12 @@ class UserRulesChecker():
     def check_stack(self, data_stack):
         # mySQL get (type, threshold, limit_type) as list
         rules_list = self.modb.GetUserRules()
-        print(rules_list)
+        # print(rules_list)
         rules_type_list = self.get_rules_column(rules_list, "data_type")
         rules_threshold_list = self.get_rules_column(rules_list, "threshold")
         rules_limit_type_list = self.get_rules_column(rules_list, "limit_type")
         rules_name_list = self.get_rules_column(rules_list, "name")
+        rules_activated_list = self.get_rules_column(rules_list, "activated")
         
         data_type_alreadypublish = []
 
@@ -43,16 +44,17 @@ class UserRulesChecker():
                     threshold = rules_threshold_list[row_num]
                     limit_type = rules_limit_type_list[row_num]
                     name = rules_name_list[row_num]
+                    activated = rules_activated_list[row_num]
                     value = data[col_idx]
 
-                    # print(
-                    #     f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
+                    print(
+                        f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
 
-                    if (limit_type == "HIGH" and value > threshold) or (limit_type == "LOW" and value < threshold):
+                    if (limit_type == "HIGH" and value > threshold) or (limit_type == "LOW" and value < threshold) and activated == 1:
                         if data_type not in data_type_alreadypublish:
                             self.publish_event(value=value, name= name, data_type= data_type, threshold=threshold)
                             data_type_alreadypublish.append(data_type)
-                            # print(data_type_alreadypublish)
+                            print(data_type_alreadypublish)
                             print(
                                 f"[user_rules.py]***Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
                             

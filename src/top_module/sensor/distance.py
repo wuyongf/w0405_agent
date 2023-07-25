@@ -12,14 +12,15 @@ import src.top_module.enums.enums_linear_actuator as LAEnum
 
 class LaserDistanceSensor():
 
-    def __init__(self, config, port_config):
+    def __init__(self, modb, config, port_config):
         self.sid_left = port_config.get('LASER_L', 'sid')
         self.sid_right = port_config.get('LASER_R', 'sid')
         self.port_left = port.port().port_match(self.sid_left)
         self.port_right = port.port().port_match(self.sid_right)
         self.baudrate = 115200
         # self.config = umethods.load_config('../../../conf/config.properties')
-        self.nwdb = NWDB.TopModuleDBHandler(config)
+        # self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
         self.left = serial.Serial(self.port_left, self.baudrate)
         self.right = serial.Serial(self.port_right, self.baudrate)
         self.time_interval = 0.015
@@ -132,11 +133,11 @@ class LaserDistanceSensor():
         list_to_str_r = ','.join([str(elem) for elem in data_r])
         data_l  = [] #clean data stack
         data_r  = [] #clean data stack
-        self.nwdb.InsertDistanceChunk(self.pack_id, list_to_str_l, list_to_str_r, self.move_dir)
+        self.modb.InsertDistanceChunk(self.pack_id, list_to_str_l, list_to_str_r, self.move_dir)
 
     def create_data_pack(self, task_id):
         # TODO: task_id
-        return self.nwdb.CreateDistanceDataPack(task_id)
+        return self.modb.CreateDistanceDataPack(task_id)
 
     def store_data(self):
         """

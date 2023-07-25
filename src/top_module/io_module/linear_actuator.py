@@ -86,9 +86,9 @@ class LinearActuator():
         self.stopAll()
         while not self.stop_event.is_set():
             self.motion_extend()
-            time.sleep(1)
+            time.sleep(0.5)
             callback_direction()
-            time.sleep(1)
+            time.sleep(0.5)
             self.motion_retract()
             print('extend_retract_finished')
             self.status = LAEnum.LinearActuatorStatus.Idle

@@ -35,7 +35,7 @@ class Robot:
         self.rmapi = RMAPI.RMAPI(config)
         self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
         self.nwdb = RobotDB.robotDBHandler(config)
-        self.modb = TopModuleDB.TopModuleDBHandler(config)
+        self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
         self.config = config
         self.port_config = port_config
@@ -43,10 +43,10 @@ class Robot:
         self.nwmqtt.start()
 
         # # # module - models/sensors
-        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(config, port_config)
+        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, config, port_config, self.status_summary)
         self.mo_iaq = MoIAQ.IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
         self.mo_locker = MoLocker.Locker(port_config)
-        self.mo_access_control = MoAccessControl(config, port_config)
+        self.mo_access_control = MoAccessControl(self.modb, config, port_config)
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
@@ -428,7 +428,7 @@ class Robot:
         try:
             # Need to create new instance everytime start thread
             # Otherwise will case error [RuntimeError: threads can only be started once]
-            self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.config, self.port_config)
+            self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, self.config, self.port_config, self.status_summary)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)

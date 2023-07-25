@@ -17,7 +17,7 @@ class EventPublisher:
     def __init__(self, mq_host, status_summary):
         # rm - mqtt
         self.mq_publisher = mqtt.Client("event_publisher")
-        self.mq_publisher.connect(mq_host) 
+        self.mq_publisher.connect(mq_host)
         self.status_summary = status_summary
         self.pos_x = 0
         self.pos_y = 0
@@ -28,6 +28,14 @@ class EventPublisher:
         # yf config
         # self.robot = Robot.Robot(config, port_config, self.skill_config_path)
         # self.modb = MODB.robotDBHandler(config)
+
+    def get_robot_summary(self):
+        obj = json.loads(self.status_summary())
+        pos_x = obj["position"]["x"]
+        pos_y = obj["position"]["y"]
+        pos_theta = obj["position"]["theta"]
+        map_rm_guid = obj["map_rm_guid"]
+        return (pos_x, pos_y, pos_theta, map_rm_guid)
 
     def get_robot_post(self):
         # self.pos_x = pos_x

@@ -11,10 +11,12 @@ import time
 
 
 class LiftLevellingModule():
-    def __init__(self, config, port_config):
-        self.nwdb = NWDB.TopModuleDBHandler(config)
-        self.lld = LevelingDetection.lift_leveling_detection(config)
-        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(config, port_config)
+    def __init__(self, modb, config, port_config, status_summary):
+        # self.nwdb = NWDB.TopModuleDBHandler(config)
+        self.modb = modb
+        self.status_summary = status_summary
+        self.lld = LevelingDetection.lift_leveling_detection(modb, config, status_summary)
+        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(modb, config, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
         self.linear_actuator = LinearActuator.LinearActuator(port_config, self.cb_dir, self.cb_finish)
@@ -22,6 +24,7 @@ class LiftLevellingModule():
         self.task_id = 0
         self.status = MoEnum.LiftLevellingStatus.Idle
         self.run_flag = 0
+        
 
     def set_task_id(self, id):
         self.task_id = id
@@ -38,7 +41,7 @@ class LiftLevellingModule():
         # called when linear acturator finish extent
         self.laser_distance.set_retract_flag(True)
         print("callback: change direction")
-        time.sleep(2)
+        time.sleep(1)
 
         # Callback function when linear actuator finish extent,
         # 1. stop collecting data and upload immediately
@@ -51,7 +54,7 @@ class LiftLevellingModule():
         print("callback: finish")
         self.laser_distance.stop()
         self.status = MoEnum.LiftLevellingStatus.Finish
-        time.sleep(2)
+        time.sleep(1)
         self.lld.start_detection()
         # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
         self.linear_actuator.stop()
@@ -88,8 +91,9 @@ class LiftLevellingModule():
 if __name__ == "__main__":
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
+    nwdb = NWDB.TopModuleDBHandler(config)
 
-    ll = LiftLevellingModule(config, port_config)
+    ll = LiftLevellingModule(nwdb, config, port_config)
     # ll.pack_id = ll.create_data_pack(task_id=0)
 
     # threading.Thread(target=ll.thread_get_status).start()4
@@ -98,9 +102,6 @@ if __name__ == "__main__":
 
     ll.start()
     time.sleep(35)
-    ll = LiftLevellingModule(config, port_config)
-    
-    ll.start()
     
     # ll.start()
 
