@@ -155,7 +155,7 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
         
         if task.taskType == 'RV-FOLLOWME-UNPAIR':
-            self.robot.follow_me_unpair(task)
+            res = self.robot.follow_me_unpair(task)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:

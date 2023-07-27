@@ -208,17 +208,16 @@ class RVAPI(api.AuthenticatedAPI):
         if json_data is None: return json_data
         return json_data["chargingStatus"]
 
-    def get_followme_pairing_status(self):
+    def get_followme_pairing_state(self):
         json_data = self.get('/followMe/v1/pairing')
         if json_data is None: return json_data
-        # return RVSchema.FollowMe(json_data)
         return json_data["pairingState"]
 
     def post_followme_pair(self):
         return self.post('/followMe/v1/pairing/pair')
 
     def post_followme_unpair(self):
-        return self.post('/followMe/v1/pairing/pair/unpair')
+        return self.post('/followMe/v1/pairing/unpair')
 
 
 if __name__ == '__main__':
@@ -276,10 +275,10 @@ if __name__ == '__main__':
     # time.sleep(5)
     # rvapi.post_followme_pair()
     # time.sleep(5)
-    # while True:
-    #     res = rvapi.get_followme_pairing_status()
-    #     print(res)
-    #     time.sleep(1)
+    while True:
+        res = rvapi.get_followme_pairing_state()
+        print(res)
+        time.sleep(1)
 
     # rvapi.post_followme_unpair()
 

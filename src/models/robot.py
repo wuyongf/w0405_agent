@@ -916,51 +916,58 @@ class Robot:
             return False
 
     # Follow Me
-    def follow_me_mode(self):
+    def follow_me_mode(self, task_json):
         try:
             self.rvapi.change_mode_followme()
             return True
         except:
             return False
 
-    def follow_me_pair(self):
+    def follow_me_pair(self, task_json):
         # call pairing api
         self.rvapi.post_followme_pair()
+        print('start pairing')
         # wait for a sec
         time.sleep(1)
         count = 0
-        # count down when pairing 30s
-        while count < 30:
-            state = self.is_paired()
+        # count down when pairing 10s
+        while count < 10:
+            pairing_state = self.is_paired()
+            print(f'pairing state:{pairing_state}')
             time.sleep(1)
-            if state == True:
+            if pairing_state == True:
+                print('paired')
                 return True
-            elif state == 'pairing':
+            elif pairing_state == 'PAIRING':
                 count = count + 1
-                print(f'pairing, {30-count}s left')
-            else:
-                return False
-                print("failed to pair")
+                print(f'pairing, {10-count}s left')
         print("pairing time out")
+        return False
 
     def is_paired(self):
-        self.rvapi.get_followme_pairing_status()
+        result = self.rvapi.get_followme_pairing_state()
+        # while True:
+        #     print(state)
         # state = RVSchema.FollowMe
-        if state == "paired":
+        if result == "PAIRED":
             print("paired")
             return True
-        elif state == "pairing":
+        elif result == "PAIRING":
             print("pairing")
-        elif state == "unpaired":
+            return result
+        elif result == "UNPAIRED":
             print("unpaired")
             return False
 
-    def follow_me_unpair(self):
-        self.rvapi.post_followme_unpair()
-        time.sleep(1)
-        if self.is_paired() != True:
-            return True
-        else:
+    def follow_me_unpair(self, task_json):
+        try:
+            self.rvapi.post_followme_unpair()
+            time.sleep(2)
+            if self.is_paired() != True:
+                return True
+            else:
+                return False
+        except:
             return False
 
 
@@ -980,12 +987,14 @@ if __name__ == '__main__':
     #     # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
 
     # robot.new_delivery_mission()
-
+    
+    # # followme testing
     # robot.follow_me_mode()
-    robot.follow_me_pair()
+    # robot.is_paired()
+    # robot.follow_me_pair()
     # robot.follow_me_unpair()
 
-    layout_id = robot.get_current_layout_id()
+    # layout_id = robot.get_current_layout_id()
 
-    print(f'current layout_id: {layout_id}')
+    # print(f'current layout_id: {layout_id}')
     
