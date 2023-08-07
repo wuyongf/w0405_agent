@@ -31,6 +31,15 @@ def check_network_connection(url = ''):
     except:
         print('[check_network_connection] Error. Please check IPC network connection...')
 
+def get_unix_timestamp():
+    # Get the current time as a datetime object
+    current_time = datetime.datetime.now()
+
+    # Convert the datetime object to a Unix timestamp (seconds since January 1, 1970)
+    unix_timestamp = int(current_time.timestamp())
+
+    return unix_timestamp
+
 if __name__ == '__main__':
 
     # ## method 1 - load config file and then retrieve data
@@ -49,8 +58,10 @@ if __name__ == '__main__':
     # iso_time2 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     # print(is_future_time(iso_time1, iso_time2))
 
-    ## method 3 - check network connection
-    while(True):
-        check_network_connection()
+    # ## method 3 - check network connection
+    # while(True):
+    #     check_network_connection()
+    #     time.sleep(1)
 
-        time.sleep(1)
+    timestamp = get_unix_timestamp()
+    print(timestamp)
