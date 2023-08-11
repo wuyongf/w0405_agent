@@ -1,14 +1,14 @@
-pyserial
-mysql
-mysqlclient
-mysql-connector-python
-requests
-paho-mqtt
-pyudev
-jproperties
-pygame
+pyserial==3.5
+mysql==0.0.3
+mysqlclient==2.1.1
+mysql-connector-python==8.0.33
+requests==2.30.0
+paho-mqtt==1.6.1
+pyudev==0.24.1
+jproperties==2.1.1
+pygame==2.4.0
+scipy==1.10.1
 ipykernel
-scipy
 
 # for SMS
 twilio

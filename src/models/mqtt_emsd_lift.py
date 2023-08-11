@@ -49,12 +49,10 @@ class EMSDLift():
         topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Response',0])
         self.client.subscribe(topics)
 
-        # lift properties
+        # lift properties & status
         self.occupied = False
         self.anykey_pressed = False
         self.indexes_of_pressed_key = []
-
-        # lift status
         self.current_floor = ''
 
     def __subscribe_task(self):
@@ -63,15 +61,16 @@ class EMSDLift():
             time.sleep(1)
 
     def start(self):
-        threading.Thread(target=self.__subscribe_task).start()   # from RV API
+        threading.Thread(target=self.__subscribe_task).start()
+        threading.Thread(target=self.thread_check_is_available).start()
         print('[EMSDLift] Start...')
 
     def __on_message(self, client, userdata, msg):
         # print(msg.topic+" "+str(msg.payload))
-        print("*******************************************************************************************************")
-        print("message received ", str(msg.payload.decode("utf-8")))
-        print("message topic=", msg.topic)
-        print("*******************************************************************************************************")
+        # print("*******************************************************************************************************")
+        # print("message received ", str(msg.payload.decode("utf-8")))
+        # print("message topic=", msg.topic)
+        # print("*******************************************************************************************************")
         self.__parse_message(msg)
 
     def __parse_message(self,msg):
@@ -82,7 +81,8 @@ class EMSDLift():
             
             # update lift status
             self.current_floor = self.get_current_floor_from_keymap(msg_json['Lift_Floor'])
-            print(f'current_floor: {self.current_floor}')
+            # print(f'current_floor: {self.current_floor}')
+
             # check if any key is pressed
             self.is_anykey_pressed(msg_json)
             pass
@@ -97,10 +97,19 @@ class EMSDLift():
         return matching_keys[0]
 
     ## lift methods
-    def get_state(self):
+    def request_state(self):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
         msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = None, error_code = 240, Key_Press = []).to_json()
         self.client.publish(topic, msg)
+        # time.sleep(1)
+
+    def get_state(self):
+        print(f'*****************')
+        # print(f'[lift_state] is_anykey_pressed: {self.anykey_pressed}')
+        print(f'[lift_state] indexes_of_pressed_key: {self.indexes_of_pressed_key}')
+        print(f'[lift_state] current_floor: {self.current_floor}')
+        print(f'[lift_state] is_availble: {not self.occupied}')
+        print(f'*****************')
 
     def release_all_keys(self):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
@@ -109,8 +118,13 @@ class EMSDLift():
 
     def to(self, floor_name, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
-        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap['floor_name']).to_json()
+        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap[f'{floor_name}']).to_json()
         self.client.publish(topic, msg)
+
+        time.sleep(1)
+        self.request_state()
+        if(self.indexes_of_pressed_key == keymap[f'{floor_name}']): return True
+        return False
     
     def open(self, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
@@ -135,29 +149,44 @@ class EMSDLift():
 
         if binary_string == '0' and self.indexes_of_pressed_key == []:
             self.anykey_pressed = False
-            print(f'no key is pressed!')
+            # print(f'no key is pressed!')
         else:
             self.anykey_pressed = True
             # print("Binary representation:", binary_string)
-            print("pressed key list:", self.indexes_of_pressed_key)
+            # print("pressed key list:", self.indexes_of_pressed_key)
         pass
 
     def is_key_pressed(self, floor_name):
-        self.get_state()
+        self.request_state()
         if self.anykey_pressed:
             if keymap[floor_name][0] in self.indexes_of_pressed_key:
                 return True
         return False
 
+    def thread_check_is_available(self):
+        while(True):
+            time.sleep(2)
+
+            self.occupied = not self.is_available()
+            # self.occupied = not is_available
+    
     def is_available(self):
         lift_state = []
+        
         for i in range(6):
-            self.get_state()
-            if self.anykey_pressed: return False
+            self.request_state()
+            if self.anykey_pressed: 
+                self.occupied = True
+                return False
             else: 
                 lift_state.append(self.current_floor)
             time.sleep(1)
-        return all(item == lift_state[0] for item in lift_state)
+        
+        is_free = all(item == lift_state[0] for item in lift_state)
+        
+        self.occupied = not is_free
+        return is_free
+        
 
 
 if __name__ == "__main__":
@@ -169,8 +198,11 @@ if __name__ == "__main__":
 
     while(True):
         time.sleep(2)
-        res = lift.is_available()
-        print(f'lift.is_available: {res}')
+        lift.get_state()
+        # res = lift.is_available()
+        # print(f'lift.is_available: {res}')
+
+
         # res = lift.is_key_pressed("G/F")
         # if res:
         #     print(f'G/F is pressed!!!')
