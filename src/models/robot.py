@@ -42,12 +42,6 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
         self.nwmqtt.start()
 
-        # # # module - models/sensors
-        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, config, port_config, self.status_summary)
-        self.mo_iaq = MoIAQ.IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
-        self.mo_locker = MoLocker.Locker(port_config)
-        self.mo_access_control = MoAccessControl(self.modb, config, port_config)
-        self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -64,6 +58,13 @@ class Robot:
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
 
+        # # # module - models/sensors
+        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, config, port_config, self.status_summary)
+        self.mo_iaq = MoIAQ.IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
+        self.mo_locker = MoLocker.Locker(port_config)
+        self.mo_access_control = MoAccessControl(self.modb, config, port_config)
+        self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
+        
         ## delivery related
         #region ROBOT CONFIGURATION
         self.rmapi.write_robot_skill_to_properties(self.robot_guid, skill_config_path)
@@ -71,7 +72,7 @@ class Robot:
         self.skill_config = umethods.load_config(skill_config_path)
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
         #endregion
-
+        
         ## nw-door-agent
         self.door_agent_start = False
         self.door_agent_finish = False

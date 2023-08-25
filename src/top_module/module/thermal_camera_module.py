@@ -7,21 +7,19 @@ import time
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
-        # Comment the below line if openmv deivce port changed
-        self.interface = rpc.rpc_usb_vcp_master(port)
-        self.image_path = None
-        self.debug = debug
-
-        self.set_save_folder("/home/nw/Desktop/Images")
-
         # Uncomment the below lines if openmv deivce port changed
         #
         # import serial.tools.list_ports
         # print("Available Ports:")
         # for port, desc, hwid in serial.tools.list_ports.comports():
         #     print("{} : {} [{}]".format(port, desc, hwid))
-        # print("Please enter a port name: ")
-        # self.interface = rpc.rpc_usb_vcp_master(port=input())
+        # port = input("Please enter a port name: ")
+
+        self.interface = rpc.rpc_usb_vcp_master(port)
+        self.image_path = None
+        self.debug = debug
+
+        self.set_save_folder("/home/nw/Desktop/Images")
 
         if self.debug:
             self.stream_video_in_window()
@@ -112,18 +110,21 @@ class ThermalCam:
 
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    image = pygame.image.load(io.BytesIO(img), "jpg")
-                    if image is not None:
-                        filename = time.strftime("%Y%m%d %H:%M:%S", time.localtime()) + " gray.jpg"
+                    try:
+                        image = pygame.image.load(io.BytesIO(img), "jpg")
+                    except pygame.error:
+                        continue
 
-                        if event.key == pygame.K_d:
-                            pygame.image.save(image, os.path.join(self.save_folder, "dry", filename))
+                    filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
 
-                        if event.key == pygame.K_w:
-                            pygame.image.save(image, os.path.join(self.save_folder, "wet", filename))
+                    if event.key == pygame.K_d:
+                        pygame.image.save(image, os.path.join(self.save_folder, "dry", filename))
 
-                        if event.key == pygame.K_a:
-                            pygame.image.save(image, os.path.join(self.save_folder, "other", filename))
+                    if event.key == pygame.K_w:
+                        pygame.image.save(image, os.path.join(self.save_folder, "wet", filename))
+
+                    if event.key == pygame.K_a:
+                        pygame.image.save(image, os.path.join(self.save_folder, "other", filename))
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -145,7 +146,7 @@ class ThermalCam:
     def capture_image(self):
         image = self.__get_frame_buffer_call_back()
         if image is not None:
-            filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " grayscale.jpg"
+            filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
             filepath = os.path.join(self.save_folder, filename)
 
             image = np.asarray(image, dtype="uint8")

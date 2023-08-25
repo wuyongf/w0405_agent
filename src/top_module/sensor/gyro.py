@@ -6,6 +6,7 @@ from datetime import datetime
 import src.utils.methods as umethods
 import src.top_module.port as port
 import src.top_module.analysis.gyro_after_processing as GAP
+import src.top_module.analysis.event_publisher as event_publisher
 
 # Voltage = 5V
 
@@ -49,6 +50,8 @@ class Gyro():
         
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.start_collection)
+        self.event_publisher = event_publisher.EventPublisher('localhost', status_summary)
+
 
     def set_task_id(self, id):
         self.task_id = id
@@ -60,6 +63,7 @@ class Gyro():
         self.collect_data()
         
     def start(self):
+        self.event_publisher.publish_test()
         self.run_thread.start()
         
     def stop(self) :

@@ -1,6 +1,7 @@
 import json
 import src.top_module.db_top_module as NWDB
 import src.utils.methods as umethods
+import time
 import src.top_module.analysis.event_publisher as event_publisher
 
 
@@ -32,7 +33,7 @@ class UserRulesChecker():
         rules_limit_type_list = self.get_rules_column(rules_list, "limit_type")
         rules_name_list = self.get_rules_column(rules_list, "name")
         rules_activated_list = self.get_rules_column(rules_list, "activated")
-        
+        rules_severity_list = self.get_rules_column(rules_list, "severity")
         data_type_alreadypublish = []
 
         for data in data_stack:
@@ -45,18 +46,22 @@ class UserRulesChecker():
                     limit_type = rules_limit_type_list[row_num]
                     name = rules_name_list[row_num]
                     activated = rules_activated_list[row_num]
+                    severity = rules_severity_list[row_num]
                     value = data[col_idx]
 
                     print(
                         f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
 
                     if (limit_type == "HIGH" and value > threshold) or (limit_type == "LOW" and value < threshold) and activated == 1:
+                        print(
+                            f"[user_rules.py]***Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
+                        
                         if data_type not in data_type_alreadypublish:
-                            self.publish_event(value=value, name= name, data_type= data_type, threshold=threshold)
+                            time.sleep(1)
+                            self.publish_event(value=value, name= name, data_type= data_type, threshold=threshold, severity=severity)
+                            time.sleep(1)
                             data_type_alreadypublish.append(data_type)
                             print(data_type_alreadypublish)
-                            print(
-                                f"[user_rules.py]***Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
                             
 
                 except ValueError:
@@ -64,16 +69,17 @@ class UserRulesChecker():
                     #     f"No matched data type for rule data type {data_type}")
                     pass
                     
-    def publish_event(self, value, name, data_type, threshold):
+    def publish_event(self, value, name, data_type, threshold, severity):
         title = f"Sensor Value Alert: {name}"
         description = f"Rule Name: {name}, Data Type: {data_type}, Threshold: {threshold}, Value: {value}"
         
         self.event_publisher.add_title(title)
-        self.event_publisher.add_severity(2)
+        self.event_publisher.add_severity(severity)
         self.event_publisher.add_description(description)
         self.event_publisher.add_mapPose()
         self.event_publisher.add_empty_medias()
         self.event_publisher.publish()
+        # self.event_publisher.publish_test()
         
                     
 

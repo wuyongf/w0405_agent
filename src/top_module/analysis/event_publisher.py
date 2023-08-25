@@ -16,8 +16,8 @@ class EventPublisher:
     # def __init__(self, modb, config, mq_host, get_mapPose):
     def __init__(self, mq_host, status_summary):
         # rm - mqtt
-        self.mq_publisher = mqtt.Client("event_publisher")
-        self.mq_publisher.connect(mq_host)
+        # self.mq_publisher = mqtt.Client("event_publisher")
+        # self.mq_publisher.connect(mq_host)
         self.status_summary = status_summary
         self.pos_x = 0
         self.pos_y = 0
@@ -42,6 +42,7 @@ class EventPublisher:
         # self.pos_y = pos_y
         # self.pos_theta = pos_theta
         # self.map_rm_guid = map_rm_guid
+        print(self.status_summary())
         obj = json.loads(self.status_summary())
         self.pos_x = obj["position"]["x"]
         self.pos_y = obj["position"]["y"]
@@ -49,13 +50,16 @@ class EventPublisher:
         self.map_rm_guid = obj["map_rm_guid"]
 
     def start(self):
-        self.mq_publisher.loop_start()
+        # self.mq_publisher.loop_start()
         print(f'[event_handler]: Start...')
 
     # Event handler    
     def publish(self):
+        print('[event_publisher.py] Event Publish')
         self.event = RMSchema.Event(self.title, self.severity , self.description, self.mapPose, self.medias).to_json()
-        self.mq_publisher.publish('/robot/event' , self.event)
+        mq_publisher = mqtt.Client("event_publisher")
+        mq_publisher.connect('localhost')
+        mq_publisher.publish('/robot/event' , self.event)
         print(self.event)
 
     def add_title(self, title):
@@ -97,12 +101,15 @@ class EventPublisher:
         self.publish()
         
 if __name__ == "__main__":
+    def status_summary():
+            status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+            return status
 
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
-    modb = MODB.robotDBHandler(config)
+    # modb = MODB.robotDBHandler(config)
     
-    event_handler = EventPublisher("localhost", "")
+    event_handler = EventPublisher("localhost", status_summary)
     event_handler.start()
 
     root_path = os.path.abspath('../../')
@@ -131,5 +138,7 @@ if __name__ == "__main__":
     event_handler.add_mapPose()
     event_handler.add_medias(medias)
 
+    event_handler.publish()
+    event_handler.publish()
     event_handler.publish()
     

@@ -28,7 +28,6 @@ class IaqSensor():
         self.status_summary = status_summary
         self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
 
-
     def run(self):
         self.collect_data()
         
@@ -67,6 +66,7 @@ class IaqSensor():
     def set_task_mode(self, e, task_id=0):
         # self.event_publisher.publish_test()
         # print(self.status_summary())
+        # self.publish_event(value=10, name= 'name', data_type= 'data_type', threshold=10)
         
         self.task_mode = e
         self.task_id = task_id
@@ -146,12 +146,12 @@ class IaqSensor():
                     
                     if len(list(rawdata)) != 22: continue
                     result = self.get_data(rawdata)
-                    # print(result)
+                    print(result)
                     
 
                     # print(result_insert)
 
-                    if sum(result) < 30000:
+                    if sum(result) < 30000 and result[2] < 5000 :
                         if self.task_mode:
                             # Insert to mySQL
                             # print('***********taskmode  ON**********')
@@ -186,13 +186,14 @@ class IaqSensor():
 
 
 if __name__ == '__main__':
+    def status_summary():
+        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": 7}'
+        return status
+    
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    modb = NWDB.TopModuleDBHandler(config)
+    modb = NWDB.TopModuleDBHandler(config, status_summary)
 
-    def status_summary():
-        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": null}'
-        return status
 
     iaq = IaqSensor(modb, config, port_config, status_summary, 2)
     print(iaq.parse_json())
