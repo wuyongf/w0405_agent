@@ -167,10 +167,10 @@ class ThermalCam:
         return filepath
 
 if __name__ == '__main__':
-    # camera = ThermalCam(debug=False)
+    camera = ThermalCam(debug=False)
 
     # Init
-    interval_min = 5
+    interval_min = 5 #s
 
     start_time_hour = 18
     start_time_min  = 16
@@ -194,9 +194,9 @@ if __name__ == '__main__':
         time_difference = start_time - current_time
 
         if time_difference.total_seconds() <= 0:
-            print("Triggering the method at", current_time)
+            print("Capture the image at", current_time)
             # Call your method here
-            print('xxxxx')
+            camera.capture_image()
 
             # Update the start_time for the next interval
             start_time += timedelta(seconds=interval_seconds)
