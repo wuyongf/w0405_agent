@@ -2,6 +2,7 @@ import time
 import src.utils.methods as umethods
 import src.top_module.db_top_module as NWDB
 import src.top_module.analysis.user_rules as rule
+import json
 
 # TODO: Loop the function 4 times (L,R,extent,retract), Return the biggest result
 #       Publish nomal level alert if one or more set of data fail
@@ -19,6 +20,7 @@ class lift_leveling_detection:
         self.empty_region = []
         self.list_rate_of_change = []
         self.pack_id = 0
+        self.status_summary = status_summary
         self.result_stack = []
 
     def set_pack_id(self, pack_id):
@@ -129,7 +131,10 @@ class lift_leveling_detection:
         print(f"[levelling_detection.py] result: {self.result_stack}" )
         
         result_avg = self.get_result_avg(self.result_stack)
-        wrapped_item = [[result_avg]]
+        
+        # wrapped_item = [[result_avg]]
+        # Add x,y
+        wrapped_item = [self.append_robot_position([result_avg], xyonly = True)]
         self.user_rules.check_stack(wrapped_item)
         
         
@@ -139,9 +144,7 @@ class lift_leveling_detection:
             self.modb.UpdateDistanceResult(column=db_header[i], id=self.pack_id, result=r)
             self.result_stack = []
         self.modb.UpdateDistanceResult(column='result_avg', id=self.pack_id, result=result_avg)
-        
-                
-                
+                   
     def get_result_avg(self, resultlist): 
         sumlist = []
         for obj in resultlist:
@@ -153,6 +156,15 @@ class lift_leveling_detection:
                 return sum_value
         return -1
             
+    def append_robot_position(self, array, xyonly=False):
+        obj = json.loads(self.status_summary())
+        array.append(obj["position"]["x"])
+        array.append(obj["position"]["y"])
+        if xyonly is False:
+            array.append(obj["position"]["theta"])
+            array.append(obj["map_id"])
+        return array
+
 
 
 if __name__ == "__main__":

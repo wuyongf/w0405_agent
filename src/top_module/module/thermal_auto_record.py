@@ -1,7 +1,7 @@
-# import cv2
+import cv2
 import numpy as np
-# import rpc
-# import struct
+import rpc
+import struct
 import os
 import time
 from datetime import datetime, timedelta
@@ -170,26 +170,32 @@ if __name__ == '__main__':
     camera = ThermalCam(debug=False)
 
     # Init
-    interval_min = 5 #s
+    interval_min = 15 #s
 
-    start_time_hour = 18
-    start_time_min  = 16
+    # start_time_hour = 18
+    # start_time_min  = 16
 
 
     # Define the interval in seconds (30 minutes)
-    interval_seconds = interval_min #* 60
+    interval_seconds = interval_min * 60
 
     # Define the start time (18:05)
-    start_time = datetime.now().replace(hour=start_time_hour, minute=start_time_min, second=0, microsecond=0)
+    # start_time = datetime.now().replace(hour=start_time_hour, minute=start_time_min, second=0, microsecond=0)
+    start_time = datetime.now()
     current_time = datetime.now()
 
-    # Calculate the time difference to the next trigger time
-    time_difference = start_time - current_time
-    if time_difference.total_seconds() < 0:
-        start_time += timedelta(days=1)
+    # # Calculate the time difference to the next trigger time
+    # time_difference = start_time - current_time
+    # if time_difference.total_seconds() < 0:
+    #     pass
+    #     # start_time += timedelta(days=1)
+    # print(f'sleep 5s...')
+    # time.sleep(5)
+    print(f'start...')
 
     # Loop to trigger the method
     while True:
+
         current_time = datetime.now()
         time_difference = start_time - current_time
 
@@ -200,6 +206,7 @@ if __name__ == '__main__':
 
             # Update the start_time for the next interval
             start_time += timedelta(seconds=interval_seconds)
+            print("Next capture time at", start_time)
 
         # Sleep for a short duration to avoid high CPU usage
         time.sleep(1)

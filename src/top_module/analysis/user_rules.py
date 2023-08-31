@@ -12,14 +12,6 @@ class UserRulesChecker():
         self.header_list = header_list
         # self.status_summary = status_summary
         self.event_publisher = event_publisher.EventPublisher('localhost', status_summary)
-        
-    # def get_robot_pose(self):
-    #     obj = json.loads(self.status_summary())
-    #     pos_x = obj["position"]["x"]
-    #     pos_y = obj["position"]["y"]
-    #     pos_theta = obj["position"]["theta"]
-    #     map_rm_guid = obj["map_rm_guid"]
-    #     return (pos_x, pos_y, pos_theta, map_rm_guid)
     
     def get_rules_column(self, dataset, column):
         return [i.get(column) for i in dataset]
@@ -37,6 +29,9 @@ class UserRulesChecker():
         data_type_alreadypublish = []
 
         for data in data_stack:
+            pos_x = data[len(data)-2]
+            pos_y = data[len(data)-1]
+            print(f"[user_rules.py] x: {pos_x} , y: {pos_y}" )
             
             for row_num, data_type in enumerate(rules_type_list):
                 try:
@@ -50,11 +45,11 @@ class UserRulesChecker():
                     value = data[col_idx]
 
                     print(
-                        f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
+                        f"[user_rules.py] Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
 
                     if (limit_type == "HIGH" and value > threshold) or (limit_type == "LOW" and value < threshold) and activated == 1:
                         print(
-                            f"[user_rules.py]***Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
+                            f"[user_rules.py] ***Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
                         
                         if data_type not in data_type_alreadypublish:
                             time.sleep(1)

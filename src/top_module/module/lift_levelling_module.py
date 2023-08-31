@@ -89,11 +89,16 @@ class LiftLevellingModule():
 
 
 if __name__ == "__main__":
+    def status_summary():
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        return status
+    # Example usage:
+    
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    nwdb = NWDB.TopModuleDBHandler(config)
-
-    ll = LiftLevellingModule(nwdb, config, port_config)
+    modb = NWDB.TopModuleDBHandler(config, status_summary)
+    
+    ll = LiftLevellingModule(modb, config, port_config, status_summary)
     # ll.pack_id = ll.create_data_pack(task_id=0)
 
     # threading.Thread(target=ll.thread_get_status).start()4
@@ -101,7 +106,7 @@ if __name__ == "__main__":
     # print(ll.nwdb.GetDistanceResult(side="left", pack_id=64, move_dir=2))
 
     ll.start()
-    time.sleep(35)
+    # time.sleep(35)
     
     # ll.start()
 

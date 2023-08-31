@@ -44,6 +44,7 @@ class EventPublisher:
         # self.map_rm_guid = map_rm_guid
         print(self.status_summary())
         obj = json.loads(self.status_summary())
+        print(obj)
         self.pos_x = obj["position"]["x"]
         self.pos_y = obj["position"]["y"]
         self.pos_theta = obj["position"]["theta"]

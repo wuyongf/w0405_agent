@@ -3,6 +3,7 @@ from scipy.signal import savgol_filter
 import src.utils.methods as umethods
 import src.top_module.db_top_module as NWDB
 import src.top_module.analysis.user_rules as rule
+import json
 
 
 # TODO: function to pull from db, filtering, split into chunk and update
@@ -11,7 +12,7 @@ class gyro_after_processing:
     def __init__(self, modb, status_summary):
         # self.nwdb = NWDB.TopModuleDBHandler(config)
         self.modb = modb
-        
+        self.status_summary = status_summary
         self.header_list_insert = ['lift_vibration']
         self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
         self.pack_id = 0
@@ -32,6 +33,8 @@ class gyro_after_processing:
         return rates
     
     def after_processing(self, pack_id):
+        self.set_pack_id(pack_id)
+        
         # Query the raw data
         raw_data = self.modb.GetGyroResult(pack_id)
         
@@ -39,27 +42,40 @@ class gyro_after_processing:
         denoise_data = self.noise_filtering(raw_data)
         
         #  Find the minimun & maximun in the denoised data
-        minmax_list = find_min_max(denoise_data)
+        minmax_list = self.find_min_max(denoise_data)
         result_min = minmax_list[0]
         result_max = minmax_list[1]
         
         # Wrappe the item in [] for rules checking
-        wrapped_list = [[item] for item in minmax_list]
+        # => wrapped_list = [[item] for item in minmax_list]
+        # Then Add x,y in [item]
+        wrapped_list = [self.append_robot_position([item], xyonly = True) for item in minmax_list]
+
         # Check the data by user rules
         self.user_rules.check_stack(wrapped_list)
         
         list_to_str = ','.join([str(elem) for elem in denoise_data])
         self.modb.UpdateGyroResult(id=pack_id, column='result_denoise', result=list_to_str, result_min=result_min, result_max=result_max)
 
-def find_min_max(input_list):
-    min_val = max_val = input_list[0]
-    for num in input_list:
-        if num < min_val:
-            min_val = num
-        elif num > max_val:
-            max_val = num
+    def find_min_max(self, input_list):
+        min_val = max_val = input_list[0]
+        for num in input_list:
+            if num < min_val:
+                min_val = num
+            elif num > max_val:
+                max_val = num
 
-    return [min_val, max_val]
+        return [min_val, max_val]
+
+    def append_robot_position(self, array, xyonly=False):
+        obj = json.loads(self.status_summary())
+        array.append(obj["position"]["x"])
+        array.append(obj["position"]["y"])
+        if xyonly is False:
+            array.append(obj["position"]["theta"])
+            array.append(obj["map_id"])
+        return array
+
 
 if __name__ == "__main__":
     def status_summary():

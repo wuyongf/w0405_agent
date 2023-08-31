@@ -63,7 +63,6 @@ class Gyro():
         self.collect_data()
         
     def start(self):
-        self.event_publisher.publish_test()
         self.run_thread.start()
         
     def stop(self) :
@@ -241,12 +240,18 @@ class Gyro():
 
 
 if __name__ == '__main__':
+    def status_summary():
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        return status
     # Example usage:
+    
     config = umethods.load_config('../../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
-    gyro = Gyro(config, port_config)
+    modb = NWDB.TopModuleDBHandler(config, status_summary)
+
+    gyro = Gyro(modb, config, port_config, status_summary)
     # gyro.collect_data()
     # gyro.start_collection()
     gyro.start()
-    time.sleep(10)
+    time.sleep(20)
     gyro.stop()

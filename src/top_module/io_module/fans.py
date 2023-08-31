@@ -49,7 +49,7 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
     fan = fans(port_config)
     # fan.all_fan('on')
-    # fan.all_fan('off')
+    fan.all_fan('off')
     # fan.cooling_fan('on')
     # print(fan.get_status('all'))
     # time.sleep(2)

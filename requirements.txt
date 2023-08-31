@@ -9,6 +9,7 @@ jproperties==2.1.1
 pygame==2.4.0
 scipy==1.10.1
 ipykernel
+shapely
 
 # for SMS
 twilio

@@ -76,47 +76,16 @@ class IaqSensor():
 
     def data_check_stack(self, dataset):
         self.data_stack.append(dataset)
-        if len(self.data_stack) >= 20:
+        if len(self.data_stack) >= 5:
             # self.check_stack(self.data_stack)
             # NOTE: *** Check the data with user define rules ***
+            print(self.data_stack)
             self.user_rules.check_stack(self.data_stack)
             # clear the stack
             self.data_stack.clear()
 
     def get_rules_column(self, dataset, column):
         return [i.get(column) for i in dataset]
-
-    # NOTE: *** Check the data with user define rules ***
-    # def check_stack(self, data_stack):
-        # mySQL get (type, threshold, limit_type) as list
-        rules_list = self.modb.GetUserRules()
-        print(rules_list)
-        rules_type_list = self.get_rules_column(rules_list, "data_type")
-        rules_threshold_list = self.get_rules_column(rules_list, "threshold")
-        rules_limit_type_list = self.get_rules_column(rules_list, "limit_type")
-        rules_name_list = self.get_rules_column(rules_list, "name")
-
-        for data in data_stack:
-            for row_num, data_type in enumerate(rules_type_list):
-                try:
-                    # Compare with rules_type_list, find the index of data
-                    col_idx = self.header_list.index(data_type)
-                    threshold = rules_threshold_list[row_num]
-                    limit_type = rules_limit_type_list[row_num]
-                    name = rules_name_list[row_num]
-                    value = data[col_idx]
-                    
-                    print(f"Checking: {value}, Rule Name: {name}, Data Type: {data_type}, Column Index: {col_idx}, Limit Type: {limit_type}, Threshold: {threshold}")
-
-                    if limit_type == "HIGH" and value > threshold:
-                        print(f"*** Higher than threshold, Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
-
-                    elif limit_type == "LOW" and value < threshold:
-                        print(f"*** Lower than threshold, Rule Name: {name}, Type: {data_type}, Threshold: {threshold}, Value: {value}")
-
-                except ValueError:
-                    print(f"No matched data type for rule data type {data_type}")
-
 
 
     def collect_data(self):
@@ -156,8 +125,11 @@ class IaqSensor():
                             # Insert to mySQL
                             # print('***********taskmode  ON**********')
                             result_insert = result.copy()
+                            result_check = result.copy()
                             result_insert = self.append_robot_position(result_insert)
-                            self.data_check_stack(result)
+                            result_check = self.append_robot_position(result_check, xyonly=True)
+                            self.data_check_stack(result_check)
+                            print(result)
                             self.data_insert(result_insert)
                             print(f"[iaq.py] Task ID: {self.task_id}")
 
@@ -176,18 +148,19 @@ class IaqSensor():
         # print(obj["position"]["y"])
         return obj
 
-    def append_robot_position(self, array):
+    def append_robot_position(self, array, xyonly=False):
         obj = json.loads(self.status_summary())
         array.append(obj["position"]["x"])
         array.append(obj["position"]["y"])
-        array.append(obj["position"]["theta"])
-        array.append(obj["map_id"])
+        if xyonly is False:
+            array.append(obj["position"]["theta"])
+            array.append(obj["map_id"])
         return array
 
 
 if __name__ == '__main__':
     def status_summary():
-        status = '{"battery": 10.989, "position": {"x": 0.0, "y": 0.0, "theta": 0.0}, "map_id": 7}'
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
         return status
     
     config = umethods.load_config('../../../conf/config.properties')
