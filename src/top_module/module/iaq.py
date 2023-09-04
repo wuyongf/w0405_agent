@@ -116,6 +116,7 @@ class IaqSensor():
                     if len(list(rawdata)) != 22: continue
                     result = self.get_data(rawdata)
                     print(result)
+                    print(self.status_summary())
                     
 
                     # print(result_insert)
@@ -156,11 +157,12 @@ class IaqSensor():
             array.append(obj["position"]["theta"])
             array.append(obj["map_id"])
         return array
+    
 
 
 if __name__ == '__main__':
     def status_summary():
-        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 6, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
         return status
     
     config = umethods.load_config('../../../conf/config.properties')

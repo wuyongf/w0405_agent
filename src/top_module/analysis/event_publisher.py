@@ -49,6 +49,10 @@ class EventPublisher:
         self.pos_y = obj["position"]["y"]
         self.pos_theta = obj["position"]["theta"]
         self.map_rm_guid = obj["map_rm_guid"]
+        
+    def set_robot_pose_xy(self, x,y):
+        self.pos_x = x
+        self.pos_y = y
 
     def start(self):
         # self.mq_publisher.loop_start()
@@ -61,7 +65,7 @@ class EventPublisher:
         mq_publisher = mqtt.Client("event_publisher")
         mq_publisher.connect('localhost')
         mq_publisher.publish('/robot/event' , self.event)
-        print(self.event)
+        print(f"[event_publisher.py] {self.event}")
 
     def add_title(self, title):
         self.title  = title
@@ -72,10 +76,13 @@ class EventPublisher:
     def add_description(self, description):
         self.description = description
         
-    def add_mapPose(self):
+    def add_mapPose(self, x = -1, y = -1):
         self.get_robot_post()
-        # self.mapPose = RMSchema.mapPose(mapId='277c7d6f-2041-4000-9a9a-13f162c9fbfc')
+        # set x,y if xy pos is given
+        if x != -1 and y != -1:
+            self.set_robot_pose_xy(x,y)
         self.mapPose = RMSchema.mapPose(x=self.pos_x, y=self.pos_y, heading=self.pos_theta, mapId=self.map_rm_guid)
+        # self.mapPose = RMSchema.mapPose(mapId='277c7d6f-2041-4000-9a9a-13f162c9fbfc')
         # self.mapPose = self.robot.get_current_mapPose()
         # self.mapPose = self.get_mapPose()
     def add_medias(self, medias):
@@ -120,7 +127,7 @@ if __name__ == "__main__":
     event_img_path = os.path.join(event_path, task_id, img_name)
     event_img_path = event_img_path.replace("\\", "/") # for window
 
-    print(event_img_path)
+    # print(event_img_path)
 
     # to publish an event
     # 1. event title.   (str)

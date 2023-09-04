@@ -39,6 +39,12 @@ class TopModuleDBHandler(db.AzureDB):
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
         return self.Select(statement)
+    
+    def GetLayoutIdByMapId(self, map_id):
+        statement = f'SELECT layout_id FROM {self.database}.`robot.map` WHERE ID = {map_id};'
+        return self.Select(statement)
+        
+        
 
     def StreamIaqData(self, table, key, value):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
@@ -63,6 +69,19 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
+    
+    def GetRegions(self):
+        statement = f'SELECT ID, name, polygon, layout_id FROM {self.database}.`nw.event.region`;'
+        return self.SelectAll(statement)
+    
+    def GetRegionsByMapId(self, map_id: int):
+        statement = f'SELECT u.ID, u.name, u.polygon, u.layout_id FROM {self.database}.`nw.event.region` u JOIN {self.database}.`robot.map` v ON u.layout_id = v.layout_id WHERE v.ID = {map_id};'
+        return self.SelectAll(statement)
+    
+    def GetRegionsByLayoutId(self, layout_id: int):
+        statement = f'SELECT u.ID, u.name, u.polygon, FROM {self.database}.`nw.event.region` u WHERE u.layout_id = {layout_id};'
+        return self.SelectAll(statement)
+
 
     def CreateDistanceDataPack(self, task_id):
         # pos_x
@@ -128,13 +147,18 @@ class TopModuleDBHandler(db.AzureDB):
 
 
 if __name__ == '__main__':
+    def status_summary():
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        return status
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../../conf/port_config.properties')
     
-    nwdb = TopModuleDBHandler(config)
+    nwdb = TopModuleDBHandler(config, status_summary)
     
     # nwdb.CreateGyroDataPack(1,1)
     # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
+    
+    print(nwdb.GetRegions())
     
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())
@@ -157,8 +181,8 @@ if __name__ == '__main__':
     # nwdb.Test()
     
     # print(nwdb.GetDistanceChunk(pack_id=65, side='left', move_dir=2))
-    print(nwdb.GetGyroResult(21))
-    nwdb.UpdateGyroResult(id=21, column='result_denoise', result='test')
+    # print(nwdb.GetGyroResult(21))
+    # nwdb.UpdateGyroResult(id=21, column='result_denoise', result='test')
     
     # nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
     # nwdb.DeleteLastStreamIaqData()
