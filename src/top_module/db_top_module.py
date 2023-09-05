@@ -47,7 +47,7 @@ class TopModuleDBHandler(db.AzureDB):
         
 
     def StreamIaqData(self, table, key, value):
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, now(), {self.robot_id});'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
         # print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
         
@@ -60,7 +60,7 @@ class TopModuleDBHandler(db.AzureDB):
         # map_name
         # task_id
         # posX,Y
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id, robot_id) VALUES ({", ".join(map(str, value))}, now(), {task_id}, {self.robot_id});'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {task_id}, {self.robot_id});'
         print(f'[db_top_module.InsertIaqData]: {statement}')
         self.Insert(statement)
 
@@ -88,7 +88,8 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_y
         # floor_id
         (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
+        # statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
@@ -98,7 +99,7 @@ class TopModuleDBHandler(db.AzureDB):
         self.Insert(statement)
 
     def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir):
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date, robot_id) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , now(), {self.robot_id})'
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date, robot_id) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , "{self.now()}", {self.robot_id})'
         self.Insert(statement)
 
     # Get raw data set of laser distance chunk
@@ -119,14 +120,14 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_y
         # floor_id
         (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
-        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {lift_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {lift_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
 
     # Insert Gyro Data Chunk
     def InsertGyroChunk(self, pack_id, accel_z):
-        statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", now())'
+        statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", "{self.now()}")'
         self.Insert(statement)
         
     # Get raw data set of gyro chunk

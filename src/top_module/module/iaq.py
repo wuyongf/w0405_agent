@@ -162,7 +162,7 @@ class IaqSensor():
 
 if __name__ == '__main__':
     def status_summary():
-        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 6, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        status = '{"battery": 97.996, "position": {"x": 1520, "y": 761, "theta": 75.20575899303867}, "map_id": 7, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
         return status
     
     config = umethods.load_config('../../../conf/config.properties')
