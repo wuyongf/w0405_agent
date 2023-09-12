@@ -77,7 +77,7 @@ class StatusHandler:
                 ## to rm
                 self.publisher.publish(self.topic, self.robot.robot_status.to_json())
                 ## to nwdb
-                self.robot.nwdb.update_robot_position(self.robot.robot_status.mapPose.x, self.robot.robot_status.mapPose.y, self.robot.robot_status.mapPose.heading)
+                self.robot.nwdb.update_robot_position(self.robot.robot_status.layoutPose.x, self.robot.robot_status.layoutPose.y, self.robot.robot_status.layoutPose.heading)
                 self.robot.nwdb.update_robot_map_id(self.robot.map_id)
                 self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
                 self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
