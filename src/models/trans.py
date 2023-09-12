@@ -115,7 +115,10 @@ class RMLayoutMapTransform:
         
         cur_layout_point = scaled_point + [translation_map_origin[0], translation_map_origin[1]]
 
-        return cur_layout_point[0][0], cur_layout_point[1][0], cur_map_theta + self.map_rotate_angle
+        heading = cur_map_theta + self.map_rotate_angle
+        if heading > 360: heading -= 360
+
+        return cur_layout_point[0][0], cur_layout_point[1][0], heading
     
     def find_cur_map_point(self,cur_layout_x, cur_layout_y, cur_layout_theta):
 
@@ -125,6 +128,9 @@ class RMLayoutMapTransform:
         scaled_point = cur_layout_point - [translation_map_origin[0], translation_map_origin[1]]
         rotated_point = scaled_point / self.map_scale
         cur_map_point = np.matmul(inv(self.rotation_matrix),rotated_point)
+
+        heading = cur_layout_theta - self.map_rotate_angle
+        if heading < 360: heading += 360
         
         return cur_map_point[0][0], cur_map_point[1][0], cur_layout_theta - self.map_rotate_angle
 
