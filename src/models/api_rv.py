@@ -233,10 +233,10 @@ if __name__ == '__main__':
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
 
-    # while(True):
-    #     time.sleep(1)
-    #     res = rvapi.get_robot_is_moving()
-    #     print(res)
+    while(True):
+        time.sleep(1)
+        res = rvapi.get_robot_is_moving()
+        print(res)
 
     ####################################################################################################
 
@@ -267,19 +267,19 @@ if __name__ == '__main__':
 
     ###################
 
-    #Follow Me Workflow
+    # #Follow Me Workflow
 
-    # rvapi.change_mode_navigation()
-    # time.sleep(5)
-    # rvapi.change_mode_followme()
-    # time.sleep(5)
-    # rvapi.post_followme_pair()
-    # time.sleep(5)
-    while True:
-        res = rvapi.get_followme_pairing_state()
-        print(res)
-        time.sleep(1)
+    # # rvapi.change_mode_navigation()
+    # # time.sleep(5)
+    # # rvapi.change_mode_followme()
+    # # time.sleep(5)
+    # # rvapi.post_followme_pair()
+    # # time.sleep(5)
+    # while True:
+    #     res = rvapi.get_followme_pairing_state()
+    #     print(res)
+    #     time.sleep(1)
 
-    # rvapi.post_followme_unpair()
+    # # rvapi.post_followme_unpair()
 
     ###################

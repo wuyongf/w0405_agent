@@ -10,7 +10,7 @@ import src.models.api_rm as RMAPI
 import src.models.mqtt_nw as NWMQTT
 import src.models.db_robot as RobotDB
 import src.top_module.db_top_module as TopModuleDB
-import src.models.trans_rvrm as Trans
+import src.models.trans as Trans
 # Schema
 import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
@@ -37,6 +37,7 @@ class Robot:
         self.nwdb = RobotDB.robotDBHandler(config)
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
+        self.T_RM = Trans.RMLayoutMapTransform()
         self.config = config
         self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
@@ -53,7 +54,7 @@ class Robot:
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
         self.robot_id = self.nwdb.robot_id
         self.robot_guid = self.nwdb.robot_guid
-        self.robot_status = RMSchema.Status(0.0, 0, RMSchema.mapPose())
+        self.robot_status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
         self.map_id = None
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -93,11 +94,16 @@ class Robot:
                 self.robot_status.state = 1  # todo: robot status
                 self.robot_status.mapPose.mapId = self.get_current_map_rm_guid()  # map
                 self.robot_status.batteryPct = self.get_battery_state(protocol)  # battery
-                pixel_x, pixel_y, heading = self.get_current_pose(protocol)  # current pose
+                pixel_x, pixel_y, heading = self.get_current_pose(protocol)  # current map pose
                 # print(pixel_x, pixel_y, heading)
                 self.robot_status.mapPose.x = pixel_x
                 self.robot_status.mapPose.y = pixel_y
                 self.robot_status.mapPose.heading = heading
+
+                layout_x,  layout_y,  layout_heading = self.get_current_layout_pose()
+                self.robot_status.layoutPose.x = layout_x
+                self.robot_status.layoutPose.y = layout_y
+                self.robot_status.layoutPose.heading = layout_heading
 
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
@@ -118,9 +124,17 @@ class Robot:
         # x, y, theta = self.get_current_pose(protocal)
         # map_id = self.get_current_map_id()
         battery = self.robot_status.batteryPct
-        x = self.robot_status.mapPose.x
-        y = self.robot_status.mapPose.y
-        theta = self.robot_status.mapPose.heading
+
+        # layout position (x,y,theta)
+        x = self.robot_status.layoutPose.x
+        y = self.robot_status.layoutPose.y
+        theta = self.robot_status.layoutPose.heading
+
+        # # map position
+        # map_x = self.robot_status.mapPose.x
+        # map_y = self.robot_status.mapPose.y
+        # map_theta = self.robot_status.mapPose.heading
+
         map_id = self.map_id
         map_rm_guid = self.get_current_map_rm_guid()
 
@@ -159,6 +173,21 @@ class Robot:
             if (protocol == NWEnum.Protocol.RVAPI):
                 pos = self.rvapi.get_current_pose()
                 return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
+        except:
+            return 0, 0, 0
+
+    def get_current_layout_pose(self):
+        try:
+            map_rm_guid = self.robot_status.mapPose.mapId
+            layout_guid = self.rmapi.get_layout_guid(map_rm_guid)
+            params = self.rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+            self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                              params.scale, params.angle, params.translate)
+            cur_layout_point = self.T_RM.find_cur_layout_point(self.robot_status.mapPose.x, 
+                                                               self.robot_status.mapPose.y,
+                                                               self.robot_status.mapPose.heading)
+
+            return cur_layout_point
         except:
             return 0, 0, 0
 
@@ -978,6 +1007,8 @@ if __name__ == '__main__':
     skill_config_path = './conf/rm_skill.properties'
 
     robot = Robot(config, port_config, skill_config_path)
+
+    robot.get_current_layout_pose()
 
     # # get status
     # robot.status_start(NWEnum.Protocol.RVAPI)

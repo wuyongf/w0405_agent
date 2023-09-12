@@ -7,7 +7,7 @@ import src.models.mqtt_rv as RVMQTT
 import src.models.mqtt_rv2 as RVMQTT2
 import src.models.api_rm as RMAPI
 import src.models.db_robot as RobotDB
-import src.models.trans_rvrm as Trans
+import src.models.trans as Trans
 import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
 import src.models.enums.rm as RMEnum

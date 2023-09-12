@@ -11,10 +11,11 @@ import uuid
 
 
 class Status:
-    def __init__(self, batteryPct, state, mapPose):
+    def __init__(self, batteryPct, state, mapPose, layoutPose):
         self.batteryPct = batteryPct
         self.state = state
         self.mapPose = mapPose
+        self.layoutPose = layoutPose
 
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
@@ -30,6 +31,15 @@ class mapPose:
     def to_json(self):
         return json.dumps(self.__dict__)
 
+class layoutPose:
+    def __init__(self, layoutId='', x=0.0, y=0.0, heading=0.0):
+        self.layoutId = layoutId
+        self.x = x
+        self.y = y
+        self.heading = heading
+
+    def to_json(self):
+        return json.dumps(self.__dict__)
 
 # class Task1:
 #     def __init__(self, taskId, task_type, parameters):
@@ -130,6 +140,18 @@ class Event:
         self.medias = medias
         self.mapPose = mapPose
         self.metadata = metadata
+
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    
+# Layout_map
+class LayoutMapList:
+    def __init__(self, imageWidth, imageHeight, scale, angle, translate):
+        self.imageWidth = imageWidth
+        self.imageHeight = imageHeight
+        self.scale = scale
+        self.angle = angle
+        self.translate = translate
 
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)

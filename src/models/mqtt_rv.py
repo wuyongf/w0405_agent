@@ -94,7 +94,7 @@ class RVMQTT():
     def get_robot_is_moving(self):
         return self.moving
 
-import src.models.trans_rvrm as Trans
+import src.models.trans as Trans
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

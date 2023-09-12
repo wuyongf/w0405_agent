@@ -1,6 +1,10 @@
+# for RVRMTransform
 import math
 import src.models.schema.rv as RVSchema
-
+# for RMLayoutMapTransform
+from math import pi, cos, sin
+import numpy as np
+from numpy.linalg import inv
 
 class RVRMTransform:
     def __init__(self):
@@ -69,8 +73,62 @@ class RVRMTransform:
     def pos_rm2bim(self):
         pass
 
+class RMLayoutMapTransform:
+    '''
+    Translation between layout and map. Refernce: https://www.notion.so/W0405-DevLog-10fdc4d8771348719ccf8893b8e27aaa
+    input: current position in reference to map
+    output current position in reference to layout
+    '''
+    def __init__(self):
+        pass
 
-if __name__ == '__main__':
+    def update_layoutmap_params(self, imageWidth, imageHeight, scale, angle, translate):
+        self.map_width = imageWidth
+        self.map_height = imageHeight
+        self.map_scale = scale
+        self.map_rotate_angle = angle
+        self.map_center_translate = translate
+        self.rotation_matrix = self.__cal_rotation_matrix()        
+        pass
+
+    def __cal_rotation_matrix(self):
+        angle_rad = self.map_rotate_angle * (pi / 180)
+        return np.array([
+            [cos(angle_rad), -sin(angle_rad)],
+            [sin(angle_rad), cos(angle_rad)]])
+
+    def __find_map_origin_in_layout(self):
+        translate_layout_center = np.array([[self.map_center_translate[0]], [self.map_center_translate[1]]])
+        map_center = np.array([[self.map_width/2], [self.map_height/2]])
+        t = np.matmul(self.rotation_matrix,map_center) * self.map_scale
+        translation_map_origin = translate_layout_center - t
+
+        return translation_map_origin
+
+    def find_cur_layout_point(self, cur_map_x, cur_map_y, cur_map_theta):
+
+        translation_map_origin = self.__find_map_origin_in_layout()
+
+        cur_map_point = np.array([[cur_map_x], [cur_map_y]])
+        rotated_point = np.matmul(self.rotation_matrix,cur_map_point)
+        scaled_point = rotated_point * self.map_scale
+        
+        cur_layout_point = scaled_point + [translation_map_origin[0], translation_map_origin[1]]
+
+        return cur_layout_point[0][0], cur_layout_point[1][0], cur_map_theta + self.map_rotate_angle
+    
+    def find_cur_map_point(self,cur_layout_x, cur_layout_y, cur_layout_theta):
+
+        cur_layout_point = np.array([[cur_layout_x], [cur_layout_y]])
+        translation_map_origin = self.__find_map_origin_in_layout()
+
+        scaled_point = cur_layout_point - [translation_map_origin[0], translation_map_origin[1]]
+        rotated_point = scaled_point / self.map_scale
+        cur_map_point = np.matmul(inv(self.rotation_matrix),rotated_point)
+        
+        return cur_map_point[0][0], cur_map_point[1][0], cur_layout_theta - self.map_rotate_angle
+
+def main_RVRMTransform():
 
     trans = RVRMTransform()
     # define rv origin
@@ -99,3 +157,20 @@ if __name__ == '__main__':
     # 1.57 -> -3.14
 
     # 3.14 -> 1.57
+
+def main_RMLayoutMapTransform():
+    T_RM = RMLayoutMapTransform()
+    T_RM.update_layoutmap_params(2828, 1335, 0.39171, 6.70102, [1211.835, 359.122])
+
+    cur_layout_point = T_RM.find_cur_layout_point(744, 592, 0)
+
+    print(cur_layout_point)
+
+    cur_map_point = T_RM.find_cur_map_point(954.63313433,299.12555485, 0)
+    print(cur_map_point)
+
+if __name__ == '__main__':
+
+    # main_RVRMTransform()
+    main_RMLayoutMapTransform()
+

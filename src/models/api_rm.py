@@ -4,6 +4,7 @@ import requests
 import src.utils.methods as umethods
 import sys
 import src.models.enums.rm as RMEnum
+import src.models.schema.rm as RMSchema
 
 class RMAPI(api.AuthenticatedAPI):
     def __init__(self, config):
@@ -352,10 +353,50 @@ class RMAPI(api.AuthenticatedAPI):
             item_name = item['name']
             if position_name == item_name:
                 return item_id
+            
+    def get_layout_map_list(self, layoutIds, mapIds):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        payload = {}
+        # payload["layoutIds"] = ['0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d']
+        # payload["mapIds"] = [f'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a']
+        payload["layoutIds"] = [layoutIds]
+        payload["mapIds"] = [mapIds]
+        data = self.post('/layouts-map/list', json.dumps(payload))
+
+        calibrationData_string = data['result'][0]['calibrationData']
+        calibrationData = json.loads(calibrationData_string)
+        
+        # layoutWidth = calibrationData['layoutWidth']
+        # layoutHeight = calibrationData['layoutHeight']
+        imageWidth = calibrationData['imageWidth']
+        imageHeight = calibrationData['imageHeight']
+        scale = calibrationData['transform']['scale']
+        angle = calibrationData['transform']['angle']        
+        translate = calibrationData['transform']['translate']
+
+        # print(f'calibrationData: {calibrationData}')  
+
+        layout_map_list  =  RMSchema.LayoutMapList(imageWidth, imageHeight, scale, angle, translate)
+        return layout_map_list
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
+
+    #  6df33060-c51b-445b-a07e-86b8d5b3bcda
+    # res = rmapi.list_maps()
+    # print(res)
+
+    # res = rmapi.list_layouts()
+    # print('========================')
+
+    # res = rmapi.get_layout_map_list()
+    # print(res)
+
+    res = rmapi.get_layout_guid('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a')
+    print(res)
 
     # res = rmapi.list_maps()
     # print(res)
@@ -365,8 +406,8 @@ if __name__ == '__main__':
     # print(res) # 76186080-1adb-4542-b2be-4a5b112a6b86
 
     # rmapi.list_layout_markers('76186080-1adb-4542-b2be-4a5b112a6b86')
-    res = rmapi.get_layout_marker_guid('76186080-1adb-4542-b2be-4a5b112a6b86','P0')
-    print(res)  #210626fe-917c-480a-bdf0-3b5012d4a1b2
+    # res = rmapi.get_layout_marker_guid('76186080-1adb-4542-b2be-4a5b112a6b86','P0')
+    # print(res)  #210626fe-917c-480a-bdf0-3b5012d4a1b2
 
     # json_data = rmapi.new_job()
     # print(json_data)

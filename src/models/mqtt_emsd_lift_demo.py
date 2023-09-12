@@ -66,7 +66,6 @@ if __name__ == '__main__':
     # print(robot1.get_current_pos_joint())
     # print(robot1.pos)
     
-    
     pygame_demo(lift)
 
 
