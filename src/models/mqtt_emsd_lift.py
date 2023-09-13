@@ -12,7 +12,7 @@ import src.models.schema.robocore_lift as LiftSchema
 # 2. publish mqtt topic
 
 # robocore-keymap
-keymap = {
+keymap_robocore_nw = {
     'none': [2, 10],  # Use a list to store multiple values
     'open': [0],
     'close':[1],
@@ -24,6 +24,16 @@ keymap = {
     '6/F':  [8],
     '7/F':  [9],
     'G/F':  [11]}
+
+keymap_nw_rm = {
+    '1/F':  1,
+    '2/F':  2,
+    '3/F':  3,
+    '4/F':  4,
+    '5/F':  5,
+    '6/F':  6,
+    '7/F':  7,
+    'G/F':  0}
 
 class EMSDLift():
     def __init__(self, config):
@@ -37,43 +47,42 @@ class EMSDLift():
         self.lift_id =   config.get(cfg_session,'lift_id')
 
         # lift mqtt from robocore
-        self.client = mqtt.Client('emsd_lift')
+        self.client = mqtt.Client()
         self.client.username_pw_set(username, password)
         self.client.tls_set()
         self.client.connect(host, int(port))
-        self.client.on_message = self.__on_message
-        
-        topics = []
-        topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Lift_State',0])
-        # topics.append([f'Lift_Robo/{lift_id}/Control_Panel/Key_Press',0])
-        topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Response',0])
-        self.client.subscribe(topics)
 
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+        
         # lift properties & status
         self.occupied = False
         self.anykey_pressed = False
         self.indexes_of_pressed_key = []
-        self.current_floor = ''
+        self.current_floor = 'G/F'
 
-    def __subscribe_task(self):
-        self.client.loop_start()
-        while True:
-            time.sleep(1)
+    def on_connect(self, client, userdata, flags, rc):
+        # print("Connected with result code " + str(rc))
 
-    def start(self):
-        threading.Thread(target=self.__subscribe_task).start()
-        threading.Thread(target=self.thread_check_is_available).start()
-        print('[EMSDLift] Start...')
-
-    def __on_message(self, client, userdata, msg):
+        '''Subscribe to the topics when connected'''
+        topics = []
+        topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Lift_State',0])
+        # topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press',0])
+        # topics.append([f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Response',0])
+        
+        self.client.subscribe(topics)
+        pass
+    
+    def on_message(self, client, userdata, msg):
         # print(msg.topic+" "+str(msg.payload))
         # print("*******************************************************************************************************")
         # print("message received ", str(msg.payload.decode("utf-8")))
         # print("message topic=", msg.topic)
         # print("*******************************************************************************************************")
-        self.__parse_message(msg)
+        self.parse_message(msg)
+        pass
 
-    def __parse_message(self,msg):
+    def parse_message(self,msg):
         topic = msg.topic.split('/')[-1]
         msg_json =  json.loads(str(msg.payload.decode("utf-8")))
         # print(topic)
@@ -87,12 +96,22 @@ class EMSDLift():
             self.is_anykey_pressed(msg_json)
             pass
 
+    def start(self):
+        threading.Thread(target=self.subscribe_task).start()
+        threading.Thread(target=self.thread_check_is_available).start()
+        print('[EMSDLift] Start...')
+
+    def subscribe_task(self):
+        self.client.loop_start()
+        while True:
+            time.sleep(1)
+
     def get_current_floor_from_keymap(self, Lift_Floor):
         target_value = []
         target_value.append(Lift_Floor)
         
         # Find the key that corresponds to the target value
-        matching_keys = [key for key, value in keymap.items() if value == target_value]
+        matching_keys = [key for key, value in keymap_robocore_nw.items() if value == target_value]
 
         return matching_keys[0]
 
@@ -118,22 +137,22 @@ class EMSDLift():
 
     def to(self, floor_name, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
-        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap[f'{floor_name}']).to_json()
+        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw[f'{floor_name}']).to_json()
         self.client.publish(topic, msg)
 
         time.sleep(1)
         self.request_state()
-        if(self.indexes_of_pressed_key == keymap[f'{floor_name}']): return True
+        if(self.indexes_of_pressed_key == keymap_robocore_nw[f'{floor_name}']): return True
         return False
     
     def open(self, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
-        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap['open']).to_json()
+        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw['open']).to_json()
         self.client.publish(topic, msg)
 
     def close(self, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
-        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap['close']).to_json()
+        msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw['close']).to_json()
         self.client.publish(topic, msg)
 
     def is_anykey_pressed(self, msg_json):
@@ -159,7 +178,7 @@ class EMSDLift():
     def is_key_pressed(self, floor_name):
         self.request_state()
         if self.anykey_pressed:
-            if keymap[floor_name][0] in self.indexes_of_pressed_key:
+            if keymap_robocore_nw[floor_name][0] in self.indexes_of_pressed_key:
                 return True
         return False
 
