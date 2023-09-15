@@ -34,3 +34,14 @@ class DeliveryStatus(Enum):
     Active_WaitForUnloading = 8
     Active_BackToSender = 9
     Active_BackToChargingStation = 10
+
+class RobotStatusMode(Enum):
+    Init = 1
+    Auto = 2
+    Executing = 3
+    Charging = 4
+    Error = 5
+    Manual = 6
+    FollowME_Unpair = 7
+    FollowME_Paired = 8
+    pass

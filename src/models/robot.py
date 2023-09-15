@@ -281,7 +281,9 @@ class Robot:
             pose_is_valid = True
             # pose_is_valid = self.rvapi.check_current_pose_valid()
             map_is_active = self.rvapi.get_active_map().name == rv_map_name
-            if (pose_is_valid & map_is_active): return True
+            if (pose_is_valid & map_is_active): 
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.Auto)
+                return True
             else: return False
         except:
             return False
@@ -949,6 +951,8 @@ class Robot:
     def follow_me_mode(self, task_json):
         try:
             self.rvapi.change_mode_followme()
+            # update nwdb robot.status.mode
+            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
             return True
         except:
             return False
@@ -967,6 +971,8 @@ class Robot:
             time.sleep(1)
             if pairing_state == True:
                 print('paired')
+                # update nwdb robot.status.mode
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
                 return True
             elif pairing_state == 'PAIRING':
                 count = count + 1

@@ -51,8 +51,12 @@ class robotDBHandler(db.AzureDB):
         # print(statement)
         self.Update(statement)
 
-    def update_robot_mission_status(self, mission_status):
-        pass
+    def update_robot_status_mode(self, mode = NWEnums.RobotStatusMode):
+        try: 
+            self.update_single_value('robot.status', 'mode', mode.value, 'ID', self.robot_id)
+        except:
+            print('[db_robot.update_robot_status_mode] error')
+
 
     def update_robot_locker_status(self, is_closed):
         if is_closed is not None:
@@ -161,6 +165,14 @@ class robotDBHandler(db.AzureDB):
         values = [row[target] for row in result]  # Extract the values from the result rows
         return values
 
+    def update_single_value(self, table, target, target_value, condition, condition_value):
+        try: 
+            statement = f'UPDATE {self.database}.`{table}` SET {target} = {target_value} WHERE {condition} = {condition_value};'
+            # print(statement)
+            self.Update(statement)
+        except:
+            pass
+            # print('[db_robot.update_single_value] error')
 
     # UI Handler
     def update_ui_display_status(self, ui_flag, mission_type, status):
@@ -176,28 +188,31 @@ if __name__ == '__main__':
     nwdb = robotDBHandler(config)
 
     from src.models.schema.nw import Door
-    # doors
-    result = nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', 3)
-    print(result)
-
-    layout_id = 3
-    # get door_ids from NWDB
-    door_ids =  nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', layout_id)
     
-    # Assume door_ids is a list of door IDs retrieved from the database
-    door_list = []
-    for door_id in door_ids:
-        # Fetch the remaining properties from the database based on the door ID
-        layout_id = nwdb.get_single_value('data.robot.map.layout.door.location', 'layout_id', 'ID', door_id)
-        name = nwdb.get_single_value('data.robot.map.layout.door.location', 'name', 'ID', door_id)
-        pos_x = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_x', 'ID', door_id)
-        pos_y = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_y', 'ID', door_id)
-        pos_heading = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_heading', 'ID', door_id)
-        # Create a Door object and append it to the list
-        door = Door(layout_id, name, pos_x, pos_y, pos_heading)
-        door_list.append(door)
+    nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
-    print(door_list[0])
+    # # doors
+    # result = nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', 3)
+    # print(result)
+
+    # layout_id = 3
+    # # get door_ids from NWDB
+    # door_ids =  nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', layout_id)
+    
+    # # Assume door_ids is a list of door IDs retrieved from the database
+    # door_list = []
+    # for door_id in door_ids:
+    #     # Fetch the remaining properties from the database based on the door ID
+    #     layout_id = nwdb.get_single_value('data.robot.map.layout.door.location', 'layout_id', 'ID', door_id)
+    #     name = nwdb.get_single_value('data.robot.map.layout.door.location', 'name', 'ID', door_id)
+    #     pos_x = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_x', 'ID', door_id)
+    #     pos_y = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_y', 'ID', door_id)
+    #     pos_heading = nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_heading', 'ID', door_id)
+    #     # Create a Door object and append it to the list
+    #     door = Door(layout_id, name, pos_x, pos_y, pos_heading)
+    #     door_list.append(door)
+
+    # print(door_list[0])
 
     # position
     # json = {'robotId': 'RV-ROBOT-SIMULATOR', 'mapName': '', 'x': 13.0, 'y': 6.6, 'angle': 0.31}
