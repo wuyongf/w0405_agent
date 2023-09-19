@@ -394,11 +394,11 @@ if __name__ == '__main__':
     # res = rmapi.list_layouts()
     # print('========================')
 
-    # res = rmapi.get_layout_map_list()
-    # print(res)
-    # c5f360ec-f4be-4978-a281-0a569dab1174
-    res = rmapi.get_layout_guid('277c7d6f-2041-4000-9a9a-13f162c9fbfc')
+    res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
     print(res)
+    # c5f360ec-f4be-4978-a281-0a569dab1174
+    # res = rmapi.get_layout_guid('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    # print(res)
 
     # res = rmapi.list_maps()
     # print(res)

@@ -80,6 +80,7 @@ class RMLayoutMapTransform:
     output current position in reference to layout
     '''
     def __init__(self):
+        self.map_rotate_angle = 0.0
         pass
 
     def update_layoutmap_params(self, imageWidth, imageHeight, scale, angle, translate):

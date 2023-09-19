@@ -226,27 +226,31 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
+    ####################################################################################################
+    # Charging
+    ####################################################################################################
     # res = rvapi.get_charging_feedback()
     # print(res)
-    # rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
+    rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
     # rvapi.delete_charging()
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
 
-    while(True):
-        time.sleep(1)
-        res = rvapi.get_robot_is_moving()
-        print(res)
+    ####################################################################################################
+    # Get Robot Status - is moving or not
+    ####################################################################################################
+    # while(True):
+    #     time.sleep(1)
+    #     res = rvapi.get_robot_is_moving()
+    #     print(res)
 
     ####################################################################################################
-
     # # # post 2 predefined position
     # rvapi.post_new_waypoint('5W516_20230313','WAYPOINT1', -0.0226, 0.00776, 0.7872831189896021)
     # rvapi.post_new_waypoint('5W516_20230313','WAYPOINT2', 0.37553, 0.39732, 0.7161085920932735)
 
     # # delete all points
     # rvapi.delete_all_waypoints('5W516_20230313')
-
     ####################################################################################################
 
     # # print(rvapi.get_battery_state().percentage)
@@ -265,9 +269,9 @@ if __name__ == '__main__':
     ###################
     # 2 points: p1 = (-0.037, 0.0150, 0.785) p2 = (0.412, 0.484, 0.784)
 
-    ###################
-
-    # #Follow Me Workflow
+    ####################################################################################################
+    # Follow Me Workflow
+    ####################################################################################################
 
     # # rvapi.change_mode_navigation()
     # # time.sleep(5)
@@ -281,5 +285,3 @@ if __name__ == '__main__':
     #     time.sleep(1)
 
     # # rvapi.post_followme_unpair()
-
-    ###################
