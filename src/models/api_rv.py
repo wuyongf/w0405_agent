@@ -231,7 +231,7 @@ if __name__ == '__main__':
     ####################################################################################################
     # res = rvapi.get_charging_feedback()
     # print(res)
-    rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
+    # rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
     # rvapi.delete_charging()
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
@@ -239,10 +239,10 @@ if __name__ == '__main__':
     ####################################################################################################
     # Get Robot Status - is moving or not
     ####################################################################################################
-    # while(True):
-    #     time.sleep(1)
-    #     res = rvapi.get_robot_is_moving()
-    #     print(res)
+    while(True):
+        time.sleep(1)
+        res = rvapi.get_robot_is_moving()
+        print(res)
 
     ####################################################################################################
     # # # post 2 predefined position

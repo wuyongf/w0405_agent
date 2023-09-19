@@ -226,7 +226,7 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
-        if task.taskType == 'CHARGING-CONFIGURATION':
+        if task.taskType == 'RV-CHARGING-CONFIGURATION':
             res = True
             if (res):
                 threading.Thread(target=self.robot.charging_mission_publisher, args=(task_json, self.task_status_callback)).start()
@@ -234,8 +234,15 @@ class TaskHandler:
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
-        if task.taskType == 'CHARGING':
+        if task.taskType == 'RV-CHARGING-ON':
             res = self.robot.charging_start(task_json, self.task_status_callback)
+            if (res):
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
+            else:
+                return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
+        
+        if task.taskType == 'RV-CHARGING-OFF':
+            res = self.robot.charging_stop(task_json, self.task_status_callback)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:
