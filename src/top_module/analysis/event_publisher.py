@@ -66,6 +66,8 @@ class EventPublisher:
         mq_publisher.connect('localhost')
         mq_publisher.publish('/robot/event' , self.event)
         print(f"[event_publisher.py] {self.event}")
+        event_id = json.loads(self.event)["eventId"]
+        return event_id
 
     def add_title(self, title):
         self.title  = title

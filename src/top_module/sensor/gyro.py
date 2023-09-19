@@ -66,7 +66,7 @@ class Gyro():
         self.run_thread.start()
         
     def stop(self) :
-        self.gap.after_processing(self.pack_id)
+        self.gap.after_processing(self.pack_id, self.task_id)
         self.stop_event.set()
 
     def get_acc(self, datahex):

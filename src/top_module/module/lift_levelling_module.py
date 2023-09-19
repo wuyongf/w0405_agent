@@ -55,7 +55,7 @@ class LiftLevellingModule():
         self.laser_distance.stop()
         self.status = MoEnum.LiftLevellingStatus.Finish
         time.sleep(1)
-        self.lld.start_detection()
+        self.lld.start_detection(task_id=self.task_id)
         # self.laser_distance.set_move_dir(LAEnum.LinearActuatorStatus.Extend.value)
         self.linear_actuator.stop()
 

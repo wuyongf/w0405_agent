@@ -16,18 +16,22 @@ class UserRulesChecker():
         self.event_publisher = event_publisher.EventPublisher('localhost', status_summary)
         self.map_id = -1
         self.layout_id = -1
-
+        self.task_id = -1
 
     def get_map_id(self):
         obj = json.loads(self.status_summary())
         self.map_id = obj["map_id"]
         self.layout_id = self.modb.GetLayoutIdByMapId(self.map_id)
 
+    def set_task_id(self, id):
+        self.task_id = id
+
     def get_rules_column(self, dataset, column):
         return [i.get(column) for i in dataset]
 
-    def check_stack(self, data_stack):
+    def check_stack(self, data_stack, task_id):
         self.get_map_id()
+        self.set_task_id(task_id)
         # mySQL get (type, threshold, limit_type) as list
         rules_list = self.modb.GetUserRules()
         all_region_list = self.modb.GetRegionsByMapId(self.map_id)
@@ -103,10 +107,10 @@ class UserRulesChecker():
                                     
                             # is_inside_region = self.check_region(pos_x, pos_y, polygon_list)
                             if is_inside_region == True or polygon_list == []:
-                                print("********************************************************")
-                                
                                 if rule_id not in rule_id_alreadypublish:
+                                    print("********************************************************")
                                     time.sleep(1)
+                                    # self.modb.InsertEventLog(self.task_id, data_type, name, severity, threshold, pos_x, pos_y, self.layout_id)
                                     self.publish_event(value=value, name= name, data_type= data_type, threshold=threshold, severity=severity, x=pos_x, y=pos_y)
                                     time.sleep(1)
                                     rule_id_alreadypublish.append(rule_id)
@@ -131,7 +135,9 @@ class UserRulesChecker():
         self.event_publisher.add_description(description)
         self.event_publisher.add_mapPose(x,y)
         self.event_publisher.add_empty_medias()
-        self.event_publisher.publish()
+        event_id = self.event_publisher.publish()
+        self.modb.InsertEventLog(self.task_id, data_type, name, severity, threshold, x, y, self.layout_id, event_id)
+    # def InsertEventLog(self, task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id):
         # self.event_publisher.publish_test()
         
     def check_region(self,x ,y ,polygon_list):

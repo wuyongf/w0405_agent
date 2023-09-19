@@ -178,6 +178,7 @@ class Robot:
 
     def get_current_layout_pose(self):
         try:
+
             map_rm_guid = self.robot_status.mapPose.mapId
             layout_guid = self.rmapi.get_layout_guid(map_rm_guid)
             params = self.rmapi.get_layout_map_list(layout_guid, map_rm_guid)

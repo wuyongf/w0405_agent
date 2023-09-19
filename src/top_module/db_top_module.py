@@ -82,6 +82,10 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'SELECT u.ID, u.name, u.polygon, FROM {self.database}.`nw.event.region` u WHERE u.layout_id = {layout_id};'
         return self.SelectAll(statement)
 
+    def InsertEventLog(self, task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id, event_id):
+        statement = f'insert into {self.database}.`nw.event.log` (task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id, created_date, event_id) VALUES ({task_id}, "{data_type}", "{rule_name}", {severity}, {rule_threshold}, {pos_x}, {pos_y}, {layout_id}, "{self.now()}", "{event_id}");'
+        print(f'[db_top_module.InsertEventLog]: {statement}')
+        self.Insert(statement)
 
     def CreateDistanceDataPack(self, task_id):
         # pos_x
@@ -159,7 +163,8 @@ if __name__ == '__main__':
     # nwdb.CreateGyroDataPack(1,1)
     # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
     
-    print(nwdb.GetRegions())
+    nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
+    # print(nwdb.GetRegions())
     
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())

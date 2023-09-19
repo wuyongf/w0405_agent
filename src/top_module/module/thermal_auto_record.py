@@ -170,7 +170,7 @@ if __name__ == '__main__':
     camera = ThermalCam(debug=False)
 
     # Init
-    interval_min = 15 #s
+    interval_min = 1 #s
 
     # start_time_hour = 18
     # start_time_min  = 16

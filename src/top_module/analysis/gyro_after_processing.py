@@ -32,7 +32,7 @@ class gyro_after_processing:
             rates.append(rate)
         return rates
     
-    def after_processing(self, pack_id):
+    def after_processing(self, pack_id, task_id):
         self.set_pack_id(pack_id)
         
         # Query the raw data
@@ -52,7 +52,7 @@ class gyro_after_processing:
         wrapped_list = [self.append_robot_position([item], xyonly = True) for item in minmax_list]
 
         # Check the data by user rules
-        self.user_rules.check_stack(wrapped_list)
+        self.user_rules.check_stack(wrapped_list, task_id=task_id)
         
         list_to_str = ','.join([str(elem) for elem in denoise_data])
         self.modb.UpdateGyroResult(id=pack_id, column='result_denoise', result=list_to_str, result_min=result_min, result_max=result_max)
@@ -94,5 +94,5 @@ if __name__ == "__main__":
     # # print((gap.noise_filtering(result)))
     # gap.modb.UpdateGyroResult(id=21, column='result_denoise', result=list_to_str)
     
-    gap.after_processing(32)
+    gap.after_processing(32, task_id=999)
 

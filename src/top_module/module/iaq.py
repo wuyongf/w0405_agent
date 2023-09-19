@@ -80,7 +80,7 @@ class IaqSensor():
             # self.check_stack(self.data_stack)
             # NOTE: *** Check the data with user define rules ***
             print(self.data_stack)
-            self.user_rules.check_stack(self.data_stack)
+            self.user_rules.check_stack(self.data_stack, self.task_id)
             # clear the stack
             self.data_stack.clear()
 
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     # iaq.set_task_id("")
     iaq.start()
     # # time.sleep(5)
-    iaq.set_task_mode(True, task_id = 999)
+    iaq.set_task_mode(True, task_id = -1)
     # iaq.set_task_mode(False)
     # # 
     time.sleep(1800)

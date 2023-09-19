@@ -335,10 +335,12 @@ class RMAPI(api.AuthenticatedAPI):
         results = data['result']['list']
         # Iterate over each item and extract the "id" and "name"
         for item in results:
-            item_id = item['id']
-            item_layout_id = item['layout']['id']
-            if item_id == map_guid:
-                return item_layout_id
+            if item['layout'] is None: continue
+            else:
+                item_id = item['id']
+                item_layout_id = item['layout']['id']
+                if item_id == map_guid:
+                    return item_layout_id
 
     def get_layout_marker_guid(self, layout_guid, position_name):
         # https://docs.robotmanager.com/reference/find-makers-by-layout
@@ -394,8 +396,8 @@ if __name__ == '__main__':
 
     # res = rmapi.get_layout_map_list()
     # print(res)
-
-    res = rmapi.get_layout_guid('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a')
+    # c5f360ec-f4be-4978-a281-0a569dab1174
+    res = rmapi.get_layout_guid('277c7d6f-2041-4000-9a9a-13f162c9fbfc')
     print(res)
 
     # res = rmapi.list_maps()

@@ -114,7 +114,7 @@ class lift_leveling_detection:
         except:
             return -1
     
-    def start_detection(self):
+    def start_detection(self, task_id):
         side = ['left', 'right']
         direction = [2, 3]
         
@@ -135,7 +135,7 @@ class lift_leveling_detection:
         # wrapped_item = [[result_avg]]
         # Add x,y
         wrapped_item = [self.append_robot_position([result_avg], xyonly = True)]
-        self.user_rules.check_stack(wrapped_item)
+        self.user_rules.check_stack(wrapped_item, task_id=task_id)
         
         
         # Update result to modb
@@ -182,4 +182,4 @@ if __name__ == "__main__":
     # print(lfd.level_detection())
     lfd.set_pack_id(105)
     
-    lfd.start_detection()
+    lfd.start_detection(task_id=999)
