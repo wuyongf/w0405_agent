@@ -40,6 +40,9 @@ class layoutPose:
 
     def to_json(self):
         return json.dumps(self.__dict__)
+    
+class doorPose:
+    pass
 
 # class Task1:
 #     def __init__(self, taskId, task_type, parameters):

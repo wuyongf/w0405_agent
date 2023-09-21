@@ -43,7 +43,6 @@ class Robot:
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
         self.nwmqtt.start()
 
-
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
         # self.module_monitor = Modules.Monitor()
@@ -529,6 +528,7 @@ class Robot:
             # pos_origin details
             # pos_origin: RMSchema
             pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            pos_origin.x, pos_origin.y, pos_origin.heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
             print(f'[new_delivery_mission]: get_delivery_position_detail...')
 
             # get destination_id and then create a rm_guid first.
@@ -572,6 +572,7 @@ class Robot:
             # pos_origin details
             # pos_origin: RMSchema
             pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            pos_destination.x, pos_destination.y, pos_destination.heading = self.T_RM.find_cur_map_point(pos_destination.x, pos_destination.y, pos_destination.heading)
             print(f'[new_delivery_mission]: get_delivery_position_detail...')
 
             # get destination_id and then create a rm_guid first.

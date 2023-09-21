@@ -161,6 +161,24 @@ class RMAPI(api.AuthenticatedAPI):
         return self.delete(f'/layout-markers/{id}')
         pass
     
+    ######
+    # Door
+    ######
+    def list_layout_doors(self, layout_id):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/door?layoutId={layout_id}')
+
+        results = data['result']
+        # # Iterate over each item and extract the "id" and "name"
+        # for item in results:
+        #     item_id = item['id']
+        #     item_name = item['name']
+        #     item_position = item['position']
+        #     print(f'marker: {item_name}  id: {item_id} position: {item_position}')
+        return results
+    
     def new_job_configure_delivery(self, robot_id):
         '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
         payload = {}
@@ -387,6 +405,12 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
+    ##############
+    # List Layout Markers
+    ##############
+    # res = rmapi.list_layout_doors('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    # print(res)
+
     #  6df33060-c51b-445b-a07e-86b8d5b3bcda
     # res = rmapi.list_maps()
     # print(res)
@@ -394,8 +418,13 @@ if __name__ == '__main__':
     # res = rmapi.list_layouts()
     # print('========================')
 
-    res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
-    print(res)
+    # 4F-map: 
+    # 4F-layout : 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
+    
+    res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+
+    # res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
+    # print(res)
     # c5f360ec-f4be-4978-a281-0a569dab1174
     # res = rmapi.get_layout_guid('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
     # print(res)

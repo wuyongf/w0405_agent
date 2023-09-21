@@ -10,7 +10,7 @@ import src.utils.methods as umethods
 import handlers.status_handler as status_handler
 import handlers.remote_control_handler as remote_control_handler
 import handlers.task_handler as task_handler
-from handlers.door_handler import NWDoorAgent
+from src.handlers.door_handler_nwdb import NWDoorAgent
 import src.models.robot as Robot
 import src.models.enums.nw as NWEnum
 

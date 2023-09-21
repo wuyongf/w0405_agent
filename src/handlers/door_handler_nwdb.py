@@ -61,7 +61,7 @@ class NWDoorAgent:
                 
                 # check distance - Rev01
                 for index, door in enumerate(self.doors):
-                    distance = math.sqrt((self.robot.robot_status.mapPose.x - door.pos_x) ** 2 + (self.robot.robot_status.mapPose.y - door.pos_y) ** 2)
+                    distance = math.sqrt((self.robot.robot_status.layoutPose.x - door.pos_x) ** 2 + (self.robot.robot_status.layoutPose.y - door.pos_y) ** 2)
                     if distance < self.door_radius: # 20 pixel == 100 cm
                         print(f'[door_handler.global_check]: find target dooor...')
                         print(f'[door_handler.global_check]: pause robot...')
@@ -148,7 +148,7 @@ class NWDoorAgent:
         
         while(True):
 
-            distance = math.sqrt((self.robot.robot_status.mapPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.mapPose.y - doors[index].pos_y) ** 2)
+            distance = math.sqrt((self.robot.robot_status.layoutPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.layoutPose.y - doors[index].pos_y) ** 2)
 
             if(distance >= break_loop_distance): break
 
