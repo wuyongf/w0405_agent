@@ -692,7 +692,7 @@ class Robot:
                     return True
 
                 # Wait for a short interval before checking again
-                time.sleep(1)
+                time.sleep(0.5)
         except:
             return False
 
@@ -712,7 +712,7 @@ class Robot:
                     return True
 
                 # Wait for a short interval before checking again
-                time.sleep(1)
+                time.sleep(0.5)
         except:
             return False
 
