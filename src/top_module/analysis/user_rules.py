@@ -36,8 +36,8 @@ class UserRulesChecker():
         rules_list = self.modb.GetUserRules()
         all_region_list = self.modb.GetRegionsByMapId(self.map_id)
         # print(rules_list)
-        print(f"map_id: {self.map_id}")
-        print(f"layout_id: {self.layout_id}")
+        # print(f"map_id: {self.map_id}")
+        # print(f"layout_id: {self.layout_id}")
         # print(f"region: {custom_region}")
         rules_ID_list = self.get_rules_column(rules_list, "ID")
         rules_type_list = self.get_rules_column(rules_list, "data_type")
@@ -54,7 +54,7 @@ class UserRulesChecker():
         for data in data_stack:
             pos_x = data[len(data)-2]
             pos_y = data[len(data)-1]
-            print(f"[user_rules.py] x: {pos_x} , y: {pos_y}" )
+            # print(f"[user_rules.py] x: {pos_x} , y: {pos_y}" )
             
             for row_num, data_type in enumerate(rules_type_list):
                 try:
@@ -108,7 +108,7 @@ class UserRulesChecker():
                             # is_inside_region = self.check_region(pos_x, pos_y, polygon_list)
                             if is_inside_region == True or polygon_list == []:
                                 if rule_id not in rule_id_alreadypublish:
-                                    print("********************************************************")
+                                    # print("********************************************************")
                                     time.sleep(1)
                                     # self.modb.InsertEventLog(self.task_id, data_type, name, severity, threshold, pos_x, pos_y, self.layout_id)
                                     self.publish_event(value=value, name= name, data_type= data_type, threshold=threshold, severity=severity, x=pos_x, y=pos_y)
@@ -123,7 +123,7 @@ class UserRulesChecker():
 
                 except ValueError:
                     print(
-                        f"No matched data type for rule data type {data_type}")
+                        f"[user_rules.py] No matched data type for rule data type {data_type}")
                     pass
                     
     def publish_event(self, value, name, data_type, threshold, severity, x, y):
@@ -143,7 +143,7 @@ class UserRulesChecker():
     def check_region(self,x ,y ,polygon_list):
         for polygon in polygon_list:
             if self.region_handler.checkRegion(x=x, y=y, region=polygon) is True:
-                print("***************************Inside Polygon*****************************")
+                print("[user_rules.py] ***************************Inside Polygon*****************************")
                 return True
 
 if __name__ == "__main__":

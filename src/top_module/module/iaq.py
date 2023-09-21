@@ -70,7 +70,7 @@ class IaqSensor():
         
         self.task_mode = e
         self.task_id = task_id
-        print(self.task_mode)
+        # print(self.task_mode)
 
     
 
@@ -79,7 +79,7 @@ class IaqSensor():
         if len(self.data_stack) >= 5:
             # self.check_stack(self.data_stack)
             # NOTE: *** Check the data with user define rules ***
-            print(self.data_stack)
+            # print(self.data_stack)
             self.user_rules.check_stack(self.data_stack, self.task_id)
             # clear the stack
             self.data_stack.clear()
@@ -115,8 +115,8 @@ class IaqSensor():
                     
                     if len(list(rawdata)) != 22: continue
                     result = self.get_data(rawdata)
-                    print(result)
-                    print(self.status_summary())
+                    # print(result)
+                    # print(self.status_summary())
                     
 
                     # print(result_insert)
@@ -130,7 +130,7 @@ class IaqSensor():
                             result_insert = self.append_robot_position(result_insert)
                             result_check = self.append_robot_position(result_check, xyonly=True)
                             self.data_check_stack(result_check)
-                            print(result)
+                            # print(result)
                             self.data_insert(result_insert)
                             print(f"[iaq.py] Task ID: {self.task_id}")
 

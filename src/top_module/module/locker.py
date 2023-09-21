@@ -48,10 +48,10 @@ class Locker():
                         for counter, data in enumerate(return_data_arr):
                             if counter == 3:
                                 if data == 17:
-                                    print('[locker.py] Get status: Locked')
+                                    # print('[locker.py] Get status: Locked')
                                     return True
                                 if data == 0:
-                                    print('[locker.py] Get status: Unlocked')
+                                    # print('[locker.py] Get status: Unlocked')
                                     return False
                         return False
                     else:
