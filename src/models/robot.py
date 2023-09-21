@@ -308,6 +308,9 @@ class Robot:
             self.rvapi.delete_all_waypoints(rv_map_name)
             pose_name = 'TEMP'
             time.sleep(1)
+            print(f'--rm_map_x: {rm_map_metadata.x}')
+            print(f'--rm_map_y: {rm_map_metadata.y}')
+            print(f'--rm_map_heading: {rm_map_metadata.heading}')
             self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
@@ -528,7 +531,10 @@ class Robot:
             # pos_origin details
             # pos_origin: RMSchema
             pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
-            pos_origin.x, pos_origin.y, pos_origin.heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
             print(f'[new_delivery_mission]: get_delivery_position_detail...')
 
             # get destination_id and then create a rm_guid first.
