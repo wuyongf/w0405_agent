@@ -104,7 +104,6 @@ class Robot:
                 self.robot_status.layoutPose.x = layout_x
                 self.robot_status.layoutPose.y = layout_y
                 self.robot_status.layoutPose.heading = layout_heading
-
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
 
@@ -268,7 +267,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle - 180)
             # step 3. rv. create point base on rm. localization.
             # print('step 3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -304,7 +303,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading)
+                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle - 180)
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
