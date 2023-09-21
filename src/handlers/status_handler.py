@@ -67,12 +67,12 @@ class StatusHandler:
 
     def __publish_status(self): # publish thread
         while True:  
-            time.sleep(2)
+            time.sleep(1)
             
             try:     
-                print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
-                print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
-                print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
+                # print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
+                # print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
+                # print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
                        
                 ## to rm
                 self.publisher.publish(self.topic, self.robot.robot_status.to_json())
