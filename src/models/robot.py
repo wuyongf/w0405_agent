@@ -108,6 +108,12 @@ class Robot:
 
                 ## TO NWDB
                 self.map_id = self.get_current_map_id()
+
+                ## Summary
+                print(f'robot_status.mapPose: ({pixel_x, pixel_y, heading})')
+                print(f'robot_status.layoutPose: ({layout_x, layout_y, layout_heading})')
+                print(f'robot_status.map_rm_guid: {self.robot_status.mapPose.mapId}')
+                print(f'robot_status.battery: {self.robot_status.batteryPct}')
             except:
                 print('[robot.update_status] error!')
 
