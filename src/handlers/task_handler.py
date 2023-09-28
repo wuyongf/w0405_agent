@@ -235,6 +235,7 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
             
         if task.taskType == 'RV-CHARGING-ON':
+            print(f'RV-CHARGING-ON JSON: {task_json}')
             res = self.robot.charging_start(task_json, self.task_status_callback)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
@@ -242,6 +243,7 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Fail)
         
         if task.taskType == 'RV-CHARGING-OFF':
+            print(f'RV-CHARGING-OFF JSON: {task_json}')
             res = self.robot.charging_stop(task_json, self.task_status_callback)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)

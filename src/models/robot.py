@@ -764,6 +764,8 @@ class Robot:
 
         # back to charging stataion: 1. goto 2. charging
         time.sleep(2)
+        done = self.charging_mission_publisher
+
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
         self.delivery_clear_positions(self.a_delivery_mission)
         return True
