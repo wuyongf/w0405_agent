@@ -121,7 +121,7 @@ class RMLayoutMapTransform:
 
         return cur_layout_point[0][0], cur_layout_point[1][0], heading
     
-    def find_cur_map_point(self,cur_layout_x, cur_layout_y, cur_layout_theta):
+    def find_cur_map_point(self,cur_layout_x, cur_layout_y, cur_layout_theta = 0):
 
         cur_layout_point = np.array([[cur_layout_x], [cur_layout_y]])
         translation_map_origin = self.__find_map_origin_in_layout()
