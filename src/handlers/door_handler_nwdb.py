@@ -61,7 +61,7 @@ class NWDoorAgent:
                 
                 # check distance - Rev01
                 for index, door in enumerate(self.doors):
-                    distance = math.sqrt((self.robot.robot_status.layoutPose.x - door.pos_x) ** 2 + (self.robot.robot_status.layoutPose.y - door.pos_y) ** 2)
+                    distance = math.sqrt((self.robot.robot_status.mapPose.x - door.pos_x) ** 2 + (self.robot.robot_status.mapPose.y - door.pos_y) ** 2)
                     if distance < self.door_radius: # 20 pixel == 100 cm
                         print(f'[door_handler.global_check]: find target dooor...')
                         print(f'[door_handler.global_check]: pause robot...')
@@ -135,11 +135,14 @@ class NWDoorAgent:
             # Fetch the remaining properties from the database based on the door ID
             layout_id = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'layout_id', 'ID', door_id)
             name = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'name', 'ID', door_id)
-            pos_x = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_x', 'ID', door_id)
-            pos_y = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_y', 'ID', door_id)
-            pos_heading = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_heading', 'ID', door_id)
+            layout_pos_x = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_x', 'ID', door_id)
+            layout_pos_y = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_y', 'ID', door_id)
+            layout_pos_heading = self.robot.nwdb.get_single_value('data.robot.map.layout.door.location', 'pos_heading', 'ID', door_id)
 
+            pos_x, pos_y, pos_heading = self.robot.T_RM.find_cur_map_point(layout_pos_x, layout_pos_y, layout_pos_heading)
+            
             # Create a Door object and append it to the list
+            # door = Door(layout_id, name, layout_pos_x, layout_pos_y, layout_pos_heading, is_closed=True)
             door = Door(layout_id, name, pos_x, pos_y, pos_heading, is_closed=True)
             self.doors.append(door)
         return self.doors
@@ -148,7 +151,8 @@ class NWDoorAgent:
         
         while(True):
 
-            distance = math.sqrt((self.robot.robot_status.layoutPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.layoutPose.y - doors[index].pos_y) ** 2)
+            distance = math.sqrt((self.robot.robot_status.mapPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.mapPose.y - doors[index].pos_y) ** 2)
+            # distance = math.sqrt((self.robot.robot_status.layoutPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.layoutPose.y - doors[index].pos_y) ** 2)
 
             if(distance >= break_loop_distance): break
 

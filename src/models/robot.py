@@ -262,6 +262,7 @@ class Robot:
     # robot skills
     def localize(self, task_json):
         try:
+            print(f'localize: {task_json}')
             # step 0. init. clear current task
             self.cancel_moving_task()
             # step 1. parse task json
