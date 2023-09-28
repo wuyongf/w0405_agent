@@ -18,6 +18,20 @@ class Position:
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
     
+# Charging
+class ChargingStation:
+    def __init__(self, layout_nw_id, layout_rm_guid, map_id, map_rm_guid, pos_name, pos_x, pos_y, pos_theta):
+        self.layout_nw_id = layout_nw_id
+        self.layout_rm_guid = layout_rm_guid
+        self.map_id = map_id
+        self.map_rm_guid = map_rm_guid
+        self.pos_name = pos_name
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.pos_theta = pos_theta
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+
 # Delivery
 class DeliveryMission:
     def __init__(self, ID, robot_id, sender_id, pos_origin_id, receiver_id, pos_destination_id):

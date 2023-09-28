@@ -1,6 +1,8 @@
 import time
 import threading
 import logging
+import uuid
+import json
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
@@ -529,6 +531,53 @@ class Robot:
 
     ## NEW JOB via RMAPI
 
+    def delivery_goto_charging_station(self, charging_station: NWSchema.ChargingStation):
+        try:
+            #region Notify the receiver
+            #endregion
+
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_origin = self.nwdb.get_delivery_position_detail(charging_station.pos_origin_id)
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(charging_station.pos_x, charging_station.pos_y, charging_station.pos_theta)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        pos_origin.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_origin.map_guid,
+                                        pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x,
+                                        y=pos_origin.y,
+                                        heading=pos_origin.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-Charging-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
+
+            return True
+        except:
+            return False
+    
     def delivery_goto_sender(self, a_delivery_mission: NWSchema.DeliveryMission):
         try:
             #region Notify the receiver
@@ -764,7 +813,10 @@ class Robot:
 
         # back to charging stataion: 1. goto 2. charging
         time.sleep(2)
-        done = self.charging_mission_publisher
+        station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+        charging_station = self.nwdb.get_charing_station_detail(station_id)
+        # charging_task_str = {'taskId': str(uuid.uuid1()), 'scheduleType': 4, 'priority': 1, 'taskType': 'RV-CHARGING-OFF', 'parameters': {}}
+        # done = self.assign_job_CHARGING_ON(json.load(charging_task_str))
 
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
         self.delivery_clear_positions(self.a_delivery_mission)
@@ -860,77 +912,132 @@ class Robot:
 
     def charging_mission_publisher(self, task_json, status_callback):
 
-        done = self.assgin_job_CHARGING_GOTO(task_json)
+        done = self.charging_goto(task_json)
         if not done: return False
         done = self.wait_for_job_done(duration_min=5)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
-        done = self.assign_job_CHARGING_START(task_json, status_callback)
+        done = self.charging_on(task_json, status_callback)
         if not done: return False
 
         return True
 
-    def assgin_job_CHARGING_GOTO(self, task_json):
+    def charging_goto(self, task_json):
         try:
-            # Job START
+            #region Notify the receiver
+            #endregion
+
+            # # charging_station_detail
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station = self.nwdb.get_charing_station_detail(charging_station_id) 
+
+            # pos_origin details
+            # pos_origin: NWSchema
+            # pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            # pos_origin = NWSchema.DeliveryPose
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(charging_station.pos_x, charging_station.pos_y, charging_station.pos_theta)
+            print(f'[charging_goto]: goto...')
+
+            # Job-Delivery START
             # TASK START
             tasks = []
-            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
-            layout_guid = self.rmapi.get_layout_guid(rm_map_metadata.mapId)
-            layout_marker_guid = self.rmapi.get_layout_marker_guid(layout_guid, rm_map_metadata.positionName)
+            self.rmapi.delete_all_delivery_markers(charging_station.layout_rm_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(charging_station.layout_rm_guid, map_x, map_y, map_heading)
+            print(f'layout_rm_guid: {charging_station.layout_rm_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(charging_station.layout_rm_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
             goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
-                                        layout_guid,
-                                        layout_marker_guid,
+                                        charging_station.layout_rm_guid,
+                                        latest_marker_id,
                                         order=1,
-                                        map_id=rm_map_metadata.mapId,
-                                        pos_name=rm_map_metadata.positionName,
-                                        x=rm_map_metadata.x,
-                                        y=rm_map_metadata.y,
-                                        heading=rm_map_metadata.heading)
+                                        map_id=charging_station.map_rm_guid,
+                                        pos_name=charging_station.pos_name,
+                                        x=map_x,
+                                        y=map_y, 
+                                        heading=map_heading)
             tasks.append(goto)
             print(goto)
             # TASK END
-            print(f'[new_goto_mission]: configure task end...')
+            print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, layout_guid, tasks=tasks, job_name='CHARGING-GOTO-DEMO')
-            print(f'[new_goto_mission]: configure job end...')
+            self.rmapi.new_job(self.robot_guid, charging_station.layout_rm_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
 
             return True
         except:
             return False
 
-    def assign_job_CHARGING_START(self, task_json, status_callback):
+    def charging_on(self):
+        """
+        Interact with RM API
+        """
         try:
-            # Job START
+            # # charging_station_detail
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station_detail = self.nwdb.get_charing_station_detail(charging_station_id)
+            # Job-Delivery START
             # TASK START
             tasks = []
-            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
-            layout_guid = self.rmapi.get_layout_guid(rm_map_metadata.mapId)
-            layout_marker_guid = self.rmapi.get_layout_marker_guid(layout_guid, rm_map_metadata.positionName)
+            print(f'layout_id: {charging_station_detail.layout_rm_guid}')
+            # latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            # print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            charging = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'CHARGING'),
-                                            layout_guid,
-                                            layout_marker_guid,
-                                            order=1,
-                                            map_id=rm_map_metadata.mapId,
-                                            pos_name=rm_map_metadata.positionName,
-                                            x=rm_map_metadata.x,
-                                            y=rm_map_metadata.y,
-                                            heading=rm_map_metadata.heading)
-            tasks.append(charging)
-            print(charging)
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'),
+                                       charging_station_detail.layout_rm_guid)
+            tasks.append(task)
+            print(task)
             # TASK END
-            print(f'[new_goto_mission]: configure task end...')
+            print(f'[charging_on]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, layout_guid, tasks=tasks, job_name='CHARGING-GOTO-DEMO')
-            print(f'[new_goto_mission]: configure job end...')
+            self.rmapi.new_job(self.robot_guid,
+                               charging_station_detail.layout_rm_guid,
+                               tasks=tasks,
+                               job_name='DELIVERY-WAITUNLOADING')
+            print(f'[charging_on]: configure job end...')
 
             return True
         except:
             return False
 
-    def charging_start(self, task_json, status_callback):
+    def charging_off(self):
+        """
+        Interact with RM API
+        """
+        try:
+            # # charging_station_detail
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station_detail = self.nwdb.get_charing_station_detail(charging_station_id)
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            print(f'layout_id: {charging_station_detail.layout_rm_guid}')
+            # latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            # print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'),
+                                       charging_station_detail.layout_rm_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[charging_on]: configure task end...')
+
+            self.rmapi.new_job(self.robot_guid,
+                               charging_station_detail.layout_rm_guid,
+                               tasks=tasks,
+                               job_name='DELIVERY-WAITUNLOADING')
+            print(f'[charging_on]: configure job end...')
+
+            return True
+        except:
+            return False
+
+
+    def rv_charging_start(self, task_json, status_callback):
+        """
+        Interact with RV API
+        """
         try:
             # step 0. init. clear current task
             self.cancel_moving_task()
@@ -946,7 +1053,7 @@ class Robot:
         except:
             return False
 
-    def charging_stop(self, task_json, status_callback):
+    def rv_charging_stop(self, task_json, status_callback):
         try:
             # stop charging
             self.rvapi.delete_charging()
@@ -1029,7 +1136,9 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path)
 
-    robot.get_current_layout_pose()
+    robot.charging_off()
+
+    # robot.get_current_layout_pose()
 
     # # get status
     # robot.status_start(NWEnum.Protocol.RVAPI)

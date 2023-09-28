@@ -99,6 +99,26 @@ class robotDBHandler(db.AzureDB):
         statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`sys.mission`"
         return self.Select(statement)
     
+    # CHARGING
+    def get_available_charging_station_id(self, robot_id):
+        statement = f'SELECT dock_location_id FROM {self.database}.`robot.status` WHERE ID = "{robot_id}";'
+        return self.Select(statement)
+
+    def get_charing_station_detail(self, available_charging_station_id):
+        # mission_id = self.nwdb.get_single_value('sys.mission.delivery', 'mission_id', 'ID', available_delivery_id)
+        ID = available_charging_station_id
+        # robot_id = self.get_single_value('sys.mission.delivery', 'robot_id', 'ID', ID)
+        layout_nw_id = self.get_single_value('data.robot.status.dock.location', 'layout_id', 'ID', ID)
+        layout_rm_guid = self.get_single_value('robot.map.layout', 'rm_guid', 'ID', layout_nw_id)
+        map_id = self.get_single_value('robot.map.layout', 'activated_map_id', 'ID', layout_nw_id)
+        map_rm_guid = self.get_single_value('robot.map', 'rm_guid', 'ID', map_id)
+        pos_name = self.get_single_value('data.robot.status.dock.location', 'pos_name', 'ID', ID)
+        pos_x = self.get_single_value('data.robot.status.dock.location', 'pos_x', 'ID', ID)
+        pos_y = self.get_single_value('data.robot.status.dock.location', 'pos_y', 'ID', ID)
+        pos_theta = self.get_single_value('data.robot.status.dock.location', 'pos_theta', 'ID', ID)
+        
+        return NWSchema.ChargingStation(layout_nw_id, layout_rm_guid, map_id, map_rm_guid, pos_name, pos_x, pos_y, pos_theta)
+    
     # DELIVERY
     def get_available_delivery_id(self):
         statement = f'SELECT ID FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'
@@ -189,7 +209,11 @@ if __name__ == '__main__':
 
     from src.models.schema.nw import Door
     
-    nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
+    # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
+
+    id = nwdb.get_available_charging_station_id(1)
+    charging_station_detail = nwdb.get_charing_station_detail(id)
+    print(charging_station_detail.to_json())
 
     # # doors
     # result = nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', 3)
