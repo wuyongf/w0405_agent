@@ -53,12 +53,14 @@ class Robot:
         ## robot baisc info
         self.ipc_ip_addr = config.get('IPC', 'localhost')
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
-        self.robot_id = self.nwdb.robot_id
-        self.robot_guid = self.nwdb.robot_guid
+        self.robot_nw_id = self.nwdb.robot_id
+        self.robot_rm_guid = self.nwdb.robot_guid
         self.robot_status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
         self.map_id = None
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
+
+        self.layout_rm_guid = ''
 
         # # # module - models/sensors
         self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, config, port_config, self.status_summary)
@@ -69,7 +71,7 @@ class Robot:
         
         ## delivery related
         #region ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(self.robot_guid, skill_config_path)
+        self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid, skill_config_path)
         # print(f'[new_delivery_mission]: write Robot Skill...')
         self.skill_config = umethods.load_config(skill_config_path)
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
@@ -112,10 +114,13 @@ class Robot:
                 self.map_id = self.get_current_map_id()
 
                 ## Summary
-                print(f'robot_status.mapPose: ({pixel_x, pixel_y, heading})')
-                print(f'robot_status.layoutPose: ({layout_x, layout_y, layout_heading})')
-                print(f'robot_status.map_rm_guid: {self.robot_status.mapPose.mapId}')
+                print(f'robot_nw_id: {self.robot_nw_id}')
+                print(f'robot_rm_guid: {self.robot_rm_guid}')
                 print(f'robot_status.battery: {self.robot_status.batteryPct}')
+                print(f'robot_status.map_rm_guid: {self.robot_status.mapPose.mapId}')
+                print(f'robot_status.map_pose: ({pixel_x, pixel_y, heading})')
+                print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
+                print(f'robot_status.layout_pose: ({layout_x, layout_y, layout_heading})')
             except:
                 print('[robot.update_status] error!')
 
@@ -186,8 +191,8 @@ class Robot:
         try:
 
             map_rm_guid = self.robot_status.mapPose.mapId
-            layout_guid = self.rmapi.get_layout_guid(map_rm_guid)
-            params = self.rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+            self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
+            params = self.rmapi.get_layout_map_list(layout_rm_guid, map_rm_guid)
             self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                               params.scale, params.angle, params.translate)
             cur_layout_point = self.T_RM.find_cur_layout_point(self.robot_status.mapPose.x, 
@@ -417,7 +422,7 @@ class Robot:
         try:
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
 
-            self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.IAQ)
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.IAQ)
             mission_id = self.nwdb.get_latest_mission_id()
 
             # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
@@ -443,7 +448,7 @@ class Robot:
         # try:
         self.mo_gyro = MoGyro(self.modb, self.config, self.port_config, self.status_summary)
         rm_mission_guid = self.rmapi.get_mission_id(task_json)
-        self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
+        self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
         mission_id = self.nwdb.get_latest_mission_id()
 
         print(f'mission_id: {mission_id}')
@@ -474,7 +479,7 @@ class Robot:
             self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, self.config, self.port_config, self.status_summary)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
-            self.nwdb.insert_new_mission_id(self.robot_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
             mission_id = self.nwdb.get_latest_mission_id()
 
             self.mo_lift_levelling.set_task_id(id=mission_id)
@@ -572,7 +577,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-Charging-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-Charging-DEMO')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -619,7 +624,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -664,7 +669,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -694,7 +699,7 @@ class Robot:
             # TASK END
             print(f'[delivery_wait_for_loading]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
             print(f'[delivery_wait_for_loading]: configure job end...')
 
             return True
@@ -721,7 +726,7 @@ class Robot:
             # TASK END
             print(f'[delivery_wait_for_unloading]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid,
+            self.rmapi.new_job(self.robot_rm_guid,
                                pos_destination.layout_guid,
                                tasks=tasks,
                                job_name='DELIVERY-WAITUNLOADING')
@@ -814,7 +819,7 @@ class Robot:
 
         # back to charging stataion: 1. goto 2. charging
         time.sleep(2)
-        station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+        station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
         charging_station = self.nwdb.get_charing_station_detail(station_id)
         # charging_task_str = {'taskId': str(uuid.uuid1()), 'scheduleType': 4, 'priority': 1, 'taskType': 'RV-CHARGING-OFF', 'parameters': {}}
         # done = self.assign_job_CHARGING_ON(json.load(charging_task_str))
@@ -859,7 +864,7 @@ class Robot:
             #endregion
 
             #region ROBOT CONFIGURATION
-            self.rmapi.write_robot_skill_to_properties(self.robot_guid)
+            self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid)
             print(f'[new_delivery_mission]: write Robot Skill...')
             skill_config = umethods.load_config('./models/conf/rm_skill.properties')
             #endregion
@@ -902,7 +907,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -923,13 +928,13 @@ class Robot:
 
         return True
 
-    def charging_goto(self, task_json):
+    def charging_goto(self):
         try:
             #region Notify the receiver
             #endregion
 
             # # charging_station_detail
-            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
             charging_station = self.nwdb.get_charing_station_detail(charging_station_id) 
 
             # pos_origin details
@@ -963,7 +968,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid, charging_station.layout_rm_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, charging_station.layout_rm_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -976,7 +981,7 @@ class Robot:
         """
         try:
             # # charging_station_detail
-            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
             charging_station_detail = self.nwdb.get_charing_station_detail(charging_station_id)
             # Job-Delivery START
             # TASK START
@@ -992,7 +997,7 @@ class Robot:
             # TASK END
             print(f'[charging_on]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid,
+            self.rmapi.new_job(self.robot_rm_guid,
                                charging_station_detail.layout_rm_guid,
                                tasks=tasks,
                                job_name='DELIVERY-WAITUNLOADING')
@@ -1008,7 +1013,7 @@ class Robot:
         """
         try:
             # # charging_station_detail
-            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_id)
+            charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
             charging_station_detail = self.nwdb.get_charing_station_detail(charging_station_id)
             # Job-Delivery START
             # TASK START
@@ -1024,7 +1029,7 @@ class Robot:
             # TASK END
             print(f'[charging_on]: configure task end...')
 
-            self.rmapi.new_job(self.robot_guid,
+            self.rmapi.new_job(self.robot_rm_guid,
                                charging_station_detail.layout_rm_guid,
                                tasks=tasks,
                                job_name='DELIVERY-WAITUNLOADING')
@@ -1137,7 +1142,10 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path)
 
-    robot.charging_off()
+    # robot.charging_off()
+
+    robot.charging_goto()
+    # robot.charging_on()
 
     # robot.get_current_layout_pose()
 
