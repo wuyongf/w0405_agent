@@ -10,7 +10,7 @@ class NWDoorAgent:
         self.doors = []
 
         # door buffer
-        self.door_radius = 35 # 20 pixel == 100 cm
+        self.door_radius = 38 # 20 pixel == 100 cm
         self.break_loop_distance = 50 
 
         # logic: nw-door-agent

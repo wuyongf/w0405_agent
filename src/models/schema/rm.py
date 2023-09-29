@@ -159,6 +159,30 @@ class LayoutMapList:
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
 
+# Door
+class Door:
+    def __init__(self, id, name, startPoint, endPoint, motionAxis, motionDegree, motionDirection, graphVertexId):
+        self.id = id
+        self.name = name
+        self.startPoint = startPoint
+        self.endPoint = endPoint
+        self.motionAxis = motionAxis
+        self.motionDegree = motionDegree
+        self.motionDirection = motionDirection
+        self.graphVertexId = graphVertexId
+
+    def parse(self, dct):
+        self.id = dct["id"]
+        self.name = dct["name"]
+        self.startPoint = dct["startPoint"]
+        self.endPoint = dct["endPoint"]
+        self.motionAxis = dct["motionAxis"]
+        self.motionDegree = dct["motionDegree"]
+        self.motionDirection = dct["motionDirection"]
+        self.graphVertexId = dct["graphVertexId"]
+
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
 
 if __name__ == '__main__':
     # media_info_list = []

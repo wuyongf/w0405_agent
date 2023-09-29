@@ -141,6 +141,7 @@ class RMAPI(api.AuthenticatedAPI):
         data = self.get(f'/layout-markers/{layout_id}')
 
         results = data['result']
+        print(results)
         # Iterate over each item and extract the "id" and "name"
         for item in results:
             item_id = item['id']
@@ -457,6 +458,23 @@ if __name__ == '__main__':
     
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
+
+    ##############
+    # List Doors
+    ##############
+    json_door = rmapi.list_layout_doors('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    
+    door_list = []
+    for item in json_door:
+
+        door  = RMSchema.Door.parse(item)
+
+        door_list.append(door)
+
+    print('done')
+
+    # json(json_door)
+    # print(res)
 
     ##############
     # List Layout Markers

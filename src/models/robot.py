@@ -6,10 +6,12 @@ import json
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
-import src.models.mqtt_rv2 as RVMQTT2
+# import src.models.mqtt_rv2 as RVMQTT2
 from src.models.mqtt_rv_joystick import RVJoyStick
 import src.models.api_rm as RMAPI
-import src.models.mqtt_nw as NWMQTT
+from src.models.mqtt_nw import NWMQTT
+from src.models.mqtt_nw_publisher import NWMQTTPub
+
 import src.models.db_robot as RobotDB
 import src.top_module.db_top_module as TopModuleDB
 import src.models.trans as Trans
@@ -22,10 +24,10 @@ import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
-from src.top_module.module import lift_levelling_module as MoLiftLevelling
-from src.top_module.module import iaq as MoIAQ
-from src.top_module.module import locker as MoLocker
-from src.top_module.module.access_control_module import AccessControl as MoAccessControl
+from src.top_module.module.lift_levelling_module import LiftLevellingModule
+from src.top_module.module.iaq import IaqSensor
+from src.top_module.module.locker import Locker
+from src.top_module.module.access_control_module import AccessControl
 from src.top_module.sensor.gyro import Gyro as MoGyro
 
 
@@ -35,7 +37,8 @@ class Robot:
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
         self.rmapi = RMAPI.RMAPI(config)
-        self.nwmqtt = NWMQTT.NWMQTT(config, port_config)
+        self.nwmqtt = NWMQTT(config, port_config)
+        self.nwmqttpub = NWMQTTPub(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
@@ -43,7 +46,8 @@ class Robot:
         self.config = config
         self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
-        self.nwmqtt.start()
+        self.nwmqtt.start()   
+        self.nwmqttpub.start() 
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -63,10 +67,10 @@ class Robot:
         self.layout_rm_guid = ''
 
         # # # module - models/sensors
-        self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, config, port_config, self.status_summary)
-        self.mo_iaq = MoIAQ.IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
-        self.mo_locker = MoLocker.Locker(port_config)
-        self.mo_access_control = MoAccessControl(self.modb, config, port_config)
+        self.mo_lift_levelling = LiftLevellingModule(self.modb, config, port_config, self.status_summary)
+        self.mo_iaq = IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
+        self.mo_locker = Locker(port_config)
+        self.mo_access_control = AccessControl(self.modb, config, port_config)
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
         
         ## delivery related
@@ -83,6 +87,7 @@ class Robot:
 
     def sensor_start(self):
         self.mo_iaq.start()
+        self.nwmqttpub.fans_off()
         # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
 
@@ -817,13 +822,21 @@ class Robot:
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
-        # back to charging stataion: 1. goto 2. charging
-        time.sleep(2)
-        station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
-        charging_station = self.nwdb.get_charing_station_detail(station_id)
-        # charging_task_str = {'taskId': str(uuid.uuid1()), 'scheduleType': 4, 'priority': 1, 'taskType': 'RV-CHARGING-OFF', 'parameters': {}}
-        # done = self.assign_job_CHARGING_ON(json.load(charging_task_str))
+        # back to charging stataion:  
+        # 1. goto
+        done = self.charging_goto()
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
 
+        # 2. charging
+        done = self.charging_on()
+        if not done: return False
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # finish. status -> Idle and wait for next mission...
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
         self.delivery_clear_positions(self.a_delivery_mission)
         return True
@@ -1142,10 +1155,9 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path)
 
-    # robot.charging_off()
-
-    robot.charging_goto()
     # robot.charging_on()
+    # robot.charging_off()
+    # robot.charging_goto()
 
     # robot.get_current_layout_pose()
 

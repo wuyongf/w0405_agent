@@ -14,7 +14,7 @@ import src.top_module.module.locker as Locker
 class NWMQTT():
     def __init__(self, config, port_config):
         self.broker_address = config.get('IPC', 'localhost')
-        self.broker_port = 1884
+        self.broker_port = config.get('NWMQTT', 'port')
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = config.get('NWDB', 'robot_id')
         self.nw_client = mqtt.Client("nw_mqtt_subscriber")
@@ -27,7 +27,7 @@ class NWMQTT():
         self.lock = Locker.Locker(port_config)
 
     def connect(self):
-        self.nw_client.connect(self.broker_address, self.broker_port, 60)
+        self.nw_client.connect(self.broker_address, int(self.broker_port), 60)
         self.nw_client.loop_start()
 
     def start(self):
