@@ -87,7 +87,7 @@ class Robot:
 
     def sensor_start(self):
         self.mo_iaq.start()
-        self.nwmqttpub.fans_off()
+        self.nwmqttpub.fans_off("all")
         # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
 
