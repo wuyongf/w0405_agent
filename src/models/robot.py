@@ -197,7 +197,7 @@ class Robot:
 
             map_rm_guid = self.robot_status.mapPose.mapId
             self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
-            params = self.rmapi.get_layout_map_list(layout_rm_guid, map_rm_guid)
+            params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
             self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                               params.scale, params.angle, params.translate)
             cur_layout_point = self.T_RM.find_cur_layout_point(self.robot_status.mapPose.x, 
@@ -481,7 +481,7 @@ class Robot:
         try:
             # Need to create new instance everytime start thread
             # Otherwise will case error [RuntimeError: threads can only be started once]
-            self.mo_lift_levelling = MoLiftLevelling.LiftLevellingModule(self.modb, self.config, self.port_config, self.status_summary)
+            self.mo_lift_levelling = LiftLevellingModule(self.modb, self.config, self.port_config, self.status_summary)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
@@ -793,11 +793,14 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
+        # init
+        self.nwdb.update_single_value('ui.display.status','ui.flag',0,'robot_id',self.robot_nw_id)
+
         # to sender
         done = self.delivery_goto_sender(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=5)  # wait for job is done
+        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # loading package
@@ -811,7 +814,7 @@ class Robot:
         done = self.delivery_goto_receiver(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=5)  # wait for job is done
+        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # unloading package
