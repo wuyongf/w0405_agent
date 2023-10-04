@@ -459,19 +459,19 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    ##############
-    # List Doors
-    ##############
-    json_door = rmapi.list_layout_doors('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    # ##############
+    # # List Doors
+    # ##############
+    # json_door = rmapi.list_layout_doors('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
     
-    door_list = []
-    for item in json_door:
+    # door_list = []
+    # for item in json_door:
 
-        door  = RMSchema.Door.parse(item)
+    #     door  = RMSchema.Door.parse(item)
 
-        door_list.append(door)
+    #     door_list.append(door)
 
-    print('done')
+    # print('done')
 
     # json(json_door)
     # print(res)
@@ -492,7 +492,7 @@ if __name__ == '__main__':
     # 4F-map: 
     # 4F-layout : 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
     
-    # res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
 
     # res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
     # print(res)

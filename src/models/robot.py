@@ -88,6 +88,10 @@ class Robot:
     def sensor_start(self):
         self.mo_iaq.start()
         self.nwmqttpub.fans_off("all")
+
+        # delivery
+        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
+
         # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
 
@@ -793,9 +797,6 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
-        # init
-        self.nwdb.update_single_value('ui.display.status','ui.flag',0,'robot_id',self.robot_nw_id)
-
         # to sender
         done = self.delivery_goto_sender(a_delivery_mission)
         if not done: return False
@@ -841,6 +842,7 @@ class Robot:
 
         # finish. status -> Idle and wait for next mission...
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
+        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
         self.delivery_clear_positions(self.a_delivery_mission)
         return True
 
