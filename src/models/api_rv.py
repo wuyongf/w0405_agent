@@ -218,6 +218,26 @@ class RVAPI(api.AuthenticatedAPI):
 
     def post_followme_unpair(self):
         return self.post('/followMe/v1/pairing/unpair')
+    
+    # Safety Zone
+    def put_safety_zone_minimum(self):
+        return self.put('/baseControl/v1/safetyZone/MINIMUM')
+    
+    # Check Boot Up Successful
+    def wait_for_ready(self):
+        
+        while(True):
+            print(f'check robot is ready or not....')
+            time.sleep(1)
+
+            json_data = self.get('/battery/v1/state')
+            if json_data is not None: 
+                break
+            else:
+                continue
+        
+        print(f'robot is ready!!!')
+        return True
 
 
 if __name__ == '__main__':
@@ -225,6 +245,11 @@ if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
+
+    ####################################################################################################
+    # Robot
+    ####################################################################################################
+    rvapi.check_is_ready()
 
     ####################################################################################################
     # Charging
@@ -239,10 +264,10 @@ if __name__ == '__main__':
     ####################################################################################################
     # Get Robot Status - is moving or not
     ####################################################################################################
-    while(True):
-        time.sleep(1)
-        res = rvapi.get_robot_is_moving()
-        print(res)
+    # while(True):
+    #     time.sleep(1)
+    #     res = rvapi.get_robot_is_moving()
+    #     print(res)
 
     ####################################################################################################
     # # # post 2 predefined position

@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     # Robot
     robot = Robot.Robot(config, port_config, skill_config_path)
+    robot.init()
     robot.status_start(NWEnum.Protocol.RVMQTT)
     robot.sensor_start()
 

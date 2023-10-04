@@ -3,6 +3,7 @@ import math, time, threading
 import src.models.robot as Robot
 import src.utils.methods as umethods
 from src.models.schema.nw import Door
+from src.top_module.analysis.region_handler import RegionHandler
 
 class NWDoorAgent:
     def __init__(self, robot: Robot.Robot):
@@ -25,8 +26,8 @@ class NWDoorAgent:
         # thread
         thread_global_check = threading.Thread(target=self.global_check).start()
         thread_detail_check = threading.Thread(target=self.detail_check).start()
-
         thread_assgin_mission = threading.Thread(target=self.assign_door_handler_mission).start()
+        
     # Logic
     def assign_door_handler_mission(self):
         while(True):
@@ -36,7 +37,7 @@ class NWDoorAgent:
             if(self.robot.door_agent_finish): 
                 self.robot.door_agent_finish = False
                 self.end()
-            time.sleep(1)            
+            time.sleep(1)
 
     def start(self):
         print(f'[door_handler.start]: configure doors start...')

@@ -95,6 +95,14 @@ class Robot:
         # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
 
+    def init(self):
+        print(f'[robot.init]: Start...')
+        self.rvapi.wait_for_ready()
+        self.rvapi.put_safety_zone_minimum()
+        self.rvapi.change_mode_navigation()
+        print(f'[robot.init]: Finish...')
+        pass
+
     def status_start(self, protocol: NWEnum.Protocol):
         threading.Thread(target=self.update_status, args=(protocol, )).start()  # from RV API
         print(f'[robot.status_start]: Start...')
