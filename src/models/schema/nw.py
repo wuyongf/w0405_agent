@@ -68,3 +68,12 @@ class Door:
         self.is_closed = is_closed
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    
+class DoorRegion:
+    def __init__(self, name, polygon, layout_id, is_closed = True):
+        self.name = name
+        self.polygon = polygon
+        self.layout_id = layout_id
+        self.is_closed = is_closed
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)

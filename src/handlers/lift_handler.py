@@ -61,7 +61,7 @@ class NWLiftAgent:
                 
                 # check distance - Rev01
                 for index, door in enumerate(self.doors):
-                    distance = math.sqrt((self.robot.robot_status.mapPose.x - door.pos_x) ** 2 + (self.robot.robot_status.mapPose.y - door.pos_y) ** 2)
+                    distance = math.sqrt((self.robot.status.mapPose.x - door.pos_x) ** 2 + (self.robot.status.mapPose.y - door.pos_y) ** 2)
                     if distance < self.door_radius: # 20 pixel == 100 cm
                         print(f'[door_handler.global_check]: find target dooor...')
                         print(f'[door_handler.global_check]: pause robot...')
@@ -121,7 +121,7 @@ class NWLiftAgent:
     def configure_doors(self):
 
         # get RV activated map --> get NWDB corresponding layout_id
-        layout_id = self.robot.get_current_layout_id()
+        layout_id = self.robot.get_current_layout_nw_id()
         print(f'current layout_id: {layout_id}')
 
         # get door_ids from NWDB
@@ -147,7 +147,7 @@ class NWLiftAgent:
         
         while(True):
 
-            distance = math.sqrt((self.robot.robot_status.mapPose.x - doors[index].pos_x) ** 2 + (self.robot.robot_status.mapPose.y - doors[index].pos_y) ** 2)
+            distance = math.sqrt((self.robot.status.mapPose.x - doors[index].pos_x) ** 2 + (self.robot.status.mapPose.y - doors[index].pos_y) ** 2)
 
             if(distance >= break_loop_distance): break
 

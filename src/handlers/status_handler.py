@@ -75,11 +75,11 @@ class StatusHandler:
                 # print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
                        
                 ## to rm
-                self.publisher.publish(self.topic, self.robot.robot_status.to_json())
+                self.publisher.publish(self.topic, self.robot.status.to_json())
                 ## to nwdb
-                self.robot.nwdb.update_robot_position(self.robot.robot_status.layoutPose.x, self.robot.robot_status.layoutPose.y, self.robot.robot_status.layoutPose.heading)
-                self.robot.nwdb.update_robot_map_id(self.robot.map_id)
-                self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
+                self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
+                self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
+                self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
                 self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
@@ -89,16 +89,16 @@ class StatusHandler:
             time.sleep(2)
             
             try:     
-                print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
-                print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
-                print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
+                print(f'[status_handler]: robot battery: {self.robot.status.batteryPct}')
+                print(f'[status_handler]: robot map rm_guid: {self.robot.status.mapPose.mapId}')
+                print(f'[status_handler]: robot position: ({self.robot.status.mapPose.x}, {self.robot.status.mapPose.y}, {self.robot.status.mapPose.heading})')
                        
                 ## to rm
-                self.publisher.publish(self.topic, self.robot.robot_status.to_json())
+                self.publisher.publish(self.topic, self.robot.status.to_json())
                 ## to nwdb
-                self.robot.nwdb.update_robot_position(self.robot.robot_status.mapPose.x, self.robot.robot_status.mapPose.y, self.robot.robot_status.mapPose.heading)
-                self.robot.nwdb.update_robot_map_id(self.robot.map_id)
-                self.robot.nwdb.update_robot_battery(self.robot.robot_status.batteryPct)
+                self.robot.nwdb.update_robot_position(self.robot.status.mapPose.x, self.robot.status.mapPose.y, self.robot.status.mapPose.heading)
+                self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
+                self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
             

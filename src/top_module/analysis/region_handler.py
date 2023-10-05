@@ -26,4 +26,5 @@ if __name__ == "__main__":
     polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0)])
     # print(polygon.contains(point))
 
-    rh.checkRegion(530,1500,rh.parseRegionData(data))
+    res = rh.checkRegion(530,1500,rh.parseRegionData(data))
+    print(res)

@@ -11,7 +11,7 @@ import src.utils.methods as umethods
 import handlers.status_handler as status_handler
 import handlers.remote_control_handler as remote_control_handler
 import handlers.task_handler as task_handler
-from src.handlers.door_handler_nwdb import NWDoorAgent
+from src.handlers.door_handler_nwdb import NWDoorAgent, NWDoorRegionAgent
 import src.models.robot as Robot
 import src.models.enums.nw as NWEnum
 
@@ -68,7 +68,8 @@ if __name__ == '__main__':
     remote_control_handler.start()
 
     # NW Door Agent
-    nw_door_agent = NWDoorAgent(robot)
+    # nw_door_agent = NWDoorAgent(robot)
+    nw_door_agent = NWDoorRegionAgent(robot)
 
     # Robot Init
     time.sleep(2)

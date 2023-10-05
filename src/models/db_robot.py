@@ -184,6 +184,19 @@ class robotDBHandler(db.AzureDB):
         result = self.SelectAll(statement)
         values = [row[target] for row in result]  # Extract the values from the result rows
         return values
+    
+    def get_value_with_conditions(self, table, target, conditions):
+        try:
+            # Construct the WHERE clause for multiple conditions
+            where_clause = ' AND '.join([f'{key} = {value}' for key, value in conditions.items()])
+            statement = f'SELECT {target} FROM {self.database}.`{table}` WHERE {where_clause};'
+            # Execute the SQL statement to retrieve the value
+            result = self.SelectAll(statement)
+            values = [row[target] for row in result]  # Extract the values from the result rows
+            return values
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return None
 
     def update_single_value(self, table, target, target_value, condition, condition_value):
         try: 
@@ -207,13 +220,18 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
 
-    from src.models.schema.nw import Door
+    # from src.models.schema.nw import Door
     
     # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
-    id = nwdb.get_available_charging_station_id(1)
-    charging_station_detail = nwdb.get_charing_station_detail(id)
-    print(charging_station_detail.to_json())
+    doors = nwdb.get_value_with_conditions('nw.event.region', 'polygon', {'layout_id': 5, 'is_door': 1})
+    for door in doors:
+        print(door)
+
+    # # charging status
+    # id = nwdb.get_available_charging_station_id(1)
+    # charging_station_detail = nwdb.get_charing_station_detail(id)
+    # print(charging_station_detail.to_json())
 
     # # doors
     # result = nwdb.get_values('data.robot.map.layout.door.location', 'ID', 'layout_id', 3)

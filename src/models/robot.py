@@ -59,12 +59,13 @@ class Robot:
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
         self.robot_nw_id = self.nwdb.robot_id
         self.robot_rm_guid = self.nwdb.robot_guid
-        self.robot_status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
-        self.map_id = None
+        self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
+        self.map_nw_id = None
+        self.layout_nw_id = None
+        self.layout_rm_guid = None
+
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
-
-        self.layout_rm_guid = ''
 
         # # # module - models/sensors
         self.mo_lift_levelling = LiftLevellingModule(self.modb, config, port_config, self.status_summary)
@@ -111,33 +112,36 @@ class Robot:
         while True:
             try:
                 # # rm status <--- rv status
-                self.robot_status.state = 1  # todo: robot status
-                self.robot_status.mapPose.mapId = self.get_current_map_rm_guid()  # map
-                self.robot_status.batteryPct = self.get_battery_state(protocol)  # battery
+                self.status.state = 1  # todo: robot status
+                self.status.mapPose.mapId = self.get_current_map_rm_guid()  # map
+                self.status.batteryPct = self.get_battery_state(protocol)  # battery
                 pixel_x, pixel_y, heading = self.get_current_pose(protocol)  # current map pose
                 # print(pixel_x, pixel_y, heading)
-                self.robot_status.mapPose.x = pixel_x
-                self.robot_status.mapPose.y = pixel_y
-                self.robot_status.mapPose.heading = heading
+                self.status.mapPose.x = pixel_x
+                self.status.mapPose.y = pixel_y
+                self.status.mapPose.heading = heading
 
-                layout_x,  layout_y,  layout_heading = self.get_current_layout_pose()
-                self.robot_status.layoutPose.x = layout_x
-                self.robot_status.layoutPose.y = layout_y
-                self.robot_status.layoutPose.heading = layout_heading
+                # layout
+                self.layout_nw_id = self.get_current_layout_nw_id()
+                layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
+                self.status.layoutPose.x = layout_x
+                self.status.layoutPose.y = layout_y
+                self.status.layoutPose.heading = layout_heading
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
 
                 ## TO NWDB
-                self.map_id = self.get_current_map_id()
+                self.map_nw_id = self.get_current_map_nw_id()
 
                 ## Summary
                 print(f'robot_nw_id: {self.robot_nw_id}')
                 print(f'robot_rm_guid: {self.robot_rm_guid}')
-                print(f'robot_status.battery: {self.robot_status.batteryPct}')
-                print(f'robot_status.map_rm_guid: {self.robot_status.mapPose.mapId}')
-                print(f'robot_status.map_pose: ({pixel_x, pixel_y, heading})')
+                print(f'robot_status.battery: {self.status.batteryPct}')
+                print(f'robot_status.map_rm_guid: {self.status.mapPose.mapId}')
+                print(f'robot_status.map_rm_pose: ({pixel_x, pixel_y, heading})')
+                print(f'robot_status.layout_nw_id: {self.layout_nw_id}')
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                print(f'robot_status.layout_pose: ({layout_x, layout_y, layout_heading})')
+                print(f'robot_status.layout_rm_pose: ({layout_x, layout_y, layout_heading})')
             except:
                 print('[robot.update_status] error!')
 
@@ -151,19 +155,19 @@ class Robot:
         # battery = self.get_battery_state(protocal)
         # x, y, theta = self.get_current_pose(protocal)
         # map_id = self.get_current_map_id()
-        battery = self.robot_status.batteryPct
+        battery = self.status.batteryPct
 
         # layout position (x,y,theta)
-        x = self.robot_status.layoutPose.x
-        y = self.robot_status.layoutPose.y
-        theta = self.robot_status.layoutPose.heading
+        x = self.status.layoutPose.x
+        y = self.status.layoutPose.y
+        theta = self.status.layoutPose.heading
 
         # # map position
         # map_x = self.robot_status.mapPose.x
         # map_y = self.robot_status.mapPose.y
         # map_theta = self.robot_status.mapPose.heading
 
-        map_id = self.map_id
+        map_id = self.map_nw_id
         map_rm_guid = self.get_current_map_rm_guid()
 
         # 3) convert to json
@@ -207,15 +211,17 @@ class Robot:
     def get_current_layout_pose(self):
         try:
 
-            map_rm_guid = self.robot_status.mapPose.mapId
+            map_rm_guid = self.status.mapPose.mapId
             self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
+            print('<debug>layout_pose 1')
             params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
+            print('<debug>layout_pose 2')
             self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                               params.scale, params.angle, params.translate)
-            cur_layout_point = self.T_RM.find_cur_layout_point(self.robot_status.mapPose.x, 
-                                                               self.robot_status.mapPose.y,
-                                                               self.robot_status.mapPose.heading)
-
+            print('<debug>layout_pose 3')
+            cur_layout_point = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 
+                                                               self.status.mapPose.y,
+                                                               self.status.mapPose.heading)
             return cur_layout_point
         except:
             return 0, 0, 0
@@ -237,14 +243,14 @@ class Robot:
     def get_current_mapPose(self):
         # pixel_x, pixel_y, heading = self.get_current_pose()
         # mapId = self.get_current_map_rm_guid()
-        map_id = self.map_id
-        x = self.robot_status.mapPose.x
-        y = self.robot_status.mapPose.y
-        theta = self.robot_status.mapPose.heading
+        map_id = self.map_nw_id
+        x = self.status.mapPose.x
+        y = self.status.mapPose.y
+        theta = self.status.mapPose.heading
         
         return RMSchema.mapPose(map_id, x, y, theta)
 
-    def get_current_map_id(self):
+    def get_current_map_nw_id(self):
         try:
             # 1. get rv_current map
             rv_map_name = self.rvapi.get_active_map().name
@@ -258,9 +264,9 @@ class Robot:
         except:
             return None
 
-    def get_current_layout_id(self):
+    def get_current_layout_nw_id(self):
         try:
-            map_id = self.get_current_map_id()
+            map_id = self.get_current_map_nw_id()
             if map_id is None: return None
             layout_id = self.nwdb.get_single_value('robot.map.layout', 'ID', 'activated_map_id', map_id)
             return layout_id
@@ -339,9 +345,9 @@ class Robot:
             self.rvapi.delete_all_waypoints(rv_map_name)
             pose_name = 'TEMP'
             time.sleep(1)
-            print(f'--rm_map_x: {rm_map_metadata.x}')
-            print(f'--rm_map_y: {rm_map_metadata.y}')
-            print(f'--rm_map_heading: {rm_map_metadata.heading}')
+            print(f'goto--rm_map_x: {rm_map_metadata.x}')
+            print(f'goto--rm_map_y: {rm_map_metadata.y}')
+            print(f'goto--rm_map_heading: {rm_map_metadata.heading}')
             self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
@@ -377,6 +383,7 @@ class Robot:
     def thread_check_mission_status(self, task_json, status_callback):
 
         self.door_agent_start = True  # door-agent logic
+        self.door_agent_finish = False
 
         print('[goto.check_mission_status] Starting...')
         rm_task_data = RMSchema.Task(task_json)
@@ -404,6 +411,7 @@ class Robot:
                     print('[goto.check_mission_status] robot has cancelled moving task')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
 
+                self.door_agent_start = False
                 self.door_agent_finish = True  # door-agent logic
         print('[goto.check_mission_status] Exiting...')
 
