@@ -58,8 +58,33 @@ class EMSDLift():
         # lift properties & status
         self.occupied = False
         self.anykey_pressed = False
-        self.indexes_of_pressed_key = []
-        self.current_floor = 'G/F'
+        self.pressed_key_robocore = []
+        self.current_floor_str = 'G/F'
+        self.pressed_floorkey_nw_rm = []
+
+        # for ncs integration
+        self.rm_current_floor = 0
+        self.rm_destination_floor = 0
+        self.rm_motion_state = 0
+        self.rm_door_state = 0
+        self.rm_available_modes = [0]
+        self.rm_current_mode = 0
+
+    def update_motion_state(self):
+
+        # init
+        self.pressed_floorkey_nw_rm.clear()
+
+        # robocore key to nw_rm
+        for target_value in self.pressed_key_robocore:
+            if(target_value == 0 or 1 or 2 or 10): continue
+            else:
+                matching_keys = [key for key, value in keymap_robocore_nw.items() if value == target_value]
+                self.pressed_floorkey_nw_rm.append(keymap_nw_rm[matching_keys])
+
+        print(self.pressed_floorkey_nw_rm)
+
+        pass
 
     def on_connect(self, client, userdata, flags, rc):
         # print("Connected with result code " + str(rc))
@@ -89,11 +114,17 @@ class EMSDLift():
         if topic == 'Lift_State': 
             
             # update lift status
-            self.current_floor = self.get_current_floor_from_keymap(msg_json['Lift_Floor'])
+            self.current_floor_str = self.__get_current_floor_from_keymap(msg_json['Lift_Floor'])
+            self.rm_current_floor = keymap_nw_rm[f'{self.current_floor_str}']
             # print(f'current_floor: {self.current_floor}')
 
             # check if any key is pressed
             self.is_anykey_pressed(msg_json)
+
+            # door status
+            if(self.is_key_pressed("open")): self.rm_door_state = 2
+            else: self.rm_door_state = 0
+
             pass
 
     def start(self):
@@ -106,13 +137,11 @@ class EMSDLift():
         while True:
             time.sleep(1)
 
-    def get_current_floor_from_keymap(self, Lift_Floor):
+    def __get_current_floor_from_keymap(self, Lift_Floor):
         target_value = []
-        target_value.append(Lift_Floor)
-        
+        target_value.append(Lift_Floor)    
         # Find the key that corresponds to the target value
         matching_keys = [key for key, value in keymap_robocore_nw.items() if value == target_value]
-
         return matching_keys[0]
 
     ## lift methods
@@ -125,9 +154,11 @@ class EMSDLift():
     def get_state(self):
         print(f'*****************')
         # print(f'[lift_state] is_anykey_pressed: {self.anykey_pressed}')
-        print(f'[lift_state] indexes_of_pressed_key: {self.indexes_of_pressed_key}')
-        print(f'[lift_state] current_floor: {self.current_floor}')
+        print(f'[lift_state] pressed_key_robocore: {self.pressed_key_robocore}')
+        print(f'[lift_state] current_floor_str: {self.current_floor_str}')
         print(f'[lift_state] is_availble: {not self.occupied}')
+        print(f'[rm_lift_state] current_floor: {self.rm_current_floor}')
+        print(f'[rm_lift_state] door_state: {self.rm_door_state}')
         print(f'*****************')
 
     def release_all_keys(self):
@@ -142,7 +173,7 @@ class EMSDLift():
 
         time.sleep(1)
         self.request_state()
-        if(self.indexes_of_pressed_key == keymap_robocore_nw[f'{floor_name}']): return True
+        if(self.pressed_key_robocore == keymap_robocore_nw[f'{floor_name}']): return True
         return False
     
     def open(self, duration = 2):
@@ -164,9 +195,9 @@ class EMSDLift():
         binary_string = bin(int(hex_number[2:], 16))[2:]  # Remove '0b' prefix
 
         # Find all indexes of '1' bits (from right to left)
-        self.indexes_of_pressed_key = [i for i, bit in enumerate(binary_string[::-1]) if bit == '1']
+        self.pressed_key_robocore = [i for i, bit in enumerate(binary_string[::-1]) if bit == '1']
 
-        if binary_string == '0' and self.indexes_of_pressed_key == []:
+        if binary_string == '0' and self.pressed_key_robocore == []:
             self.anykey_pressed = False
             # print(f'no key is pressed!')
         else:
@@ -178,13 +209,13 @@ class EMSDLift():
     def is_key_pressed(self, floor_name):
         self.request_state()
         if self.anykey_pressed:
-            if keymap_robocore_nw[floor_name][0] in self.indexes_of_pressed_key:
+            if keymap_robocore_nw[floor_name][0] in self.pressed_key_robocore:
                 return True
         return False
 
     def thread_check_is_available(self):
         while(True):
-            time.sleep(2)
+            time.sleep(1)
 
             self.occupied = not self.is_available()
             # self.occupied = not is_available
@@ -192,14 +223,14 @@ class EMSDLift():
     def is_available(self):
         lift_state = []
         
-        for i in range(6):
+        for i in range(10):
             self.request_state()
             if self.anykey_pressed: 
                 self.occupied = True
                 return False
             else: 
-                lift_state.append(self.current_floor)
-            time.sleep(1)
+                lift_state.append(self.current_floor_str)
+            time.sleep(0.1)
         
         is_free = all(item == lift_state[0] for item in lift_state)
         
@@ -217,16 +248,17 @@ if __name__ == "__main__":
 
     while(True):
         time.sleep(2)
-        lift.get_state()
+        # lift.get_state()
+        lift.update_motion_state()
         # res = lift.is_available()
         # print(f'lift.is_available: {res}')
 
 
-        # res = lift.is_key_pressed("G/F")
+        # res = lift.is_key_pressed("open")
         # if res:
-        #     print(f'G/F is pressed!!!')
+        #     print(f'the key is pressed!!!')
         # else:
-        #     print(f'G/F is not pressed!!!')
+        #     print(f'the key is not pressed!!!')
 
     # time.sleep(5)
     # print(f'get current state...')
@@ -248,3 +280,7 @@ if __name__ == "__main__":
 
     # print("Binary representation:", binary_string)
     # print("Indexes of '1' bits (from right to left):", indexes_of_ones)
+
+    # lift is stop
+    # 1. no key is pressed.
+    # 2. 
