@@ -249,14 +249,14 @@ if __name__ == '__main__':
     ####################################################################################################
     # Robot
     ####################################################################################################
-    rvapi.check_is_ready()
+    # rvapi.check_is_ready()
 
     ####################################################################################################
     # Charging
     ####################################################################################################
-    # res = rvapi.get_charging_feedback()
-    # print(res)
-    # rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
+    res = rvapi.get_charging_feedback()
+    print(res)
+    rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
     # rvapi.delete_charging()
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)

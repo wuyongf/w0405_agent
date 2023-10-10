@@ -218,8 +218,9 @@ class NWDoorRegionAgent:
                 # check distance - Rev02
                 for index, door in enumerate(self.doors):
                     
+                    print(f'xxx')
                     inside = self.region_handler.checkRegion(self.robot.status.layoutPose.x,self.robot.status.layoutPose.y,self.region_handler.parseRegionData(door.polygon))
-                    
+                    print(f'xxx2')
                     if inside:
                         print(f'[door_handler.global_check]: find target dooor...')
                         print(f'[door_handler.global_check]: pause robot...')

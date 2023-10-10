@@ -327,6 +327,10 @@ class Robot:
     # status_callback: check task_handler3.py
     def goto(self, task_json, status_callback):
         try:
+            self.door_agent_start = True  # door-agent logic
+            self.door_agent_finish = False
+            time.sleep(1)
+
             # step 0. init. clear current task
             self.cancel_moving_task()
             # step 1. get rm_map_id, rv_map_name, map_metadata
@@ -381,9 +385,6 @@ class Robot:
         print('[charging.check_mission_status] Exiting...')
 
     def thread_check_mission_status(self, task_json, status_callback):
-
-        self.door_agent_start = True  # door-agent logic
-        self.door_agent_finish = False
 
         print('[goto.check_mission_status] Starting...')
         rm_task_data = RMSchema.Task(task_json)
