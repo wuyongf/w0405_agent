@@ -17,16 +17,17 @@ class TopModuleDBHandler(db.AzureDB):
             'password': config.get('NWDB', 'password'),
             'database': config.get('NWDB', 'database'),
             'client_flags': [mysql.connector.ClientFlag.SSL],
-            'ssl_ca': config.get('NWDB', 'ssl_ca')}
+            'ssl_ca': config.get('NWDB', 'ssl_ca')
+        }
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
         self.status_summary = status_summary
         self.robot_guid = config.get('NWDB', 'robot_guid')
         self.robot_id = self.GetRobotId()
-        
+
     def get_robot_summary(self):
         # (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
-        
+
         obj = json.loads(self.status_summary())
         pos_x = obj["position"]["x"]
         pos_y = obj["position"]["y"]
@@ -35,22 +36,19 @@ class TopModuleDBHandler(db.AzureDB):
         map_rm_guid = obj["map_rm_guid"]
         return (pos_x, pos_y, pos_theta, map_id, map_rm_guid)
 
-
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
         return self.Select(statement)
-    
+
     def GetLayoutIdByMapId(self, map_id):
         statement = f'SELECT layout_id FROM {self.database}.`robot.map` WHERE ID = {map_id};'
         return self.Select(statement)
-        
-        
 
     def StreamIaqData(self, table, key, value):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
         # print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
-        
+
     def DeleteLastStreamIaqData(self):
         statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
         # print(f'[db_top_module.StreamIaqData]: {statement}')
@@ -64,25 +62,30 @@ class TopModuleDBHandler(db.AzureDB):
         print(f'[db_top_module.InsertIaqData]: {statement}')
         self.Insert(statement)
 
+    def GetIaqData(self, task_id):
+        statement = f'SELECT * FROM {self.database}.`sensor.iaq.history` WHERE task_id = {task_id}'
+        return self.SelectAll(statement)
+
     def GetUserRules(self):
         # TODO *** Let the userrules get sensor type from table "data.sensor.type"
         statement = f'SELECT u.*, t.data_type FROM {self.database}.`nw.event.user_rules` u JOIN {self.database}.`data.sensor.type` t ON u.data_type_fk = t.ID;'
         print("Get user rules")
         return self.SelectAll(statement)
-    
+
     def GetRegions(self):
         statement = f'SELECT ID, name, polygon, layout_id FROM {self.database}.`nw.event.region`;'
         return self.SelectAll(statement)
-    
+
     def GetRegionsByMapId(self, map_id: int):
         statement = f'SELECT u.ID, u.name, u.polygon, u.layout_id FROM {self.database}.`nw.event.region` u JOIN {self.database}.`robot.map` v ON u.layout_id = v.layout_id WHERE v.ID = {map_id};'
         return self.SelectAll(statement)
-    
+
     def GetRegionsByLayoutId(self, layout_id: int):
         statement = f'SELECT u.ID, u.name, u.polygon, FROM {self.database}.`nw.event.region` u WHERE u.layout_id = {layout_id};'
         return self.SelectAll(statement)
 
-    def InsertEventLog(self, task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id, event_id):
+    def InsertEventLog(self, task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id,
+                       event_id):
         statement = f'insert into {self.database}.`nw.event.log` (task_id, data_type, rule_name, severity, rule_threshold, pos_x, pos_y, layout_id, created_date, event_id) VALUES ({task_id}, "{data_type}", "{rule_name}", {severity}, {rule_threshold}, {pos_x}, {pos_y}, {layout_id}, "{self.now()}", "{event_id}");'
         print(f'[db_top_module.InsertEventLog]: {statement}')
         self.Insert(statement)
@@ -97,7 +100,7 @@ class TopModuleDBHandler(db.AzureDB):
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
-    
+
     def UpdateDistanceResult(self, column: str, id: int, result: float):
         statement = f'UPDATE {self.database}.`sensor.distance_sensor.datapack` SET {column} = "{result}" WHERE id = {id}'
         self.Insert(statement)
@@ -133,39 +136,46 @@ class TopModuleDBHandler(db.AzureDB):
     def InsertGyroChunk(self, pack_id, accel_z):
         statement = f'INSERT INTO {self.database}.`sensor.gyro.datachunk` (pack_id, accel_z, created_date) VALUES ("{pack_id}", "{accel_z}", "{self.now()}")'
         self.Insert(statement)
-        
+
     # Get raw data set of gyro chunk
     def GetGyroChunk(self, pack_id):
         statement = f'SELECT `accel_z` FROM {self.database}.`sensor.gyro.datachunk` WHERE pack_id = "{pack_id}"'
         return self.SelectAll(statement)
-        
+
     # Get Gyro data list
     def GetGyroResult(self, pack_id):
         result = []
         for i in self.GetGyroChunk(pack_id=pack_id):
             result = result + list(i.values())[0].split(",")
         return result
-    
+
     def UpdateGyroResult(self, column: str, id: int, result: str, result_min, result_max):
         statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" , result_min = {result_min}, result_max = {result_max} WHERE id = {id}'
         self.Insert(statement)
 
 
 if __name__ == '__main__':
-    def status_summary():
-        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
-        return status
-    config = umethods.load_config('../../conf/config.properties')
-    port_config = umethods.load_config('../../../conf/port_config.properties')
-    
-    nwdb = TopModuleDBHandler(config, status_summary)
-    
-    # nwdb.CreateGyroDataPack(1,1)
-    # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
-    
-    nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
+    try:
+
+        def status_summary():
+            status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+            return status
+
+        config = umethods.load_config('../../conf/config.properties')
+        port_config = umethods.load_config('../../../conf/port_config.properties')
+
+        nwdb = TopModuleDBHandler(config, status_summary)
+
+        # nwdb.CreateGyroDataPack(1,1)
+        # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
+
+        # nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
+        print(nwdb.GetIaqData(199))
+    except:
+        pass
+
     # print(nwdb.GetRegions())
-    
+
     # print(nwdb.GetUserRules_Column())
     # print(nwdb.GetUserRules())
     # print((nwdb.GetUserRules()[2]).get('type'))
@@ -185,11 +195,11 @@ if __name__ == '__main__':
 
     # print(nwdb.GetDistanceResult(side = 'left', pack_id = 50, move_dir = 2))
     # nwdb.Test()
-    
+
     # print(nwdb.GetDistanceChunk(pack_id=65, side='left', move_dir=2))
     # print(nwdb.GetGyroResult(21))
     # nwdb.UpdateGyroResult(id=21, column='result_denoise', result='test')
-    
+
     # nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
     # nwdb.DeleteLastStreamIaqData()
 
