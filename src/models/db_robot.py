@@ -21,6 +21,7 @@ class robotDBHandler(db.AzureDB):
         self.database = config.get('NWDB','database')
         self.robot_guid = config.get('NWDB','robot_guid')
         self.robot_id = self.get_robot_id()
+        self.nwdb_lift_id = config.get('NWDB_Lift','lift_id')
     
     def get_robot_id(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
@@ -119,6 +120,39 @@ class robotDBHandler(db.AzureDB):
         
         return NWSchema.ChargingStation(layout_nw_id, layout_rm_guid, map_id, map_rm_guid, pos_name, pos_x, pos_y, pos_theta)
     
+    # Lift
+    def configure_lift_mission(self, cur_layout_id, target_layout_id):
+        # mission_id = self.nwdb.get_single_value('sys.mission.delivery', 'mission_id', 'ID', available_delivery_id)
+        lift_id = self.nwdb_lift_id
+        robot_id = self.robot_id
+        
+        # cur_layout_id = cur_layout_id
+        cur_floor_int = self.get_single_value('robot.map.layout', 'floor_id', 'ID', cur_layout_id)
+        cur_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'is_waiting_pos': 1})[0]
+        cur_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'is_waiting_pos': 0})[0]
+
+        # target_layout_id = target_layout_id
+        target_floor_int = self.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
+        target_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'is_waiting_pos': 1})[0]
+        target_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'is_waiting_pos': 0})[0]
+        
+        return NWSchema.LiftMission(lift_id, robot_id, 
+                 cur_layout_id, cur_floor_int, cur_waiting_pos_id, cur_transit_pos_id,
+                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id)
+
+    def get_lift_position_detail(self, pos_id):
+        floor_id = self.get_single_value('data.lift.location', 'floor_id', 'ID', pos_id)
+        layout_id = self.get_single_value('robot.map.layout', 'ID', 'floor_id', floor_id)
+        layout_rm_guid = self.get_single_value('robot.map.layout', 'rm_guid', 'ID', layout_id)
+        map_id = self.get_single_value('robot.map.layout', 'activated_map_id', 'ID', layout_id)
+        map_rm_guid = self.get_single_value('robot.map', 'rm_guid', 'ID', map_id)
+        pos_name = self.get_single_value('data.lift.location', 'pos_name', 'ID', pos_id)
+        pos_x = self.get_single_value('data.lift.location', 'pos_x', 'ID', pos_id)
+        pos_y = self.get_single_value('data.lift.location', 'pos_y', 'ID', pos_id)
+        pos_theta = self.get_single_value('data.lift.location', 'pos_theta', 'ID', pos_id)
+        
+        return NWSchema.LiftPose(layout_rm_guid, map_rm_guid, pos_name, pos_x, pos_y, pos_theta)
+
     # DELIVERY
     def get_available_delivery_id(self):
         statement = f'SELECT ID FROM {self.database}.`sys.mission.delivery` WHERE status = 0 AND "{self.now()}" < planned_start_time;'
@@ -220,13 +254,20 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
 
-    # from src.models.schema.nw import Door
-    
+    # from src.models.schema.nw import Door    
     # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
-    doors = nwdb.get_value_with_conditions('nw.event.region', 'polygon', {'layout_id': 5, 'is_door': 1})
-    for door in doors:
-        print(door)
+    ### Lift
+    # a_lift_mission = nwdb.configure_lift_mission(5,6)
+    # print(a_lift_mission)
+
+    lift_pos = nwdb.get_lift_position_detail(1)
+    print(lift_pos)
+
+    # # door
+    # doors = nwdb.get_value_with_conditions('nw.event.region', 'polygon', {'layout_id': 5, 'is_door': 1})
+    # for door in doors:
+    #     print(door)
 
     # # charging status
     # id = nwdb.get_available_charging_station_id(1)

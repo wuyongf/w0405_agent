@@ -6,11 +6,11 @@ import json
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
-# import src.models.mqtt_rv2 as RVMQTT2
 from src.models.mqtt_rv_joystick import RVJoyStick
 import src.models.api_rm as RMAPI
 from src.models.mqtt_nw import NWMQTT
 from src.models.mqtt_nw_publisher import NWMQTTPub
+from src.models.mqtt_emsd_lift import EMSDLift
 
 import src.models.db_robot as RobotDB
 import src.top_module.db_top_module as TopModuleDB
@@ -39,6 +39,7 @@ class Robot:
         self.rmapi = RMAPI.RMAPI(config)
         self.nwmqtt = NWMQTT(config, port_config)
         self.nwmqttpub = NWMQTTPub(config)
+        self.emsdlift = EMSDLift(config)
         self.nwdb = RobotDB.robotDBHandler(config)
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
@@ -47,7 +48,8 @@ class Robot:
         self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
         self.nwmqtt.start()   
-        self.nwmqttpub.start() 
+        self.nwmqttpub.start()
+        
 
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
@@ -92,6 +94,9 @@ class Robot:
 
         # delivery
         self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
+
+        # lift
+        self.emsdlift.start()
 
         # self.mo_access_control.start()
         print(f'[robot.sensor_start]: Start...')
@@ -324,9 +329,20 @@ class Robot:
         except:
             return False
 
+    def is_another_floor(self, task_json):
+        # target_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+        target_map_id = task_json['parameters']['mapId']
+        if(self.status.mapPose.mapId != target_map_id): return True
+        return False
+
     # status_callback: check task_handler3.py
     def goto(self, task_json, status_callback):
         try:
+            if(self.is_another_floor()):
+                # init goto_across_floor
+                print(f'[robot.goto] init goto_across_floor...')
+                return True
+
             self.door_agent_start = True  # door-agent logic
             self.door_agent_finish = False
             time.sleep(1)
@@ -443,7 +459,6 @@ class Robot:
         pass
 
     # Module - IAQ
-
     def iaq_on(self, task_json):
         try:
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
@@ -465,7 +480,66 @@ class Robot:
         except:
             return False
 
-    # Module - IAQ - End
+
+    # Follow Me
+    def follow_me_mode(self, task_json):
+        try:
+            self.rvapi.change_mode_followme()
+            # update nwdb robot.status.mode
+            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
+            return True
+        except:
+            return False
+
+    def follow_me_pair(self, task_json):
+        # call pairing api
+        self.rvapi.post_followme_pair()
+        print('start pairing')
+        # wait for a sec
+        time.sleep(1)
+        count = 0
+        # count down when pairing 10s
+        while count < 10:
+            pairing_state = self.is_paired()
+            print(f'pairing state:{pairing_state}')
+            time.sleep(1)
+            if pairing_state == True:
+                print('paired')
+                # update nwdb robot.status.mode
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
+                return True
+            elif pairing_state == 'PAIRING':
+                count = count + 1
+                print(f'pairing, {10-count}s left')
+        print("pairing time out")
+        return False
+
+    def is_paired(self):
+        result = self.rvapi.get_followme_pairing_state()
+        # while True:
+        #     print(state)
+        # state = RVSchema.FollowMe
+        if result == "PAIRED":
+            print("paired")
+            return True
+        elif result == "PAIRING":
+            print("pairing")
+            return result
+        elif result == "UNPAIRED":
+            print("unpaired")
+            return False
+
+    def follow_me_unpair(self, task_json):
+        try:
+            self.rvapi.post_followme_unpair()
+            time.sleep(2)
+            if self.is_paired() != True:
+                return True
+            else:
+                return False
+        except:
+            return False
+
 
     # Module - Lift Inspection
     # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
@@ -525,6 +599,12 @@ class Robot:
 
     # Module - Lift Inspection - End
 
+    # LIFT
+    # Lift Init
+    def get_lift_mission_detail(self, cur_layout_id, target_layout_id):
+        self.a_lift_mission = self.nwdb.configure_lift_mission(cur_layout_id, target_layout_id)
+        return self.a_lift_mission
+    
     # DELIVERY
     # def configure_delivery_mission(self, available_delivery_ID):
     def locker_unlock(self):
@@ -560,207 +640,8 @@ class Robot:
 
     def get_delivery_mission_detail(self):
         return self.a_delivery_mission
-
-    ## NEW JOB via RMAPI
-
-    def delivery_goto_charging_station(self, charging_station: NWSchema.ChargingStation):
-        try:
-            #region Notify the receiver
-            #endregion
-
-            # pos_origin details
-            # pos_origin: RMSchema
-            pos_origin = self.nwdb.get_delivery_position_detail(charging_station.pos_origin_id)
-            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(charging_station.pos_x, charging_station.pos_y, charging_station.pos_theta)
-            pos_origin.x = map_x
-            pos_origin.y = map_y
-            pos_origin.heading = map_heading
-            print(f'[new_delivery_mission]: get_delivery_position_detail...')
-
-            # get destination_id and then create a rm_guid first.
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
-            # configure task-01: create a new position on RM-Layout
-            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
-            print(f'layout_id: {pos_origin.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
-                                        pos_origin.layout_guid,
-                                        latest_marker_id,
-                                        order=1,
-                                        map_id=pos_origin.map_guid,
-                                        pos_name=pos_origin.pos_name,
-                                        x=pos_origin.x,
-                                        y=pos_origin.y,
-                                        heading=pos_origin.heading)
-            tasks.append(goto)
-            print(goto)
-            # TASK END
-            print(f'[new_delivery_mission]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-Charging-DEMO')
-            print(f'[new_delivery_mission]: configure job end...')
-
-            return True
-        except:
-            return False
     
-    def delivery_goto_sender(self, a_delivery_mission: NWSchema.DeliveryMission):
-        try:
-            #region Notify the receiver
-            #endregion
-
-            # pos_origin details
-            # pos_origin: RMSchema
-            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
-            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
-            pos_origin.x = map_x
-            pos_origin.y = map_y
-            pos_origin.heading = map_heading
-            print(f'[new_delivery_mission]: get_delivery_position_detail...')
-
-            # get destination_id and then create a rm_guid first.
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
-            # configure task-01: create a new position on RM-Layout
-            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
-            print(f'layout_id: {pos_origin.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
-                                        pos_origin.layout_guid,
-                                        latest_marker_id,
-                                        order=1,
-                                        map_id=pos_origin.map_guid,
-                                        pos_name=pos_origin.pos_name,
-                                        x=pos_origin.x,
-                                        y=pos_origin.y,
-                                        heading=pos_origin.heading)
-            tasks.append(goto)
-            print(goto)
-            # TASK END
-            print(f'[new_delivery_mission]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
-            print(f'[new_delivery_mission]: configure job end...')
-
-            return True
-        except:
-            return False
-
-    def delivery_goto_receiver(self, a_delivery_mission: NWSchema.DeliveryMission):
-        try:
-            #region Notify the receiver
-            #endregion
-
-            # pos_origin details
-            # pos_origin: RMSchema
-            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
-            pos_destination.x, pos_destination.y, pos_destination.heading = self.T_RM.find_cur_map_point(pos_destination.x, pos_destination.y, pos_destination.heading)
-            print(f'[new_delivery_mission]: get_delivery_position_detail...')
-
-            # get destination_id and then create a rm_guid first.
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
-            # configure task-01: create a new position on RM-Layout
-            self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y,
-                                              pos_destination.heading)
-            print(f'layout_id: {pos_destination.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
-                                        pos_destination.layout_guid,
-                                        latest_marker_id,
-                                        order=1,
-                                        map_id=pos_destination.map_guid,
-                                        pos_name=pos_destination.pos_name,
-                                        x=pos_destination.x,
-                                        y=pos_destination.y,
-                                        heading=pos_destination.heading)
-            tasks.append(goto)
-            print(goto)
-            # TASK END
-            print(f'[new_delivery_mission]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
-            print(f'[new_delivery_mission]: configure job end...')
-
-            return True
-        except:
-            return False
-
-    def delivery_wait_for_loading(self, a_delivery_mission: NWSchema.DeliveryMission):
-        try:
-            #region Notify the receiver
-            #endregion
-
-            # pos_origin details
-            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
-            print(f'[delivery_wait_for_loading]: get_pos_origin_detail...')
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            print(f'layout_id: {pos_origin.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-LOADING-PACKAGE'),
-                                       pos_origin.layout_guid)
-            tasks.append(task)
-            print(task)
-            # TASK END
-            print(f'[delivery_wait_for_loading]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
-            print(f'[delivery_wait_for_loading]: configure job end...')
-
-            return True
-        except:
-            return False
-
-    def delivery_wait_for_unloading(self, a_delivery_mission: NWSchema.DeliveryMission):
-        try:
-            # pos_origin details
-            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
-            print(f'[delivery_wait_for_unloading]: get_pos_origin_detail...')
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            print(f'layout_id: {pos_destination.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-UNLOADING-PACKAGE'),
-                                       pos_destination.layout_guid)
-            tasks.append(task)
-            print(task)
-            # TASK END
-            print(f'[delivery_wait_for_unloading]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid,
-                               pos_destination.layout_guid,
-                               tasks=tasks,
-                               job_name='DELIVERY-WAITUNLOADING')
-            print(f'[delivery_wait_for_unloading]: configure job end...')
-
-            return True
-        except:
-            return False
+    ## NEW JOB via RMAPI
 
     def delivery_clear_positions(self, a_delivery_mission: NWSchema.DeliveryMission):
         pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
@@ -808,63 +689,8 @@ class Robot:
                 time.sleep(0.5)
         except:
             return False
-
-    # Delivery Publisher
-    def delivery_mission_publisher(self):
-
-        a_delivery_mission = self.get_delivery_mission_detail()
-
-        # to sender
-        done = self.delivery_goto_sender(a_delivery_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # loading package
-        done = self.delivery_wait_for_loading(a_delivery_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # to receiver
-        done = self.delivery_goto_receiver(a_delivery_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # unloading package
-        done = self.delivery_wait_for_unloading(a_delivery_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,
-                                         self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # back to charging stataion:  
-        # 1. goto
-        done = self.charging_goto()
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # 2. charging
-        done = self.charging_on()
-        if not done: return False
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # finish. status -> Idle and wait for next mission...
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
-        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
-        self.delivery_clear_positions(self.a_delivery_mission)
-        return True
-
+    
     ## Delivery Publisher Methods
-
     def wait_for_job_done(self, duration_min):
         print(f'[delivery]: wait for job done... duration: {duration_min} minutes')
         start_time = time.time()
@@ -950,7 +776,6 @@ class Robot:
             return False
 
     # Charging
-
     def charging_mission_publisher(self, task_json, status_callback):
 
         done = self.charging_goto(task_json)
@@ -1074,7 +899,6 @@ class Robot:
         except:
             return False
 
-
     def rv_charging_start(self, task_json, status_callback):
         """
         Interact with RV API
@@ -1110,65 +934,472 @@ class Robot:
         except:
             return False
 
-    # Follow Me
-    def follow_me_mode(self, task_json):
+    
+    ## Mission Designer
+    ### Delivery
+    def delivery_mission_publisher(self):
+
+        a_delivery_mission = self.get_delivery_mission_detail()
+
+        # to sender
+        done = self.pub_delivery_goto_sender(a_delivery_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # loading package
+        done = self.pub_delivery_wait_for_loading(a_delivery_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # to receiver
+        done = self.pub_delivery_goto_receiver(a_delivery_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # unloading package
+        done = self.pub_delivery_wait_for_unloading(a_delivery_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,
+                                         self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # back to charging stataion:  
+        # 1. goto
+        done = self.charging_goto()
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # 2. charging
+        done = self.charging_on()
+        if not done: return False
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # finish. status -> Idle and wait for next mission...
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
+        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
+        self.delivery_clear_positions(self.a_delivery_mission)
+        return True
+
+    ### Lift
+    def lift_mission_publisher(self):
+
+        a_lift_mission = self.get_lift_mission_detail(cur_layout_id=self.layout_nw_id, 
+                                                      target_layout_id=0)
+
+        # to CurWaitingPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
+        if not done: return False
+        print(f'[lift_mission] to CurWaitingPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # call lift
+        
+
+        # hold lift/ release lift
+
+
+        # to CurTransitPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurTransitPos)
+        if not done: return False
+        print(f'[lift_mission] to CurTransitPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # localize TargetTransitPos
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
+        if not done: return False
+        print(f'[lift_mission] to TargetTransitPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # to TargetWaitingPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetWaitingPos)
+        if not done: return False
+        print(f'[lift_mission] to TargetWaitingPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # loading package
+        done = self.pub_delivery_wait_for_loading(a_lift_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # to receiver
+        done = self.pub_delivery_goto_receiver(a_lift_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # unloading package
+        done = self.pub_delivery_wait_for_unloading(a_lift_mission)
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,
+                                         self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # back to charging stataion:  
+        # 1. goto
+        done = self.charging_goto()
+        if not done: return False
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # 2. charging
+        done = self.charging_on()
+        if not done: return False
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
+        # finish. status -> Idle and wait for next mission...
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
+        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
+        self.delivery_clear_positions(self.a_delivery_mission)
+        return True
+
+    ## Publish RM Mission
+    ### Delivery
+    def pub_delivery_goto_charging_station(self, charging_station: NWSchema.ChargingStation):
         try:
-            self.rvapi.change_mode_followme()
-            # update nwdb robot.status.mode
-            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
+            #region Notify the receiver
+            #endregion
+
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_origin = self.nwdb.get_delivery_position_detail(charging_station.pos_origin_id)
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(charging_station.pos_x, charging_station.pos_y, charging_station.pos_theta)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        pos_origin.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_origin.map_guid,
+                                        pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x,
+                                        y=pos_origin.y,
+                                        heading=pos_origin.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-Charging-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
+
+            return True
+        except:
+            return False
+    
+    def pub_delivery_goto_sender(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            #region Notify the receiver
+            #endregion
+
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        pos_origin.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_origin.map_guid,
+                                        pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x,
+                                        y=pos_origin.y,
+                                        heading=pos_origin.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
+
             return True
         except:
             return False
 
-    def follow_me_pair(self, task_json):
-        # call pairing api
-        self.rvapi.post_followme_pair()
-        print('start pairing')
-        # wait for a sec
-        time.sleep(1)
-        count = 0
-        # count down when pairing 10s
-        while count < 10:
-            pairing_state = self.is_paired()
-            print(f'pairing state:{pairing_state}')
-            time.sleep(1)
-            if pairing_state == True:
-                print('paired')
-                # update nwdb robot.status.mode
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
-                return True
-            elif pairing_state == 'PAIRING':
-                count = count + 1
-                print(f'pairing, {10-count}s left')
-        print("pairing time out")
-        return False
-
-    def is_paired(self):
-        result = self.rvapi.get_followme_pairing_state()
-        # while True:
-        #     print(state)
-        # state = RVSchema.FollowMe
-        if result == "PAIRED":
-            print("paired")
-            return True
-        elif result == "PAIRING":
-            print("pairing")
-            return result
-        elif result == "UNPAIRED":
-            print("unpaired")
-            return False
-
-    def follow_me_unpair(self, task_json):
+    def pub_delivery_goto_receiver(self, a_delivery_mission: NWSchema.DeliveryMission):
         try:
-            self.rvapi.post_followme_unpair()
-            time.sleep(2)
-            if self.is_paired() != True:
-                return True
-            else:
-                return False
+            #region Notify the receiver
+            #endregion
+
+            # pos_origin details
+            # pos_origin: RMSchema
+            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            pos_destination.x, pos_destination.y, pos_destination.heading = self.T_RM.find_cur_map_point(pos_destination.x, pos_destination.y, pos_destination.heading)
+            print(f'[new_delivery_mission]: get_delivery_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y,
+                                              pos_destination.heading)
+            print(f'layout_id: {pos_destination.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        pos_destination.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_destination.map_guid,
+                                        pos_name=pos_destination.pos_name,
+                                        x=pos_destination.x,
+                                        y=pos_destination.y,
+                                        heading=pos_destination.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
+
+            return True
         except:
             return False
 
+    def pub_delivery_wait_for_loading(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            # pos_origin details
+            pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            print(f'[delivery_wait_for_loading]: get_pos_origin_detail...')
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-LOADING-PACKAGE'),
+                                       pos_origin.layout_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[delivery_wait_for_loading]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
+            print(f'[delivery_wait_for_loading]: configure job end...')
+
+            return True
+        except:
+            return False
+
+    def pub_delivery_wait_for_unloading(self, a_delivery_mission: NWSchema.DeliveryMission):
+        try:
+            # pos_origin details
+            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            print(f'[delivery_wait_for_unloading]: get_pos_origin_detail...')
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            print(f'layout_id: {pos_destination.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-UNLOADING-PACKAGE'),
+                                       pos_destination.layout_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[delivery_wait_for_unloading]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid,
+                               pos_destination.layout_guid,
+                               tasks=tasks,
+                               job_name='DELIVERY-WAITUNLOADING')
+            print(f'[delivery_wait_for_unloading]: configure job end...')
+
+            return True
+        except:
+            return False
+
+    ### Lift
+    def pub_goto_liftpos(self, a_lift_mission: NWSchema.LiftMission, pos_type: NWEnum.LiftPositionType):
+        try:
+            # pos_origin details
+            # pos_origin: RMSchema
+            if  (pos_type == NWEnum.LiftPositionType.CurWaitingPos): 
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_waiting_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.CurTransitPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_transit_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.TargetWaitingPos): 
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_waiting_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
+            
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
+            print(f'[new_delivery_mission]: get_lift_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        pos_origin.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_origin.map_guid,
+                                        pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x,
+                                        y=pos_origin.y,
+                                        heading=pos_origin.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[new_delivery_mission]: configure job end...')
+
+            return True
+        except:
+            return False
+
+    def pub_localize_liftpos(self, a_lift_mission: NWSchema.LiftMission, pos_type: NWEnum.LiftPositionType):
+        try:
+            # pos_origin details
+            # pos_origin: RMSchema
+            if  (pos_type == NWEnum.LiftPositionType.CurWaitingPos): 
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_waiting_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.CurTransitPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_transit_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.TargetWaitingPos): 
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_waiting_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
+
+            map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+            pos_origin.x = map_x
+            pos_origin.y = map_y
+            pos_origin.heading = map_heading
+            print(f'[pub_localize_liftpos]: get_lift_position_detail...')
+
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+            print(f'layout_id: {pos_origin.layout_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_localize(self.skill_config.get('RM-Skill', 'RM-LOCALIZE'),
+                                        pos_origin.layout_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=pos_origin.map_guid,
+                                        pos_name=pos_origin.pos_name,
+                                        x=pos_origin.x,
+                                        y=pos_origin.y,
+                                        heading=pos_origin.heading)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[pub_localize_liftpos]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            print(f'[pub_localize_liftpos]: configure job end...')
+
+            return True
+        except:
+            return False
+
+    def pub_call_lift(self, a_lift_mission: NWSchema.LiftMission):
+        try:
+            print(f'[pub_call_lift]: ...')
+            # a_lift_mission.cur_floor_int
+            pos = self.nwdb.get_lift_position_detail(a_lift_mission.cur_waiting_pos_id)
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            # print(f'layout_id: {pos.layout_guid}')
+            # configure task-01: create a new task
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'ROBOCORE-CALL-LIFT'),
+                                       pos.layout_guid)
+            tasks.append(task)
+            print(task)
+            # TASK END
+            print(f'[pub_call_lift]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, pos.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
+            print(f'[pub_call_lift]: configure job end...')
+
+            return True
+        except:
+            return False
+        pass
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
@@ -1176,6 +1407,10 @@ if __name__ == '__main__':
     skill_config_path = './conf/rm_skill.properties'
 
     robot = Robot(config, port_config, skill_config_path)
+
+    a_lift_mission = robot.get_lift_mission_detail(5, 6)
+
+    robot.pub_call_lift(a_lift_mission)
 
     # robot.charging_on()
     # robot.charging_off()

@@ -176,6 +176,25 @@ class EMSDLift():
         if(self.pressed_key_robocore == keymap_robocore_nw[f'{floor_name}']): return True
         return False
     
+    def rm_to(self, floor_int, duration = 2):
+        try:
+            floor_name = list(keymap_nw_rm.keys())[list(keymap_nw_rm.values()).index(floor_int)]
+            print(f'[rm_to] floor_name: {floor_name}')
+            
+            topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
+            msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw[f'{floor_name}']).to_json()
+            self.client.publish(topic, msg)
+
+            time.sleep(1)
+            self.request_state()
+            if(keymap_robocore_nw[f'{floor_name}'][0] in self.indexes_of_pressed_key): 
+                print(f'[lift.rm_to] this key is in the pressed key list!')
+                return True
+            return False
+        except:
+            print(f'[lift.rm_to] failed')
+            return False  
+        
     def open(self, duration = 2):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
         msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw['open']).to_json()
@@ -223,7 +242,7 @@ class EMSDLift():
     def is_available(self):
         lift_state = []
         
-        for i in range(10):
+        for i in range(15):
             self.request_state()
             if self.anykey_pressed: 
                 self.occupied = True
@@ -236,6 +255,12 @@ class EMSDLift():
         
         self.occupied = not is_free
         return is_free
+    
+    def is_arrived(self, target_floor_int):
+        
+        if((self.rm_current_floor == target_floor_int) and (not self.occupied)): return True
+        
+        return False
         
 
 
@@ -248,8 +273,10 @@ if __name__ == "__main__":
 
     while(True):
         time.sleep(2)
-        # lift.get_state()
-        lift.update_motion_state()
+        lift.get_state()
+        res = lift.is_arrived(target_floor_int = 6)
+        print(res)
+        # lift.update_motion_state()
         # res = lift.is_available()
         # print(f'lift.is_available: {res}')
 

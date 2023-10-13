@@ -164,4 +164,10 @@ if __name__ == '__main__':
     lift_handler = NWLiftAgent(robot)
     # status_handler.start()
 
-    
+## goto - lift waiting point -4/F
+## robot - call the lift
+## lift - open the door
+## goto - lift point -4/F
+## localize - lift point - 4/F
+## goto - lift waiting point -6/F
+## lift - realse all keys

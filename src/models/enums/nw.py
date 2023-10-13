@@ -14,6 +14,13 @@ class Protocol(Enum):
     RVMQTT = 1
     RVAPI = 2
 
+# Lift
+class LiftPositionType(Enum):
+    CurWaitingPos = 0
+    CurTransitPos = 1
+    TargetWaitingPos = 2
+    TargetTransitPos = 3
+
 # Delivery
 class LockerCommand(Enum):
     Null = 0

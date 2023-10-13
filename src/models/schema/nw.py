@@ -31,6 +31,36 @@ class ChargingStation:
         self.pos_theta = pos_theta
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+# Lift
+class LiftMission:
+    def __init__(self, lift_id, robot_id, 
+                 cur_layout_id, cur_floor_int, cur_waiting_pos_id, cur_transit_pos_id,
+                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id):
+        self.lift_id = lift_id
+        self.robot_id = robot_id
+        self.cur_layout_id = cur_layout_id
+        self.cur_floor_int = cur_floor_int
+        self.cur_waiting_pos_id = cur_waiting_pos_id
+        self.cur_transit_pos_id = cur_transit_pos_id
+
+        self.target_layout_id = target_layout_id
+        self.target_floor_int = target_floor_int
+        self.target_waiting_pos_id = target_waiting_pos_id
+        self.target_transit_pos_id = target_transit_pos_id
+
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+    
+class LiftPose:
+    def __init__(self, layout_guid = '', map_guid = '', pos_name = '', x = 0.0, y = 0.0, heading = 0.0):
+        self.layout_guid = layout_guid
+        self.map_guid = map_guid
+        self.pos_name = pos_name
+        self.x = x
+        self.y = y
+        self.heading = heading
+    def to_json(self):
+        return json.dumps(self.__dict__)
 
 # Delivery
 class DeliveryMission:

@@ -244,6 +244,29 @@ class RMAPI(api.AuthenticatedAPI):
         }
 
         return task
+    
+    def task_localize(self, skill_id, layout_id, layoutMarkerId = None, order = 1, 
+                  map_id = None, pos_name = None, x = None, y = None, heading = None):
+        
+        def goto_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+            
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_id,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "params": goto_params(map_id, pos_name, x, y, heading)
+        }
+
+        return task
 
         ## for delivery
     def create_delivery_marker(self, layout_id, x, y, heading):
@@ -452,12 +475,65 @@ def goto_charging_staion():
     print(f'[new_delivery_mission]: configure job end...')
 
 
+def pub_localization():
+    config = umethods.load_config('../../conf/config.properties')
+    rmapi = RMAPI(config)
+
+    import src.models.db_robot as RobotDB
+    nwdb = RobotDB.robotDBHandler(config)
+
+    import src.models.trans as Trans
+    T_RM = Trans.RMLayoutMapTransform()
+
+    map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
+    layout_guid = '3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece'
+    params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+    T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                              params.scale, params.angle, params.translate)
+
+    ##############
+    # Publish GOTO Mission
+    ##############
+    charging_station_id = nwdb.get_available_charging_station_id(1)
+    charging_station = nwdb.get_charing_station_detail(charging_station_id)
+    map_x, map_y, map_heading = T_RM.find_cur_map_point(charging_station.pos_x, charging_station.pos_y, charging_station.pos_theta)
+    print(f'[charging_goto]: goto...')
+    # Job-Delivery START
+    # TASK START
+    tasks = []
+    rmapi.delete_all_delivery_markers(charging_station.layout_rm_guid)
+    # configure task-01: create a new position on RM-Layout
+    rmapi.create_delivery_marker(charging_station.layout_rm_guid, map_x, map_y, map_heading)
+    print(f'layout_rm_guid: {charging_station.layout_rm_guid}')
+    latest_marker_id = rmapi.get_latest_delivery_marker_guid(charging_station.layout_rm_guid)
+    print(f'latest_marker_id: {latest_marker_id}')
+    # configure task-01: create a new task
+    goto = rmapi.task_localize('cc8ab9bc-3462-4552-ac3b-783f1b944c0c',
+                                charging_station.layout_rm_guid,
+                                latest_marker_id,
+                                order=1,
+                                map_id=charging_station.map_rm_guid,
+                                pos_name='TEMP',
+                                x=map_x,
+                                y=map_y, 
+                                heading=map_heading)
+    tasks.append(goto)
+    print(goto)
+    # TASK END
+    print(f'[new_delivery_mission]: configure task end...')
+    rmapi.new_job('2658a873-a0a6-4c3f-967f-d179c4073272', charging_station.layout_rm_guid, tasks=tasks, job_name='Localize-DEMO')
+    print(f'[new_delivery_mission]: configure job end...')
+
 if __name__ == '__main__':
+
+    pub_localization()
     
     # goto_charging_staion()
     
-    config = umethods.load_config('../../conf/config.properties')
-    rmapi = RMAPI(config)
+    # config = umethods.load_config('../../conf/config.properties')
+    # rmapi = RMAPI(config)
+
+    # res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
 
     # ##############
     # # List Doors
@@ -492,7 +568,7 @@ if __name__ == '__main__':
     # 4F-map: 
     # 4F-layout : 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
     
-    res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
+    
 
     # res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
     # print(res)
