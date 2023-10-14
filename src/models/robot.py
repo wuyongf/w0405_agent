@@ -934,7 +934,21 @@ class Robot:
         except:
             return False
 
-    
+    ## Methods
+    ### Lift
+    def robocore_call_lift(self, task_json):
+        try:
+            print(f'robocore_call_lift: {task_json}')
+
+            mapId = task_json['parameters']['mapId']
+
+            # need to get current floor id
+
+
+            pass
+        except:
+            return False
+
     ## Mission Designer
     ### Delivery
     def delivery_mission_publisher(self):
