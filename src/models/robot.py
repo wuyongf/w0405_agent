@@ -50,7 +50,6 @@ class Robot:
         self.nwmqtt.start()   
         self.nwmqttpub.start()
         
-
         # self.module_lift_inspect =Modules.LiftInspectionSensor()
         # self.module_internal = Modules.InternalDevice()
         # self.module_monitor = Modules.Monitor()
@@ -83,6 +82,9 @@ class Robot:
         self.skill_config = umethods.load_config(skill_config_path)
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
         #endregion
+
+        ## lift related
+        self.last_goto_json = None
         
         ## nw-door-agent
         self.door_agent_start = False
@@ -337,10 +339,20 @@ class Robot:
 
     # status_callback: check task_handler3.py
     def goto(self, task_json, status_callback):
+        '''
+        No TMat Transformation!!! Just RM_MAP -> RV_MAP
+        '''
         try:
-            if(self.is_another_floor()):
+            if(self.is_another_floor(task_json)):
+
+                self.last_goto_json = task_json
                 # init goto_across_floor
                 print(f'[robot.goto] init goto_across_floor...')
+
+                self.get_lift_mission_detail()
+                time.sleep(2)
+                
+                threading.Thread(target=self.lift_mission_publisher).start()
                 return True
 
             self.door_agent_start = True  # door-agent logic
@@ -932,20 +944,57 @@ class Robot:
 
             return True
         except:
-            return False
-
+            
+            return False      
+         
     ## Methods
     ### Lift
-    def robocore_call_lift(self, task_json):
+    def robocore_call_lift(self, task_json):  
         try:
-            print(f'robocore_call_lift: {task_json}')
+            # print(f'robocore_call_lift: {task_json}')
+            # mapId = task_json['parameters']['mapId']
+            mapId = self.get_current_map_rm_guid()
+            
+            # need to get target_floor_int
+            # mapId -> nw_layout_id -> nw_floor_id
+            target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', mapId)
+            target_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
 
-            mapId = task_json['parameters']['mapId']
+            while(self.emsdlift.occupied):
+                print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                time.sleep(2)
+            
+            # keep calling the lift
+            while(True):
+                # check if available
+                if(self.emsdlift.occupied):
+                    print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                    time.sleep(2)
+                    continue
+                # try ask lift
+                is_pressed  = self.emsdlift.rm_to(target_floor_int)
+                if(not is_pressed):
+                    print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
+                    continue
+                
+                print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
+                break
 
-            # need to get current floor id
+            # keep checking if lift is arrived
+            while(True):
+                if(self.emsdlift.is_arrived(target_floor_int)):
+                    print(f'[robocore_call_lift] arrived!')
 
+                    # hold the lift
+                    print(f'[robocore_call_lift] hold the lift door for 5 minutes!')
+                    self.emsdlift.open(10 * 60 * 5) # 10 = 1s
 
-            pass
+                    break
+                else:
+                    print(f'[robocore_call_lift] wait for arriving...')
+                    time.sleep(2)
+
+            return True
         except:
             return False
 
@@ -1013,77 +1062,67 @@ class Robot:
         # to CurWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
         if not done: return False
-        print(f'[lift_mission] to CurWaitingPos...')
+        print(f'[lift_mission] Flag1: to CurWaitingPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-        # call lift
-        
-
-        # hold lift/ release lift
-
+        # call lift, and hold the lift door
+        done = self.pub_call_lift(a_lift_mission)
+        if not done: return False
+        print(f'[lift_mission] Flag2:  pub_call_lift mission...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
 
         # to CurTransitPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurTransitPos)
         if not done: return False
-        print(f'[lift_mission] to CurTransitPos...')
+        print(f'[lift_mission] Flag3:  to CurTransitPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
+
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        print(f'[lift_mission] Flag4:  close lift door...')
 
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
         if not done: return False
-        print(f'[lift_mission] to TargetTransitPos...')
+        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
+        
+        # **check if lift is arrived, hold the lift door
+        while(True):
+            if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
+                print(f'[lift_mission] Flag6:  lift is arrived,...')
+                # hold the lift
+                print(f'[robocore_call_lift] Flag6: hold the lift door for 5 minutes!')
+                self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                break
+
+            print(f'[lift_mission] Flag6:  wait for lift arriving...')
+            time.sleep(2)
 
         # to TargetWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetWaitingPos)
         if not done: return False
-        print(f'[lift_mission] to TargetWaitingPos...')
+        print(f'[lift_mission] Flag7:   to TargetWaitingPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-        # loading package
-        done = self.pub_delivery_wait_for_loading(a_lift_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        print(f'[lift_mission] Flag8:  close lift door...')
 
-        # to receiver
-        done = self.pub_delivery_goto_receiver(a_lift_mission)
+        # to Last GOTO Position
+        done = self.pub_last_goto()
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
+        print(f'[lift_mission] Flag9:   to LastGotoPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
 
-        # unloading package
-        done = self.pub_delivery_wait_for_unloading(a_lift_mission)
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,
-                                         self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # back to charging stataion:  
-        # 1. goto
-        done = self.charging_goto()
-        if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # 2. charging
-        done = self.charging_on()
-        if not done: return False
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # finish. status -> Idle and wait for next mission...
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
-        self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
-        self.delivery_clear_positions(self.a_delivery_mission)
         return True
 
     ## Publish RM Mission
@@ -1414,7 +1453,54 @@ class Robot:
         except:
             return False
         pass
+    
+    def pub_last_goto(self):
+        try:
+            task_json = self.last_goto_json
+            # pos_origin details
+            map_rm_guid = task_json['parameters']['mapId']
+            pos_name = task_json['parameters']['positionName']
+            pos_x = task_json['parameters']['x']
+            pos_y = task_json['parameters']['y']
+            pos_theta = task_json['parameters']['heading']
+            layout_nw_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', map_rm_guid)
+            layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', layout_nw_id)
+            # pos_origin: RMSchema
+            print(f'[lift]: pub_last_goto...')
 
+            # get destination_id and then create a rm_guid first.
+
+            # Job-Delivery START
+            # TASK START
+            tasks = []
+            self.rmapi.delete_all_delivery_markers(layout_rm_guid)
+            # configure task-01: create a new position on RM-Layout
+            self.rmapi.create_delivery_marker(layout_rm_guid, pos_x, pos_y, pos_theta)
+            print(f'layout_id: {layout_rm_guid}')
+            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(layout_rm_guid)
+            print(f'latest_marker_id: {latest_marker_id}')
+            # configure task-01: create a new task
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+                                        layout_rm_guid,
+                                        latest_marker_id,
+                                        order=1,
+                                        map_id=map_rm_guid,
+                                        pos_name=pos_name,
+                                        x=pos_x,
+                                        y=pos_y,
+                                        heading=pos_theta)
+            tasks.append(goto)
+            print(goto)
+            # TASK END
+            print(f'[new_delivery_mission]: configure task end...')
+
+            self.rmapi.new_job(self.robot_rm_guid, layout_rm_guid, tasks=tasks, job_name='Lift-LAST-GOTO')
+            print(f'[new_delivery_mission]: configure job end...')
+
+            return True
+        except:
+            return False
+        
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')

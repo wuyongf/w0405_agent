@@ -40,7 +40,7 @@ def pygame_demo(lift: EMSDLift):
           # print("moving...")
           res = lift.to('4/F')
           print(f'press success? {res}!!')
-        if event.key == pygame.K+_6:
+        if event.key == pygame.K_6:
           # print("moving...")
           res = lift.to('6/F')
           print(f'press success? {res}!!')

@@ -252,7 +252,7 @@ class TaskHandler:
         
         if task.taskType == 'ROBOCORE-CALL-LIFT':
             print(f'ROBOCORE-CALL-LIFT JSON: {task_json}')
-            res = self.robot.rv_charging_stop(task_json, self.task_status_callback)
+            res = self.robot.robocore_call_lift(task_json, self.task_status_callback)
             if (res):
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Complete)
             else:
