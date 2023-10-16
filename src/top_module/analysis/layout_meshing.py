@@ -110,8 +110,21 @@ class LayoutMeshing:
         im = ax.imshow(heat_map)
         plt.show()
 
-        pass
+    def createLuxHeatMap(self, task_id):
+        self.set_task_id(task_id)
+        self.set_data_type("lux")
+        self.getIaqDataList()
+        self.formatList()
+        self.integrateList()
+        self.createHeatMap()
 
+    def compareLuxHeatMap(self, task_id_1, task_id_2):
+        self.set_data_type("lux")
+        self.set_task_id(task_id_1)
+        self.getIaqDataList()
+        self.formatList()
+        list_1 = self.integrateList()
+        self.createHeatMap()
 
 if __name__ == "__main__":
 
@@ -124,16 +137,17 @@ if __name__ == "__main__":
     modb = MODB.TopModuleDBHandler(config, status_summary)
 
     lm = LayoutMeshing(modb)
+    lm.createLuxHeatMap(205)
+    
+    # lm.set_task_id(206)
+    # lm.set_data_type("lux")
+    # lm.getIaqDataList()
+    # # print(lm.data_list_raw)
+    # lm.formatList()
+    # lm.integrateList()
+    # lm.createHeatMap()
 
-    lm.set_task_id(195)
-    lm.set_data_type("lux")
-    lm.getIaqDataList()
-    # print(lm.data_list_raw)
-    lm.formatList()
-    lm.integrateList()
-    lm.createHeatMap()
-
-    print(lm.x_grid_min, lm.x_grid_max, lm.y_grid_min, lm.y_grid_max)
-    print("canvas size: ", lm.x_grid_max - lm.x_grid_min, ", ", lm.y_grid_max - lm.y_grid_min)
+    # print(lm.x_grid_min, lm.x_grid_max, lm.y_grid_min, lm.y_grid_max)
+    # print("canvas size: ", lm.x_grid_max - lm.x_grid_min, ", ", lm.y_grid_max - lm.y_grid_min)
 
     # print(lm.data_list)
