@@ -187,7 +187,7 @@ class EMSDLift():
 
             time.sleep(1)
             self.request_state()
-            if(keymap_robocore_nw[f'{floor_name}'][0] in self.indexes_of_pressed_key): 
+            if(keymap_robocore_nw[f'{floor_name}'][0] in self.pressed_key_robocore): 
                 print(f'[lift.rm_to] this key is in the pressed key list!')
                 return True
             return False

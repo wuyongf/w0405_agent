@@ -258,11 +258,14 @@ if __name__ == '__main__':
     # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
     ### Lift
+    target_layout_id = nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', "'d6734e98-f53a-4b69-8ed8-cbc42ef58e3a'")
+    print(target_layout_id)
+
     # a_lift_mission = nwdb.configure_lift_mission(5,6)
     # print(a_lift_mission)
 
-    lift_pos = nwdb.get_lift_position_detail(1)
-    print(lift_pos)
+    # lift_pos = nwdb.get_lift_position_detail(1)
+    # print(lift_pos)
 
     # # door
     # doors = nwdb.get_value_with_conditions('nw.event.region', 'polygon', {'layout_id': 5, 'is_door': 1})

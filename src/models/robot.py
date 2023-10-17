@@ -353,6 +353,8 @@ class Robot:
                 # target_map_rm_guid = task_json['parameters']['mapId']
                 # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
                 # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
+                rm_task_data = RMSchema.Task(task_json)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
 
                 time.sleep(2)
                 threading.Thread(target=self.lift_mission_publisher).start()
@@ -711,7 +713,7 @@ class Robot:
         start_time = time.time()
         while True:
             # Check if the job is done (replace with your own condition)
-            if self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Completed:
+            if self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Completed or self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Aborted:
                 return True
 
             # Check if the specified duration has elapsed
@@ -960,7 +962,7 @@ class Robot:
             
             # need to get target_floor_int
             # mapId -> nw_layout_id -> nw_floor_id
-            target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', mapId)
+            target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{mapId}"')
             target_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
 
             while(self.emsdlift.occupied):
@@ -975,6 +977,7 @@ class Robot:
                     time.sleep(2)
                     continue
                 # try ask lift
+                print(f'press rm_button: {target_floor_int}')
                 is_pressed  = self.emsdlift.rm_to(target_floor_int)
                 if(not is_pressed):
                     print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
@@ -1060,10 +1063,12 @@ class Robot:
     def lift_mission_publisher(self):
 
         target_map_rm_guid = self.last_goto_json['parameters']['mapId']
-        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{target_map_rm_guid}"')
+        print(f'[lift-debug] target_map_rm_guid: {target_map_rm_guid}')
+        print(f'[lift-debug] target_layout_id: {target_layout_id}')
                 
-        a_lift_mission = self.get_lift_mission_detail(cur_layout_id=self.layout_nw_id, 
-                                                      target_layout_id= target_layout_id)
+        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, 
+                                                      target_layout_id)
 
         # to CurWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
@@ -1098,6 +1103,23 @@ class Robot:
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
         
+        # **keep calling the lift
+        while(True):
+            # check if available
+            if(self.emsdlift.occupied):
+                print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                time.sleep(2)
+                continue
+            # try ask lift
+            print(f'press rm_button: {a_lift_mission.target_floor_int}')
+            is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
+            if(not is_pressed):
+                print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
+                continue
+            
+            print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
+            break
+
         # **check if lift is arrived, hold the lift door
         while(True):
             if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
@@ -1107,7 +1129,7 @@ class Robot:
                 self.emsdlift.open(10 * 60 * 5) # 10 = 1s
                 break
 
-            print(f'[lift_mission] Flag6:  wait for lift arriving...')
+            print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
             time.sleep(2)
 
         # to TargetWaitingPos
@@ -1395,6 +1417,12 @@ class Robot:
             elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
                 pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
 
+            target_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', a_lift_mission.target_layout_id)
+            target_map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', a_lift_mission.target_layout_id)
+            params = self.rmapi.get_layout_map_list(target_layout_rm_guid, target_map_rm_guid)
+            print('<debug>layout_pose 2')
+            self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                              params.scale, params.angle, params.translate)
             map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
             pos_origin.x = map_x
             pos_origin.y = map_y
