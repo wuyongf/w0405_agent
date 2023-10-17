@@ -25,14 +25,20 @@ class IaqSensor():
         self.data_stack = []
         self.stop_event = threading.Event()
         self.run_thread = threading.Thread(target=self.collect_data)
+        self.stream_run_thread = threading.Thread(target=self.stream_thread)
         self.status_summary = status_summary
         self.user_rules = rule.UserRulesChecker(self.modb, self.header_list_insert, status_summary)
-
+        # Result
+        self.result = []
+        self.result_insert_array = []
+        self.result_check_array = []
+        
     def run(self):
         self.collect_data()
         
     def start(self):
         self.run_thread.start()
+        self.stream_run_thread.start()
         
     def stop(self) :
         self.stop_event.set()
@@ -67,9 +73,14 @@ class IaqSensor():
         # self.event_publisher.publish_test()
         # print(self.status_summary())
         # self.publish_event(value=10, name= 'name', data_type= 'data_type', threshold=10)
+        
         self.task_mode = e
         self.task_id = task_id
         
+        if e is False:
+            print('[iaq.py]: Stop IAQ task, Insert data to db')
+            self.insert_array_to_db()
+            self.data_check_array()
 
     
 
@@ -93,54 +104,77 @@ class IaqSensor():
                 try:
                     named_tuple = time.localtime()  # get struct_time
                     time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
-
                     if not ser.is_open:
                         continue
-                    
                     send_data = serial.to_bytes(self.command)
                     ser.write(send_data)  # 发送命令
                     time.sleep(0.1)  # 延时，否则len_return_data将返回0，此处易忽视！！！
-                    
                     len_return_data = ser.inWaiting()  # 获取缓冲数据（接收数据）长度
                     if not len_return_data:
                         continue
-
                     return_data = ser.read(len_return_data)  # 读取缓冲数据
                     return_data_arr = bytearray(return_data)
                     count = 1
                     # print(return_data_arr)
-                    
                     rawdata = [data for i, data in enumerate(return_data_arr) if 4 <= i + 1 <= 25]
-                    
                     if len(list(rawdata)) != 22: continue
-                    result = self.get_data(rawdata)
-                    # print(result)
-                    # print(self.status_summary())
                     
-
-                    # print(result_insert)
+                    result = self.get_data(rawdata)
+                    self.result = result
 
                     if sum(result) < 30000 and result[2] < 5000 :
                         if self.task_mode:
-                            # Insert to mySQL
-                            # print('***********taskmode  ON**********')
-                            result_insert = result.copy()
-                            result_check = result.copy()
-                            result_insert = self.append_robot_position(result_insert)
-                            result_check = self.append_robot_position(result_check, xyonly=True)
-                            self.data_check_stack(result_check)
-                            # print(result)
-                            self.data_insert(result_insert)
-                            print(f"[iaq.py] Task ID: {self.task_id}")
+                            # self.insert_result(result)
+                            self.insert_result_toArray(result)
 
                         # Stream to mySQL
-                        self.data_stream(result)
+                        # self.data_stream(result)
                         time.sleep(self.time_interval)
 
 
                 except IndexError:
                     self.GG += 1
                     continue
+                
+    def insert_result(self, result):
+        # Insert result to mySQL
+        result_insert = result.copy()
+        result_check = result.copy()
+        result_insert = self.append_robot_position(result_insert)
+        result_check = self.append_robot_position(result_check, xyonly=True)
+        self.data_check_stack(result_check)
+        # print(result)
+        self.data_insert(result_insert)
+        print(f"[iaq.py] Task ID: {self.task_id}")
+        
+    def insert_result_toArray(self, result):
+        # Insert result to mySQL
+        result_insert = result.copy()
+        result_check = result.copy()
+        result_insert = self.append_robot_position(result_insert)
+        result_check = self.append_robot_position(result_check, xyonly=True)
+        
+        # Avoid any upload to db during inspection
+        # self.data_check_stack(result_check)
+        # self.data_insert(result_insert)
+        
+        # Insert result to local array
+        self.result_insert_array.append(result_insert)
+        self.result_check_array.append(result_check)
+        
+    def insert_array_to_db(self):
+        for i in self.result_insert_array:
+            self.insert_result(i)
+    
+    def data_check_array(self):
+        for i in self.result_check_array:
+            self.data_check_stack(i)
+
+        
+
+    def stream_thread(self):
+        self.data_stream(self.result)
+        time.sleep(self.time_interval)
 
     def parse_json(self):
         obj = json.loads(self.status_summary())
