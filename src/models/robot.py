@@ -349,9 +349,12 @@ class Robot:
                 # init goto_across_floor
                 print(f'[robot.goto] init goto_across_floor...')
 
-                self.get_lift_mission_detail()
+                # cur_layout_id = self.layout_nw_id
+                # target_map_rm_guid = task_json['parameters']['mapId']
+                # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+                # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
+
                 time.sleep(2)
-                
                 threading.Thread(target=self.lift_mission_publisher).start()
                 return True
 
@@ -1056,8 +1059,11 @@ class Robot:
     ### Lift
     def lift_mission_publisher(self):
 
+        target_map_rm_guid = self.last_goto_json['parameters']['mapId']
+        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+                
         a_lift_mission = self.get_lift_mission_detail(cur_layout_id=self.layout_nw_id, 
-                                                      target_layout_id=0)
+                                                      target_layout_id= target_layout_id)
 
         # to CurWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
