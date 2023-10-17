@@ -121,15 +121,14 @@ class IaqSensor():
                     if len(list(rawdata)) != 22: continue
                     
                     result = self.get_data(rawdata)
-                    self.result = result
+                    # self.result = result
 
                     if sum(result) < 30000 and result[2] < 5000 :
                         if self.task_mode:
                             # self.insert_result(result)
                             self.insert_result_toArray(result)
-
-                        # Stream to mySQL
-                        # self.data_stream(result)
+                            
+                        self.result = result
                         time.sleep(self.time_interval)
 
 
