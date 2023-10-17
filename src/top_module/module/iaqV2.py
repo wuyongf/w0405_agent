@@ -77,6 +77,7 @@ class IaqSensor():
         self.task_mode = e
         self.task_id = task_id
         
+        # Upload to db & check user rules when IAQ task = OFF
         if e is False:
             print('[iaq.py]: Stop IAQ task, Insert data to db')
             self.insert_array_to_db()
@@ -164,7 +165,7 @@ class IaqSensor():
         
     def insert_array_to_db(self):
         for i in self.result_insert_array:
-            self.insert_result(i)
+            self.data_insert(i)
     
     def data_check_array(self):
         for i in self.result_check_array:
