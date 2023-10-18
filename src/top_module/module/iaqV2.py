@@ -75,8 +75,7 @@ class IaqSensor():
         # self.publish_event(value=10, name= 'name', data_type= 'data_type', threshold=10)
         
         # init array
-        self.result_insert_array = []
-        self.result_check_array = []
+
         
         self.task_mode = e
         self.task_id = task_id
@@ -86,6 +85,8 @@ class IaqSensor():
             print('[iaq.py]: Stop IAQ task, Insert data to db')
             self.insert_array_to_db()
             self.data_check_array()
+            self.result_insert_array = []
+            self.result_check_array = []
 
     
 
