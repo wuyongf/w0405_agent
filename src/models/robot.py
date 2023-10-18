@@ -70,7 +70,7 @@ class Robot:
 
         # # # module - models/sensors
         self.mo_lift_levelling = LiftLevellingModule(self.modb, config, port_config, self.status_summary)
-        self.mo_iaq = IaqSensor(self.modb, config, port_config, self.status_summary, Ti=2)
+        self.mo_iaq = IaqSensor(self.modb, config, port_config, self.status_summary, Ti=1)
         self.mo_locker = Locker(port_config)
         self.mo_access_control = AccessControl(self.modb, config, port_config)
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
