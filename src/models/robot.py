@@ -25,7 +25,8 @@ import src.models.enums.nw as NWEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module.lift_levelling_module import LiftLevellingModule
-from src.top_module.module.iaq import IaqSensor
+# from src.top_module.module.iaq import IaqSensor
+from src.top_module.module.iaqV2 import IaqSensor
 from src.top_module.module.locker import Locker
 from src.top_module.module.access_control_module import AccessControl
 from src.top_module.sensor.gyro import Gyro as MoGyro
