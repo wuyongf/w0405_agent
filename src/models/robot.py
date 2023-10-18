@@ -311,7 +311,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle - 180)
+                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)
             # step 3. rv. create point base on rm. localization.
             # print('step 3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -377,7 +377,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle - 180)
+                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -981,6 +981,10 @@ class Robot:
                 print(f'press rm_button: {target_floor_int}')
                 is_pressed  = self.emsdlift.rm_to(target_floor_int)
                 if(not is_pressed):
+                    
+                    # if(self.emsdlift.at())
+                    # OPEN!!!
+
                     print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
                     continue
                 
@@ -1092,10 +1096,6 @@ class Robot:
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-        # **release the lift door
-        self.emsdlift.release_all_keys()
-        self.emsdlift.close()
-        print(f'[lift_mission] Flag4:  close lift door...')
 
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
@@ -1103,14 +1103,15 @@ class Robot:
         print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
+
         
         # **keep calling the lift
         while(True):
-            # check if available
-            if(self.emsdlift.occupied):
-                print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
-                time.sleep(2)
-                continue
+            # # check if available
+            # if(self.emsdlift.occupied):
+            #     print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+            #     time.sleep(2)
+            #     continue
             # try ask lift
             print(f'press rm_button: {a_lift_mission.target_floor_int}')
             is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
@@ -1120,6 +1121,20 @@ class Robot:
             
             print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
             break
+
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        print(f'[lift_mission] Flag4:  close lift door...')
+
+
+
+        # localize TargetTransitPos
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
+        if not done: return False
+        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
 
         # **check if lift is arrived, hold the lift door
         while(True):

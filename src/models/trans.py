@@ -130,10 +130,30 @@ class RMLayoutMapTransform:
         rotated_point = scaled_point / self.map_scale
         cur_map_point = np.matmul(inv(self.rotation_matrix),rotated_point)
 
-        heading = cur_layout_theta - self.map_rotate_angle
-        if heading < 360: heading += 360
+        heading = cur_layout_theta
+        # heading = cur_layout_theta - self.map_rotate_angle
+        # if heading < 360: heading += 360
         
-        return cur_map_point[0][0], cur_map_point[1][0], cur_layout_theta - self.map_rotate_angle
+        print(f'heading: {heading}')
+
+        return cur_map_point[0][0], cur_map_point[1][0], heading
+
+    def find_cur_map_point2(self,cur_layout_x, cur_layout_y, cur_layout_theta = 0):
+
+        cur_layout_point = np.array([[cur_layout_x], [cur_layout_y]])
+        translation_map_origin = self.__find_map_origin_in_layout()
+
+        scaled_point = cur_layout_point - [translation_map_origin[0], translation_map_origin[1]]
+        rotated_point = scaled_point / self.map_scale
+        cur_map_point = np.matmul(inv(self.rotation_matrix),rotated_point)
+
+        # heading = cur_layout_theta
+        heading = cur_layout_theta - self.map_rotate_angle
+        # if heading < 360: heading += 360
+        
+        print(f'heading: {heading}')
+
+        return cur_map_point[0][0], cur_map_point[1][0], heading
 
 def main_RVRMTransform():
 
