@@ -7,7 +7,7 @@ class LayoutMeshing:
 
     def __init__(self, modb):
         self.modb = modb
-        self.mesh_size = 5
+        self.mesh_size = 10
         self.task_id = 0
         self.data_list_raw = []
         self.data_list = []
