@@ -153,6 +153,14 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" , result_min = {result_min}, result_max = {result_max} WHERE id = {id}'
         self.Insert(statement)
 
+    def InsertHeatmap(self, task_id, mesh_size, data_type, x_grid_min, x_grid_max, y_grid_min, y_grid_max, data_list):
+        statement = f'INSERT INTO {self.database}.`nw.event.heatmap` (task_id, mesh_size, data_type, x_grid_min, x_grid_max, y_grid_min, y_grid_max, data_list) VALUES ("{task_id}", "{mesh_size}", "{data_type}", "{x_grid_min}" , "{x_grid_max}", "{y_grid_min}", "{y_grid_max}", "{data_list}")'
+        self.Insert(statement)
+
+    def InsertHeatmapComparison(self, task_id, target_task_id, mission_uuid, data_type, delta_data_list, max_delta, mean_delta):
+        statement = f'INSERT INTO {self.database}.`nw.event.heatmap` (task_id, target_task_id, mission_uuid, data_type, delta_data_list, max_delta, mean_delta) VALUES ("{task_id}", "{target_task_id}", "{mission_uuid}", "{data_type}" , "{delta_data_list}", "{max_delta}", "{mean_delta}")'
+        self.Insert(statement)
+
 
 if __name__ == '__main__':
     try:
@@ -171,6 +179,7 @@ if __name__ == '__main__':
 
         # nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
         print(nwdb.GetIaqData(199))
+        
     except:
         pass
 

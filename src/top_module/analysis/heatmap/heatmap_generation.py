@@ -3,16 +3,17 @@ import src.utils.methods as umethods
 import numpy as np
 import matplotlib.pyplot as plt
 
-class LayoutMeshing:
 
-    def __init__(self, modb):
+class HeatmapGeneration:
+
+    def __init__(self, modb, data_type):
         self.modb = modb
         self.mesh_size = 10
         self.task_id = 0
         self.data_list_raw = []
         self.data_list = []
         self.integrate_list = []
-        self.data_type = "lux"
+        self.data_type = data_type
         self.x_grid_min = 0
         self.x_grid_max = 0
         self.y_grid_min = 0
@@ -92,7 +93,7 @@ class LayoutMeshing:
 
         # print(integrate_list)
         print("number of grids: ", len(integrate_list))
-        
+
         self.integrate_list = integrate_list
         return (integrate_list)
 
@@ -108,14 +109,10 @@ class LayoutMeshing:
                 objList[gridId] = new_value
                 # iList[gridId] = new_i
                 # print('exist', gridId, current_value, objList[gridId], new_value)
-                
             else:
                 objList[gridId] = current_value
                 # iList[gridId] = 1
                 # print('create', gridId, current_value)
-            
-        # print("*****", objList)
-
         integrate_list = []
         for grid_str in objList:
             obj = {}
@@ -127,11 +124,9 @@ class LayoutMeshing:
 
         # print(integrate_list)
         print("number of grids: ", len(integrate_list))
-        
+
         self.integrate_list = integrate_list
         return (integrate_list)
-
-
 
     def plotHeatMap(self, integrate_list, x_grid_min, x_grid_max, y_grid_min, y_grid_max):
         canvas_size_x = x_grid_max - x_grid_min
@@ -143,15 +138,11 @@ class LayoutMeshing:
             # print(x,y)
             heat_map[y][x] = i['value']
         # print(heat_map)
-        
+
         fig, ax = plt.subplots()
         im = ax.imshow(heat_map)
-        
         cbar = ax.figure.colorbar(im, ax=ax)
         cbar.ax.set_ylabel('Lux', rotation=-90, va="bottom")
-        
-
-                
         plt.show()
 
     def createLuxHeatMap(self, task_id):
@@ -170,6 +161,10 @@ class LayoutMeshing:
         self.integrateListV2()
         return (self.integrate_list)
 
+    def insertData(self):
+        listStr = str(self.integrate_list)
+        self.modb.InsertHeatmap(self.task_id, self.mesh_size, self.data_type, self.x_grid_min, self.x_grid_max,
+                                self.y_grid_min, self.y_grid_max, listStr)
 
     # def compareLuxHeatMap(self, task_id_1, task_id_2):
     #     self.set_data_type("lux")
@@ -179,19 +174,21 @@ class LayoutMeshing:
     #     list_1 = self.integrateList()
     #     self.plotHeatMap()
 
+
 if __name__ == "__main__":
 
     def status_summary():
         status = '{"battery": 97.996, "position": {"x": 1520, "y": 761, "theta": 75.20575899303867}, "map_id": 7, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
         return status
 
-    config = umethods.load_config('../../../conf/config.properties')
-    port_config = umethods.load_config('../../../conf/port_config.properties')
+    config = umethods.load_config('../../../../conf/config.properties')
+    port_config = umethods.load_config('../../../../conf/port_config.properties')
     modb = MODB.TopModuleDBHandler(config, status_summary)
 
-    lm = LayoutMeshing(modb)
+    lm = HeatmapGeneration(modb, "lux")
     lm.createLuxHeatMap(212)
-    
+    lm.insertData()
+
     # lm.set_task_id(206)
     # lm.set_data_type("lux")
     # lm.getIaqDataList()
