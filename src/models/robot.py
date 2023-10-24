@@ -977,14 +977,16 @@ class Robot:
                     print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
                     time.sleep(2)
                     continue
-                # try ask lift
-                print(f'press rm_button: {target_floor_int}')
+                
+                # check if at current floor
+                if(self.emsdlift.is_arrived(target_floor_int)):
+                    print(f'[robocore_call_lift] try to call emsd lift... already at cuurent floor...')
+                    break
+
+                # try to call lift
+                # print(f'press rm_button: {target_floor_int}')
                 is_pressed  = self.emsdlift.rm_to(target_floor_int)
                 if(not is_pressed):
-                    
-                    # if(self.emsdlift.at())
-                    # OPEN!!!
-
                     print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
                     continue
                 
@@ -1096,14 +1098,12 @@ class Robot:
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
         if not done: return False
         print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
-
         
         # **keep calling the lift
         while(True):
@@ -1127,8 +1127,6 @@ class Robot:
         self.emsdlift.close()
         print(f'[lift_mission] Flag4:  close lift door...')
 
-
-
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
         if not done: return False
@@ -1151,7 +1149,7 @@ class Robot:
         # to TargetWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetWaitingPos)
         if not done: return False
-        print(f'[lift_mission] Flag7:   to TargetWaitingPos...')
+        print(f'[lift_mission] Flag7: to TargetWaitingPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
@@ -1163,7 +1161,7 @@ class Robot:
         # to Last GOTO Position
         done = self.pub_last_goto()
         if not done: return False
-        print(f'[lift_mission] Flag9:   to LastGotoPos...')
+        print(f'[lift_mission] Flag9: to LastGotoPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
