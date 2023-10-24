@@ -1,14 +1,17 @@
 import src.top_module.db_top_module as MODB
 import src.utils.methods as umethods
 import src.top_module.analysis.heatmap.heatmap_generation as HeatmapGeneration
+import json
+import ast
 
 
 class HeatmapDifference:
 
-    def __init__(self, modb, task_id, target_task_id, data_type):
+    def __init__(self, modb, task_id, target_task_id, data_type, mission_guid):
         self.modb = modb
         # self.meshing_1 = meshing_1
         # self.meshing_2 = meshing_2
+        self.mission_guid = mission_guid
         self.task_id = task_id
         self.target_task_id = target_task_id
         self.data_type = data_type
@@ -19,6 +22,8 @@ class HeatmapDifference:
         self.y_grid_min = 0
         self.y_grid_max = 0
         self.comparison_list = []
+        self.max_delta = 0
+        self.mean_delta = 0
 
     def findMaxMin(self, x, y):
         if x < self.x_grid_min or self.x_grid_min == 0:
@@ -48,17 +53,24 @@ class HeatmapDifference:
         for i in result_dict_2:
             obj2[i['grid_id']] = i['value']
 
-        # print("*******", obj1)
+        # print("*******", obj1)3.
+
         # print("*******", obj2)
 
         return common_grid_ids, obj1, obj2
 
     def get_difference_list(self):
         # Create intergrate list of two task
-        integrate_list_1 = self.meshing_1.createIntergrateList(self.task_id)
-        integrate_list_2 = self.meshing_2.createIntergrateList(self.target_task_id)
+
+        # TODO: get integrate list : change to query db
+        # integrate_list_1 = self.meshing_1.createIntergrateList(self.task_id)
+        # integrate_list_2 = self.meshing_2.createIntergrateList(self.target_task_id)
+        integrate_list_1 = ast.literal_eval(self.modb.GetHeatmap(self.task_id, self.data_type)["data_list"])
+        integrate_list_2 = ast.literal_eval(self.modb.GetHeatmap(self.target_task_id, self.data_type)["data_list"])
         intersection, grid_value_1, grid_value_2 = self.intersection_of_lists(integrate_list_1, integrate_list_2)
         # intersection = {'x109y23', 'x119y26', 'x114y26', 'x110y23', 'x111y21'}
+        # print("*****", ast.literal_eval(self.modb.GetHeatmap(self.task_id, self.data_type)["data_list"]))
+        # print("======", integrate_list_1)
 
         # Get difference and form a list
         obj_list = []
@@ -86,10 +98,26 @@ class HeatmapDifference:
         # plot graph
         self.meshing_2.plotHeatMap(obj_list, self.x_grid_min, self.x_grid_max, self.y_grid_min, self.y_grid_max)
 
+    def get_max_mean_delta(self):
+        max_delta = 0
+        mean_delta = 0
+        for i in self.comparison_list:
+            delta = i['value']
+            if delta > max_delta:
+                max_delta = delta
+            mean_delta += delta
+        if len(self.comparison_list) != 0:
+            mean_delta /= len(self.comparison_list)
+
+        self.max_delta = max_delta
+        self.mean_delta = mean_delta
+        # print(self.max_delta, self.mean_delta)
+        return max_delta, mean_delta
+
     def insertComparisonData(self):
         listStr = str(self.comparison_list)
-        self.modb.InsertHeatmapComparison(self.task_id, self.target_task_id, self.comparison_list)
-        pass
+        self.modb.InsertHeatmapComparison(self.task_id, self.target_task_id, self.mission_guid,
+                                          self.data_type, listStr, self.max_delta, self.mean_delta)
 
 
 if __name__ == "__main__":
@@ -105,7 +133,11 @@ if __name__ == "__main__":
     # meshing_1 = HeatmapGeneration.HeatmapGeneration(modb)
     # meshing_2 = HeatmapGeneration.HeatmapGeneration(modb)
 
-    md = HeatmapDifference(modb, 205, 207, "lux")
+    md = HeatmapDifference(modb, 207, 205, "lux", "test")
     md.get_difference_list()
-    md = HeatmapDifference(modb, 205, 206, "lux")
+    md.get_max_mean_delta()
+    md.insertComparisonData()
+    md = HeatmapDifference(modb, 207, 206, "lux", "test")
     md.get_difference_list()
+    md.get_max_mean_delta()
+    md.insertComparisonData()

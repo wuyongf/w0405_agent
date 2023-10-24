@@ -186,7 +186,7 @@ if __name__ == "__main__":
     modb = MODB.TopModuleDBHandler(config, status_summary)
 
     lm = HeatmapGeneration(modb, "lux")
-    lm.createLuxHeatMap(212)
+    lm.createLuxHeatMap(207)
     lm.insertData()
 
     # lm.set_task_id(206)

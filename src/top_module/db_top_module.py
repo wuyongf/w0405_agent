@@ -153,35 +153,103 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'UPDATE {self.database}.`sensor.gyro.datapack` SET {column} = "{result}" , result_min = {result_min}, result_max = {result_max} WHERE id = {id}'
         self.Insert(statement)
 
+    def GetHeatmap(self, task_id, data_type):
+        statement = f'SELECT * FROM {self.database}.`nw.event.heatmap` WHERE `task_id` = "{task_id}" AND `data_type` = "{data_type}"'
+        return self.SelectAll(statement)[0] if self.SelectAll(statement) else None
+
     def InsertHeatmap(self, task_id, mesh_size, data_type, x_grid_min, x_grid_max, y_grid_min, y_grid_max, data_list):
         statement = f'INSERT INTO {self.database}.`nw.event.heatmap` (task_id, mesh_size, data_type, x_grid_min, x_grid_max, y_grid_min, y_grid_max, data_list) VALUES ("{task_id}", "{mesh_size}", "{data_type}", "{x_grid_min}" , "{x_grid_max}", "{y_grid_min}", "{y_grid_max}", "{data_list}")'
         self.Insert(statement)
 
-    def InsertHeatmapComparison(self, task_id, target_task_id, mission_uuid, data_type, delta_data_list, max_delta, mean_delta):
-        statement = f'INSERT INTO {self.database}.`nw.event.heatmap` (task_id, target_task_id, mission_uuid, data_type, delta_data_list, max_delta, mean_delta) VALUES ("{task_id}", "{target_task_id}", "{mission_uuid}", "{data_type}" , "{delta_data_list}", "{max_delta}", "{mean_delta}")'
+    def InsertHeatmapComparison(self, task_id, target_task_id, mission_guid, data_type, delta_data_list, max_delta, mean_delta):
+        statement = f'INSERT INTO {self.database}.`nw.event.heatmap.comparison` (task_id, target_task_id, mission_guid, data_type, delta_data_list, max_delta, mean_delta) VALUES ("{task_id}", "{target_task_id}", "{mission_guid}", "{data_type}" , "{delta_data_list}", "{max_delta}", "{mean_delta}")'
         self.Insert(statement)
+
+    def GetMissionGuidByTaskId(self, task_id):
+        statement = f'SELECT `rm_mission_guid` FROM {self.database}.`sys.mission` WHERE `ID` = "{task_id}"'
+        return self.Select(statement)
+
+    def GetTaskIdListByMissionId(self, mission_guid, limit):
+        # mission_guid = self.GetMissionGuid(task_id)
+        statement = f'SELECT `ID` FROM {self.database}.`sys.mission` WHERE `rm_mission_guid` = "{mission_guid}" ORDER BY `ID` DESC LIMIT {limit + 2}'
+        dict_list = self.SelectAll(statement)
+        result = []
+        for i in dict_list:
+            result.append(i['ID'])
+        return result
+
+    # Get rules by task_id
+    def GetHeatmapComparisonRules(self, task_id, data_type):
+        mission_guid = self.GetMissionGuidByTaskId(task_id)
+        statement = f'SELECT * FROM {self.database}.`nw.event.heatmap.rules` WHERE `mission_guid` = "{mission_guid}" AND `data_type` = "{data_type}"'
+        result = self.SelectAll(statement)
+        if len(result) > 0:
+            return result[0]
+        return {}
+
+    def GetComparisonHistoryHeatmapByTaskId(self, task_id, data_type):
+        comparison = self.GetHeatmapComparisonRules(task_id, data_type)
+        # print(comparison)
+        missionId = comparison['mission_guid']
+        comparisonRange = comparison['comparison_range']
+        # history mission data list
+        return (self.GetHeatmapByMissionId(missionId, data_type, comparisonRange))
+
+    def GetHeatmapByMissionId(self, mission_guid, data_type, comparison_range):
+        task_id_list = self.GetTaskIdListByMissionId(mission_guid, comparison_range)
+        # print("[db_top_module.py] task_id_list : ", task_id_list)
+        result = []
+        for i in task_id_list:
+            statement = f'SELECT * FROM {self.database}.`nw.event.heatmap` WHERE `task_id` = "{i}" AND `data_type` = "{data_type}"'
+            data = self.SelectAll(statement)
+            if len(data) > 0:
+                result.append(data[0])
+        return result
+
+    def GetTaskIdList(self, task_id, data_type):
+        comparison = self.GetHeatmapComparisonRules(task_id, data_type)
+        missionId = comparison['mission_guid']
+        comparisonRange = comparison['comparison_range']
+        task_id_list = self.GetTaskIdListByMissionId(missionId, comparisonRange)
+        return task_id_list
+
+    # def GetTaskIdList(self, mission_guid, data_type, comparison_range):
+    #     task_id_list = self.GetTaskIdListByMissionId(mission_guid, comparison_range)
+    #     return task_id_list
 
 
 if __name__ == '__main__':
-    try:
 
-        def status_summary():
-            status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
-            return status
+    def status_summary():
+        status = '{"battery": 97.996, "position": {"x": 105.40159891291846, "y": 67.38314149752657, "theta": 75.20575899303867}, "map_id": 2, "map_rm_guid": "277c7d6f-2041-4000-9a9a-13f162c9fbfc"}'
+        return status
 
-        config = umethods.load_config('../../conf/config.properties')
-        port_config = umethods.load_config('../../../conf/port_config.properties')
+    config = umethods.load_config('../../conf/config.properties')
+    port_config = umethods.load_config('../../../conf/port_config.properties')
 
-        nwdb = TopModuleDBHandler(config, status_summary)
+    nwdb = TopModuleDBHandler(config, status_summary)
 
-        # nwdb.CreateGyroDataPack(1,1)
-        # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
+    # nwdb.CreateGyroDataPack(1,1)
+    # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
 
-        # nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
-        print(nwdb.GetIaqData(199))
-        
-    except:
-        pass
+    # nwdb.InsertEventLog( 999, 2, 'rule_name', 2, 1000, 1.0, 2.0, 5, "0000-0000")
+    # print(nwdb.GetIaqData(199))
+
+    # print(nwdb.GetMissionGuid(199))
+
+    # ============================
+    # comparison = nwdb.GetHeatmapComparisonRules(214, 'lux')
+    # print(comparison)
+    # missionId = comparison['mission_guid']
+    # comparisonRange = comparison['comparison_range']
+    # # history mission data list
+    # print(nwdb.GetHeatmapByMissionId(missionId, 'lux', comparisonRange))
+    print(nwdb.GetTaskIdList(211, 'lux'))
+    # ============================
+
+    # print(nwdb.GetTaskIdListByMissionId('5277d6a2-1f85-4587-a8b8-a6336985eca3'))
+
+    # print(nwdb.GetHeatmap(212, 'lux'))
 
     # print(nwdb.GetRegions())
 
@@ -211,5 +279,3 @@ if __name__ == '__main__':
 
     # nwdb.UpdateDistanceResult(column="result_rl", id=73, result=1)
     # nwdb.DeleteLastStreamIaqData()
-
-    pass
