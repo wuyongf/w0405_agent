@@ -723,7 +723,7 @@ class Robot:
                 return False
 
             # Wait for a short interval before checking again
-            time.sleep(2)
+            time.sleep(0.3)
 
     def new_delivery_mission(self, json):
         try:
