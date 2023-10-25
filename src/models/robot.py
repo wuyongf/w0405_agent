@@ -318,7 +318,7 @@ class Robot:
             self.rvapi.post_new_waypoint(rv_waypoint.mapName, rv_waypoint.name, rv_waypoint.x, rv_waypoint.y,
                                          rv_waypoint.angle)
             self.rvapi.change_mode_navigation()
-            self.rvapi.change_map(rv_map_name)
+            self.rvapi.change_map2(rv_map_name, rv_waypoint.name)
             self.rvapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             # step 4. double check
             # print('step 4')

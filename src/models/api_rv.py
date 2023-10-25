@@ -254,9 +254,9 @@ if __name__ == '__main__':
     ####################################################################################################
     # Charging
     ####################################################################################################
-    res = rvapi.get_charging_feedback()
-    print(res)
-    rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
+    # res = rvapi.get_charging_feedback()
+    # print(res)
+    # rvapi.post_charging(upperLimit=100,duration_min=60,shutdownAfterCharging=False)
     # rvapi.delete_charging()
 
     # res = rvapi.post_new_navigation_task('11',orientationIgnored=True)
@@ -286,8 +286,8 @@ if __name__ == '__main__':
     # res = rvapi.get_mode()
     # print(res.state)
 
-    # # # rvapi.change_map('5W_20230308_2', 'WP01')
-    # rvapi.change_map('5W516_20230313', 'WAYPOINT1')
+    # rvapi.change_map2('5W_20230308_2', 'WP01')
+    rvapi.change_map2('5W516-20230424', 'CHARGING')
     # res = rvapi.get_active_map()
     # print(res.name)
 
