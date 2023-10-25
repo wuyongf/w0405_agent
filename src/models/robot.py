@@ -1098,13 +1098,6 @@ class Robot:
         print(f'[lift_mission] Flag3:  to CurTransitPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
-
-        # localize TargetTransitPos
-        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
-        if not done: return False
-        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
         
         # **keep calling the lift
         while(True):
@@ -1118,15 +1111,28 @@ class Robot:
             is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
             if(not is_pressed):
                 print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
+                
+                # **release the lift door
+                self.emsdlift.release_all_keys()
+                self.emsdlift.close()
+                print(f'[lift_mission] Flag4:  close lift door...')
                 continue
-            
+
+            # **release the lift door
+            self.emsdlift.release_all_keys()
+            self.emsdlift.close()
+            print(f'[lift_mission] Flag4:  close lift door...')
+                
             print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
             break
 
-        # **release the lift door
-        self.emsdlift.release_all_keys()
-        self.emsdlift.close()
-        print(f'[lift_mission] Flag4:  close lift door...')
+
+        # localize TargetTransitPos
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
+        if not done: return False
+        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
 
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
@@ -1442,6 +1448,7 @@ class Robot:
             pos_origin.x = map_x
             pos_origin.y = map_y
             pos_origin.heading = map_heading
+            print(f'[xxx] heading: {map_heading}')
             print(f'[pub_localize_liftpos]: get_lift_position_detail...')
 
             # get destination_id and then create a rm_guid first.
