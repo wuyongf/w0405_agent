@@ -710,8 +710,9 @@ class Robot:
     
     ## Delivery Publisher Methods
     def wait_for_job_done(self, duration_min):
-        print(f'[delivery]: wait for job done... duration: {duration_min} minutes')
+        print(f'[robot.wait_for_job_done]: duration: {duration_min} minutes')
         start_time = time.time()
+        time.sleep(0.5)
         while True:
             # Check if the job is done (replace with your own condition)
             if self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Completed or self.rmapi.get_latest_mission_status() == RMEnum.MissionStatus.Aborted:
@@ -723,7 +724,7 @@ class Robot:
                 return False
 
             # Wait for a short interval before checking again
-            time.sleep(0.3)
+            time.sleep(0.2)
 
     def new_delivery_mission(self, json):
         try:

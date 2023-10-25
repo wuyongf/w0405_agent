@@ -206,8 +206,9 @@ class RMAPI(api.AuthenticatedAPI):
         payload["name"] = job_name
         payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
         payload['tasks'] = tasks
-        print(payload)
-        return self.post('/mission', json.dumps(payload))
+        print(f'[api_rm.new_job] payload: {payload}')
+        res = self.post('/mission', json.dumps(payload))
+        return res
 
     # Delivery
     def new_task(self, skill_id, layout_id, layoutMarkerId = None, order = 1):
