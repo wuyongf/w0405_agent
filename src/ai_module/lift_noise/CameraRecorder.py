@@ -1,7 +1,14 @@
 import cv2
 
+# List available camera devices
+for i in range(10):  # Check up to 10 camera indices, adjust as needed
+    cap = cv2.VideoCapture(i)
+    if cap.isOpened():
+        print(f"Camera {i}: {cap.getBackendName()}")
+        cap.release()
+
 # Initialize the USB camera
-cap = cv2.VideoCapture(0)  # Use 0 for the first camera, 1 for the second, and so on
+cap = cv2.VideoCapture(2)  # Use 0 for the first camera, 1 for the second, and so on
 
 # Define the codec and create a VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -26,3 +33,6 @@ out.release()
 
 # Close all OpenCV windows
 cv2.destroyAllWindows()
+
+#  /dev/ttyACM0
+#  /dev/video0
