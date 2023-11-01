@@ -968,16 +968,16 @@ class Robot:
          
     ## Methods
     ### Lift
-    def robocore_call_lift(self):  
+    def robocore_call_lift(self, target_floor_int):  
         try:
-            # print(f'robocore_call_lift: {task_json}')
-            # mapId = task_json['parameters']['mapId']
-            mapId = self.get_current_map_rm_guid()
+            # # print(f'robocore_call_lift: {task_json}')
+            # # mapId = task_json['parameters']['mapId']
+            # mapId = self.get_current_map_rm_guid()
             
-            # need to get target_floor_int
-            # mapId -> nw_layout_id -> nw_floor_id
-            target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{mapId}"')
-            target_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
+            # # need to get target_floor_int
+            # # mapId -> nw_layout_id -> nw_floor_id
+            # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{mapId}"')
+            # target_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
 
             while(self.emsdlift.occupied):
                 print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
@@ -999,6 +999,7 @@ class Robot:
                 # try to call lift
                 # print(f'press rm_button: {target_floor_int}')
                 is_pressed  = self.emsdlift.rm_to(target_floor_int)
+                print(f'target_floor_int {target_floor_int}')
                 if(not is_pressed):
                     print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
                     continue
@@ -1081,7 +1082,7 @@ class Robot:
 
     ### Lift
 
-    def thread_check_lift_arrive(self):
+    def thread_check_lift_arrive(self, a_lift_mission):
         # pasue robot first!
         self.rvjoystick.enable()
 
@@ -1100,7 +1101,7 @@ class Robot:
             time.sleep(0.5)
         print(f'[thread_check_lift_arrive] finished')
 
-    def func_lift_pressbutton_releasedoor(self):
+    def func_lift_pressbutton_releasedoor(self, a_lift_mission):
         print(f'[func_lift_pressbutton_releasedoor] start...')
         while(True):
             # # check if available
@@ -1128,7 +1129,7 @@ class Robot:
             print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
             break
 
-    def func_lift_checkarrive_holddoor(self):
+    def func_lift_checkarrive_holddoor(self,a_lift_mission):
         print(f'[func_lift_checkarrive_holddoor] start...')
         while(True):
             if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
@@ -1176,22 +1177,24 @@ class Robot:
         if not done: return False
         print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
         self.rvjoystick.enable()
-        self.robocore_call_lift()
+        # print(f'ccc: a_lift_mission.target_floor_int {a_lift_mission.target_floor_int}')
+        self.robocore_call_lift(a_lift_mission.cur_floor_int)
         time.sleep(2)
         self.rvjoystick.disable()
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
         
         # to press target floor button and release the door
-        # self.func_lift_pressbutton_releasedoor()
-        threading.Thread(target=self.func_lift_pressbutton_releasedoor).start()
+        self.func_lift_pressbutton_releasedoor(a_lift_mission)
+        # threading.Thread(target=self.func_lift_pressbutton_releasedoor, args=(a_lift_mission)).start()
 
         # to LiftMapOut
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapOut)
         if not done: return False
         print(f'[lift_mission] Flag7: to LiftMapOut...')
         # **check if lift is arrived, hold the lift door
-        threading.Thread(target=self.thread_check_lift_arrive).start()
+        self.thread_check_lift_arrive(a_lift_mission)
+        # threading.Thread(target=self.thread_check_lift_arrive, args=(a_lift_mission,)).start()
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
@@ -1785,10 +1788,11 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path)
 
-    a_lift_mission = robot.get_lift_mission_detail(5, 6)
+    # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 
-    robot.pub_call_lift(a_lift_mission)
+    # robot.pub_call_lift(a_lift_mission)
 
+    robot.robocore_call_lift()
     # robot.charging_on()
     # robot.charging_off()
     # robot.charging_goto()
