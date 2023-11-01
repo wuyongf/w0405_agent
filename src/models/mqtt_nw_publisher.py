@@ -63,6 +63,19 @@ class NWMQTTPub():
         # Publish message
         self.nw_client.publish(topic, payload_str)
 
+    def rotate_camera(self, angle):
+        # Define topic and payload
+        topic = "nw/set/cameras"
+
+        if(angle < 0 or angle > 150): angle = 0
+        payload = {
+            "angle": f"{angle}"
+            }
+        # Convert payload to JSON string
+        payload_str = json.dumps(payload)
+        # Publish message
+        self.nw_client.publish(topic, payload_str)
+
 
 if __name__ == "__main__":
 

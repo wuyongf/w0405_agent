@@ -94,6 +94,7 @@ class Robot:
     def sensor_start(self):
         self.mo_iaq.start()
         self.nwmqttpub.fans_off("all")
+        self.nwmqttpub.rotate_camera(50)
 
         # delivery
         self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
