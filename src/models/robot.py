@@ -320,6 +320,7 @@ class Robot:
             self.rvapi.change_mode_navigation()
             self.rvapi.change_map2(rv_map_name, rv_waypoint.name)
             self.rvapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            print(f'[aaa] init_heading: {rv_waypoint.angle}' )
             # step 4. double check
             # print('step 4')
             pose_is_valid = True
@@ -1228,6 +1229,13 @@ class Robot:
         print(f'[lift_mission] Flag3:  to CurTransitPos...')
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
+
+        # localize TargetTransitPos
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
+        if not done: return False
+        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
         
         # **keep calling the lift
         while(True):
@@ -1255,14 +1263,6 @@ class Robot:
                 
             print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
             break
-
-
-        # localize TargetTransitPos
-        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
-        if not done: return False
-        print(f'[lift_mission] Flag5:  pub_localize_liftpos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
 
         # localize TargetTransitPos
         done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetTransitPos)
