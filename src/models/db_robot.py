@@ -128,17 +128,25 @@ class robotDBHandler(db.AzureDB):
         
         # cur_layout_id = cur_layout_id
         cur_floor_int = self.get_single_value('robot.map.layout', 'floor_id', 'ID', cur_layout_id)
-        cur_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'is_waiting_pos': 1})[0]
-        cur_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'is_waiting_pos': 0})[0]
+        cur_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'pos_type': 'in'})[0]
+        cur_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': cur_floor_int, 'pos_type': 'transit'})[0]
 
         # target_layout_id = target_layout_id
         target_floor_int = self.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
-        target_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'is_waiting_pos': 1})[0]
-        target_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'is_waiting_pos': 0})[0]
+        target_waiting_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'pos_type': 'out'})[0]
+        target_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'pos_type': 'transit'})[0]
+        target_out_pos_id =  self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': target_floor_int, 'pos_type': 'out'})[0]
+
+        # liftmap_layout_id
+        liftmap_layout_id = 999
+        liftmap_in_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': 999, 'pos_type': 'in'})[0]
+        liftmap_transit_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': 999, 'pos_type': 'transit'})[0]
+        liftmap_out_pos_id = self.get_value_with_conditions('data.lift.location', 'ID', {'lift_id': self.nwdb_lift_id, 'floor_id': 999, 'pos_type': 'out'})[0]
         
         return NWSchema.LiftMission(lift_id, robot_id, 
                  cur_layout_id, cur_floor_int, cur_waiting_pos_id, cur_transit_pos_id,
-                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id)
+                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id, target_out_pos_id,
+                 liftmap_layout_id, liftmap_in_pos_id, liftmap_transit_pos_id, liftmap_out_pos_id)
 
     def get_lift_position_detail(self, pos_id):
         floor_id = self.get_single_value('data.lift.location', 'floor_id', 'ID', pos_id)

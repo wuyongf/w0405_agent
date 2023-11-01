@@ -357,8 +357,8 @@ class Robot:
                 rm_task_data = RMSchema.Task(task_json)
                 status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
 
-                time.sleep(2)
-                threading.Thread(target=self.lift_mission_publisher).start()
+                time.sleep(1)
+                threading.Thread(target=self.lift_mission_publisher2).start()
                 return True
 
             self.door_agent_start = True  # door-agent logic
@@ -1068,6 +1068,137 @@ class Robot:
         return True
 
     ### Lift
+
+    def thread_check_lift_arrive(self):
+        # pasue robot first!
+        self.rvjoystick.enable()
+
+        while(True):
+            if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
+                print(f'[lift_mission] Flag6:  lift is arrived,...')
+                # hold the lift
+                print(f'[robocore_call_lift] Flag6: hold the lift door for 5 minutes!')
+                self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                # release robot manual mode!
+                time.sleep(2)
+                self.rvjoystick.disable()
+
+                break
+            print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
+            time.sleep(0.5)
+        print(f'[thread_check_lift_arrive] finished')
+
+    def func_lift_pressbutton_releasedoor(self):
+        print(f'[func_lift_pressbutton_releasedoor] start...')
+        while(True):
+            # # check if available
+            # if(self.emsdlift.occupied):
+            #     print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+            #     time.sleep(2)
+            #     continue
+            # try ask lift
+            print(f'press rm_button: {a_lift_mission.target_floor_int}')
+            is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
+            if(not is_pressed):
+                print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
+                
+                # **release the lift door
+                self.emsdlift.release_all_keys()
+                self.emsdlift.close()
+                print(f'[lift_mission] Flag4:  close lift door...')
+                continue
+
+            # **release the lift door
+            self.emsdlift.release_all_keys()
+            self.emsdlift.close()
+            print(f'[lift_mission] Flag4:  close lift door...')
+                
+            print(f'[robocore_call_lift] called emsd lift... wait for arriving...')
+            break
+
+    def func_lift_checkarrive_holddoor(self):
+        print(f'[func_lift_checkarrive_holddoor] start...')
+        while(True):
+            if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
+                print(f'[lift_mission] Flag6:  lift is arrived,...')
+                # hold the lift
+                print(f'[robocore_call_lift] Flag6: hold the lift door for 5 minutes!')
+                self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                break
+
+            print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
+            time.sleep(2)
+        
+    def lift_mission_publisher2(self):
+
+        target_map_rm_guid = self.last_goto_json['parameters']['mapId']
+        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{target_map_rm_guid}"')
+        print(f'[lift-debug] target_map_rm_guid: {target_map_rm_guid}')
+        print(f'[lift-debug] target_layout_id: {target_layout_id}')
+                
+        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, target_layout_id)
+
+        # to CurWaitingPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
+        if not done: return False
+        print(f'[lift_mission] Flag1: to CurWaitingPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # localization to liftmap
+        done = self.pub_localize_liftmap_pos(a_lift_mission, NWEnum.LiftPositionType.LiftMapIn)
+        if not done: return False
+        print(f'[lift_mission] Flag2: Localize LiftMapIn...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # call lift, and hold the lift door
+        done = self.pub_call_lift(a_lift_mission)
+        if not done: return False
+        print(f'[lift_mission] Flag2:  pub_call_lift mission...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # to LiftMapTransitPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapTransit)
+        if not done: return False
+        print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+        
+        # to press target floor button and release the door
+        self.func_lift_pressbutton_releasedoor()
+
+        # to LiftMapOut
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapOut)
+        if not done: return False
+        print(f'[lift_mission] Flag7: to LiftMapOut...')
+        # **check if lift is arrived, hold the lift door
+        threading.Thread(target=self.thread_check_lift_arrive).start()
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        print(f'[lift_mission] Flag8:  close lift door...')
+
+        # localization to liftmap
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetOutPos)
+        if not done: return False
+        print(f'[lift_mission] Flag2: Localize TargetOutPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # to Last GOTO Position
+        done = self.pub_last_goto()
+        if not done: return False
+        print(f'[lift_mission] Flag9: to LastGotoPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        return True
+    
     def lift_mission_publisher(self):
 
         target_map_rm_guid = self.last_goto_json['parameters']['mapId']
@@ -1075,8 +1206,7 @@ class Robot:
         print(f'[lift-debug] target_map_rm_guid: {target_map_rm_guid}')
         print(f'[lift-debug] target_layout_id: {target_layout_id}')
                 
-        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, 
-                                                      target_layout_id)
+        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, target_layout_id)
 
         # to CurWaitingPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
@@ -1153,7 +1283,7 @@ class Robot:
             print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
             time.sleep(2)
 
-        # to TargetWaitingPos
+        # to TargetOutPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetWaitingPos)
         if not done: return False
         print(f'[lift_mission] Flag7: to TargetWaitingPos...')
@@ -1385,6 +1515,14 @@ class Robot:
                 pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_waiting_pos_id)
             elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
                 pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.TargetOutPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_out_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.LiftMapIn):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_in_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.LiftMapTransit):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_transit_pos_id)
+            elif(pos_type == NWEnum.LiftPositionType.LiftMapOut):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_out_pos_id)
             
             map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
             pos_origin.x = map_x
@@ -1425,6 +1563,71 @@ class Robot:
         except:
             return False
 
+    def pub_localize_liftmap_pos(self, a_lift_mission: NWSchema.LiftMission, pos_type: NWEnum.LiftPositionType):
+            try:
+                # pos_origin details
+                # pos_origin: RMSchema
+                if  (pos_type == NWEnum.LiftPositionType.CurWaitingPos): 
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_waiting_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.CurTransitPos):
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.cur_transit_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.TargetWaitingPos): 
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_waiting_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.LiftMapIn):
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_in_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.LiftMapTransit):
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_transit_pos_id)
+                elif(pos_type == NWEnum.LiftPositionType.LiftMapOut):
+                    pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.liftmap_out_pos_id)
+                
+                target_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', a_lift_mission.liftmap_layout_id)
+                target_map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', a_lift_mission.liftmap_layout_id)
+                params = self.rmapi.get_layout_map_list(target_layout_rm_guid, target_map_rm_guid)
+                print('<debug> liftmap_pos')
+                self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                                params.scale, params.angle, params.translate)
+                map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
+                pos_origin.x = map_x
+                pos_origin.y = map_y
+                pos_origin.heading = map_heading
+                print(f'[xxx] heading: {map_heading}')
+                print(f'[pub_localize_liftmap_pos]: get_lift_position_detail...')
+
+                # get destination_id and then create a rm_guid first.
+
+                # Job-Delivery START
+                # TASK START
+                tasks = []
+                self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
+                # configure task-01: create a new position on RM-Layout
+                self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
+                print(f'layout_id: {pos_origin.layout_guid}')
+                latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
+                print(f'latest_marker_id: {latest_marker_id}')
+                # configure task-01: create a new task
+                goto = self.rmapi.task_localize(self.skill_config.get('RM-Skill', 'RM-LOCALIZE'),
+                                            pos_origin.layout_guid,
+                                            latest_marker_id,
+                                            order=1,
+                                            map_id=pos_origin.map_guid,
+                                            pos_name=pos_origin.pos_name,
+                                            x=pos_origin.x,
+                                            y=pos_origin.y,
+                                            heading=pos_origin.heading)
+                tasks.append(goto)
+                print(goto)
+                # TASK END
+                print(f'[pub_localize_liftpos]: configure task end...')
+
+                self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+                print(f'[pub_localize_liftpos]: configure job end...')
+
+                return True
+            except:
+                return False
+
     def pub_localize_liftpos(self, a_lift_mission: NWSchema.LiftMission, pos_type: NWEnum.LiftPositionType):
         try:
             # pos_origin details
@@ -1437,7 +1640,9 @@ class Robot:
                 pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_waiting_pos_id)
             elif(pos_type == NWEnum.LiftPositionType.TargetTransitPos):
                 pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_transit_pos_id)
-
+            elif(pos_type == NWEnum.LiftPositionType.TargetOutPos):
+                pos_origin = self.nwdb.get_lift_position_detail(a_lift_mission.target_out_pos_id)
+            
             target_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', a_lift_mission.target_layout_id)
             target_map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', a_lift_mission.target_layout_id)
             params = self.rmapi.get_layout_map_list(target_layout_rm_guid, target_map_rm_guid)

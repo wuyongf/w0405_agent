@@ -35,7 +35,8 @@ class ChargingStation:
 class LiftMission:
     def __init__(self, lift_id, robot_id, 
                  cur_layout_id, cur_floor_int, cur_waiting_pos_id, cur_transit_pos_id,
-                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id):
+                 target_layout_id, target_floor_int, target_waiting_pos_id, target_transit_pos_id, target_out_pos_id,
+                 liftmap_layout_id, liftmap_in_pos_id, liftmap_transit_pos_id, liftmap_out_pos_id):
         self.lift_id = lift_id
         self.robot_id = robot_id
         self.cur_layout_id = cur_layout_id
@@ -47,6 +48,13 @@ class LiftMission:
         self.target_floor_int = target_floor_int
         self.target_waiting_pos_id = target_waiting_pos_id
         self.target_transit_pos_id = target_transit_pos_id
+        self.target_out_pos_id = target_out_pos_id
+
+        self.liftmap_layout_id = liftmap_layout_id
+        self.liftmap_in_pos_id = liftmap_in_pos_id
+        self.liftmap_transit_pos_id = liftmap_transit_pos_id
+        self.liftmap_out_pos_id =liftmap_out_pos_id
+
 
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)

@@ -20,6 +20,10 @@ class LiftPositionType(Enum):
     CurTransitPos = 1
     TargetWaitingPos = 2
     TargetTransitPos = 3
+    TargetOutPos = 4
+    LiftMapIn = 5
+    LiftMapTransit = 6
+    LiftMapOut = 7
 
 # Delivery
 class LockerCommand(Enum):
