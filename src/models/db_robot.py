@@ -230,7 +230,7 @@ class robotDBHandler(db.AzureDB):
     def get_value_with_conditions(self, table, target, conditions):
         try:
             # Construct the WHERE clause for multiple conditions
-            where_clause = ' AND '.join([f'{key} = {value}' for key, value in conditions.items()])
+            where_clause = ' AND '.join([f'{key} = \'{value}\'' for key, value in conditions.items()])
             statement = f'SELECT {target} FROM {self.database}.`{table}` WHERE {where_clause};'
             # Execute the SQL statement to retrieve the value
             result = self.SelectAll(statement)

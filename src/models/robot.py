@@ -388,7 +388,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)
+                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -1595,14 +1595,14 @@ class Robot:
                 target_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', a_lift_mission.liftmap_layout_id)
                 target_map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', a_lift_mission.liftmap_layout_id)
                 params = self.rmapi.get_layout_map_list(target_layout_rm_guid, target_map_rm_guid)
-                print('<debug> liftmap_pos')
+                # print('<debug> liftmap_pos')
                 self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                                 params.scale, params.angle, params.translate)
                 map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
                 pos_origin.x = map_x
                 pos_origin.y = map_y
                 pos_origin.heading = map_heading
-                print(f'[xxx] heading: {map_heading}')
+                # print(f'[xxx] heading: {map_heading}')
                 print(f'[pub_localize_liftmap_pos]: get_lift_position_detail...')
 
                 # get destination_id and then create a rm_guid first.
@@ -1656,14 +1656,14 @@ class Robot:
             target_layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', a_lift_mission.target_layout_id)
             target_map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', a_lift_mission.target_layout_id)
             params = self.rmapi.get_layout_map_list(target_layout_rm_guid, target_map_rm_guid)
-            print('<debug>layout_pose 2')
+            # print('<debug>layout_pose 2')
             self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                               params.scale, params.angle, params.translate)
             map_x, map_y, map_heading = self.T_RM.find_cur_map_point(pos_origin.x, pos_origin.y, pos_origin.heading)
             pos_origin.x = map_x
             pos_origin.y = map_y
             pos_origin.heading = map_heading
-            print(f'[xxx] heading: {map_heading}')
+            # print(f'[xxx] heading: {map_heading}')
             print(f'[pub_localize_liftpos]: get_lift_position_detail...')
 
             # get destination_id and then create a rm_guid first.
