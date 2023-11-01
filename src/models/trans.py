@@ -51,11 +51,14 @@ class RVRMTransform:
         waypoint.y = (self.map_height - pixel_y) * \
             self.map_resolution + self.rv_origin_y
 
+        # print(f'<heading> heading: {heading}')
+        if heading < 0:
+            heading = heading + 360.0
         if 0 <= heading <= 270.0:
             waypoint.angle = - (heading - 90.0) * math.pi / 180.0
         if 270 < heading <= 360.0:
             waypoint.angle = (- (heading - 360.0) + 90) * math.pi / 180.0
-        print(f'rv_heading: {waypoint.angle * 180.0 / math.pi}')
+        # print(f'rv_heading: {waypoint.angle * 180.0 / math.pi}')
         # print(f'rv pose(x,y,theta) is ({rv_x},{rv_y},{rv_angle})')
         return waypoint
 
