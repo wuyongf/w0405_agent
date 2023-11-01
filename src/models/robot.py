@@ -310,7 +310,13 @@ class Robot:
             # print('step 2')
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
-            self.get_current_layout_pose()
+            
+            map_rm_guid = self.nwdb.get_map_rm_guid(rv_map_name)
+            self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
+            params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
+            self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                              params.scale, params.angle, params.translate)
+            
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
                                                 rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)
 
