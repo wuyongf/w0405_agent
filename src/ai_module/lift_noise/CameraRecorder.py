@@ -1,38 +1,46 @@
 import cv2
 
-# List available camera devices
-for i in range(10):  # Check up to 10 camera indices, adjust as needed
-    cap = cv2.VideoCapture(i)
-    if cap.isOpened():
-        print(f"Camera {i}: {cap.getBackendName()}")
-        cap.release()
+# Open the first camera
+cap1 = cv2.VideoCapture(0)  # Use the appropriate index for your first camera
 
-# Initialize the USB camera
-cap = cv2.VideoCapture(2)  # Use 0 for the first camera, 1 for the second, and so on
+# Open the second camera
+cap2 = cv2.VideoCapture(2)  # Use the appropriate index for your second camera
 
-# Define the codec and create a VideoWriter object
+# Check if the cameras opened successfully
+if not cap1.isOpened() or not cap2.isOpened():
+    print("Error: Could not open one or both cameras.")
+    exit(1)
+
+# Define the codec and create VideoWriter objects for recording
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))  # You can change the filename, codec, frame rate, and resolution
+out1 = cv2.VideoWriter('output1.avi', fourcc, 20.0, (640, 480))
+out2 = cv2.VideoWriter('output2.avi', fourcc, 20.0, (640, 480))
 
 while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+    # Read frames from the first camera
+    ret1, frame1 = cap1.read()
 
-    # Write the frame to the output video
-    out.write(frame)
+    # Read frames from the second camera
+    ret2, frame2 = cap2.read()
 
-    cv2.imshow('Video', frame)
+    # If both frames were read successfully, record them
+    if ret1 and ret2:
+        out1.write(frame1)
+        out2.write(frame2)
 
+        # Display the frames (optional)
+        cv2.imshow('Camera 1', frame1)
+        cv2.imshow('Camera 2', frame2)
+
+    # Press 'q' to exit the loop
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 # Release the VideoCapture and VideoWriter objects
-cap.release()
-out.release()
+cap1.release()
+cap2.release()
+out1.release()
+out2.release()
 
 # Close all OpenCV windows
 cv2.destroyAllWindows()
-
-#  /dev/ttyACM0
-#  /dev/video0
