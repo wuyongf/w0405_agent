@@ -312,6 +312,9 @@ class Robot:
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
                                                 rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)
+
+            print(f'<heading_debug> rv_map_metadata.angle: {rv_map_metadata.angle}')
+            print(f'<heading_debug> self.T_RM.map_rotate_angle: {self.T_RM.map_rotate_angle}')
             # step 3. rv. create point base on rm. localization.
             # print('step 3')
             self.rvapi.delete_all_waypoints(rv_map_name)
