@@ -967,7 +967,7 @@ class Robot:
          
     ## Methods
     ### Lift
-    def robocore_call_lift(self, task_json):  
+    def robocore_call_lift(self):  
         try:
             # print(f'robocore_call_lift: {task_json}')
             # mapId = task_json['parameters']['mapId']
@@ -1163,22 +1163,27 @@ class Robot:
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-        # call lift, and hold the lift door
-        done = self.pub_call_lift(a_lift_mission)
-        if not done: return False
-        print(f'[lift_mission] Flag2:  pub_call_lift mission...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
+        # # call lift, and hold the lift door
+        # done = self.pub_call_lift(a_lift_mission)
+        # if not done: return False
+        # print(f'[lift_mission] Flag2:  pub_call_lift mission...')
+        # done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        # if not done: return False  # stop assigning lift mission
 
         # to LiftMapTransitPos
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapTransit)
         if not done: return False
         print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
+        self.rvjoystick.enable()
+        self.robocore_call_lift()
+        time.sleep(2)
+        self.rvjoystick.disable()
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
         
         # to press target floor button and release the door
-        self.func_lift_pressbutton_releasedoor()
+        # self.func_lift_pressbutton_releasedoor()
+        threading.Thread(target=self.func_lift_pressbutton_releasedoor).start()
 
         # to LiftMapOut
         done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapOut)
@@ -1186,7 +1191,7 @@ class Robot:
         print(f'[lift_mission] Flag7: to LiftMapOut...')
         # **check if lift is arrived, hold the lift door
         threading.Thread(target=self.thread_check_lift_arrive).start()
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
         # **release the lift door
