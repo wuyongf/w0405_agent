@@ -100,11 +100,11 @@ class IaqSensor():
             # Set current position for calculate displacement
             x, y = self.get_current_postition()
             self.set_capture_position(x, y)
+            print(f"[iaqV2.py] Start task mode, set current x,y = ({x}, {y})")
 
-        print(f"[iaqV2.py] Start task mode, set current x,y = ({x}, {y})")
         # Upload to db & check user rules when IAQ task = OFF
         if e is False:
-            print('[iaq.py]: Stop IAQ task, Insert data to db')
+            print('[iaqV2.py]: Stop IAQ task, Insert data to db')
             self.insert_array_to_db()
             self.data_check_array()
             self.result_insert_array = []
