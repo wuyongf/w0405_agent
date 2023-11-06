@@ -92,10 +92,15 @@ class IaqSensor():
     def set_task_mode(self, e, task_id=0):
         # Set task mode
         self.task_mode = e
-        self.task_id = task_id
-        # Set current position for calculate displacement
-        x, y = self.get_current_postition()
-        self.set_capture_position(x, y)
+
+        # ***** BUG Here : This will set task_id = 0 before upload data to db
+        # self.task_id = task_id
+
+        if e is True:
+            # Set current position for calculate displacement
+            x, y = self.get_current_postition()
+            self.set_capture_position(x, y)
+
         print(f"[iaqV2.py] Start task mode, set current x,y = ({x}, {y})")
         # Upload to db & check user rules when IAQ task = OFF
         if e is False:
@@ -104,6 +109,8 @@ class IaqSensor():
             self.data_check_array()
             self.result_insert_array = []
             self.result_check_array = []
+        # Debug 06/11/2023 : Move set id to end of uploading
+        self.task_id = task_id
 
     def data_check_stack(self, dataset):
         self.data_stack.append(dataset)
@@ -193,8 +200,9 @@ class IaqSensor():
         while True:
             if self.task_mode is True:
                 self.displacement = self.get_robot_displacement()
-                pass
-            time.sleep(0.5)
+                print("[iaqV2] displacement: ", self.displacement)
+            # time.sleep(0.5)
+            time.sleep(2)
 
     def get_robot_displacement(self):
         current_x, current_y = self.get_current_postition()
