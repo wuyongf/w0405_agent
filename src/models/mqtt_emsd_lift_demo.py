@@ -25,24 +25,47 @@ def pygame_demo(lift: EMSDLift):
           lift.get_state()
         if event.key == pygame.K_o:
           # print("moving...")
-          lift.open()
+          res = lift.open()
+          print(f'press success? {res}!!')
         if event.key == pygame.K_c:
           # print("moving...")
-          lift.close()
+          res = lift.close()
+          print(f'press success? {res}!!')
         if event.key == pygame.K_r:
           # print("moving...")
           lift.release_all_keys() # not keep pressing
+          print(f'release_all_keys')
         if event.key == pygame.K_0:
           # print("moving...")
           res = lift.to('G/F')
+          print(f'press success? {res}!!')
+        if event.key == pygame.K_1:
+          # print("moving...")
+          res = lift.to('1/F')
+          print(f'press success? {res}!!')
+        if event.key == pygame.K_2:
+          # print("moving...")
+          res = lift.to('2/F')
+          print(f'press success? {res}!!')
+        if event.key == pygame.K_3:
+          # print("moving...")
+          res = lift.to('3/F')
           print(f'press success? {res}!!')
         if event.key == pygame.K_4:
           # print("moving...")
           res = lift.to('4/F')
           print(f'press success? {res}!!')
+        if event.key == pygame.K_5:
+          # print("moving...")
+          res = lift.to('5/F')
+          print(f'press success? {res}!!')
         if event.key == pygame.K_6:
           # print("moving...")
           res = lift.to('6/F')
+          print(f'press success? {res}!!')
+        if event.key == pygame.K_7:
+          # print("moving...")
+          res = lift.to('7/F')
           print(f'press success? {res}!!')
     
         

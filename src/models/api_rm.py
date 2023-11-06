@@ -373,6 +373,12 @@ class RMAPI(api.AuthenticatedAPI):
 
         return RMEnum.MissionStatus(value)
     
+    def get_latest_mission(self):
+        json_data = self.list_missions()
+        # print(json_data)
+        list_data = json_data['result']['list']
+        return list_data[0]
+    
     def get_layout_guid(self, map_guid):
         data = self.list_maps()
         results = data['result']['list']
@@ -527,12 +533,15 @@ def pub_localization():
 
 if __name__ == '__main__':
 
-    pub_localization()
+    # pub_localization()
     
     # goto_charging_staion()
     
-    # config = umethods.load_config('../../conf/config.properties')
-    # rmapi = RMAPI(config)
+    config = umethods.load_config('../../conf/config.properties')
+    rmapi = RMAPI(config)
+
+    res = rmapi.get_latest_mission()
+    print(res)
 
     # res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
 

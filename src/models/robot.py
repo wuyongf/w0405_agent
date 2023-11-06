@@ -367,9 +367,10 @@ class Robot:
                 # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
                 # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
                 rm_task_data = RMSchema.Task(task_json)
-                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
-
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Cancelled)
                 time.sleep(1)
+
+                
                 threading.Thread(target=self.lift_mission_publisher).start()
                 return True
 
@@ -421,7 +422,7 @@ class Robot:
             if (status == 'NOT_CHARGING'):
                 continue_flag = False
                 time.sleep(1)
-                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
 
             if (status == 'PRE_CHARGING' or status == 'CHARGING' or status == 'POST_CHARGING'):
                 print('[charging.check_mission_status] robot is charging...')
@@ -447,7 +448,7 @@ class Robot:
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
-                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Complete)
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
 
                 # # if error
                 # if(self.check_goto_has_error):
@@ -456,7 +457,7 @@ class Robot:
                 # if cancelled
                 if (self.check_goto_is_cancelled()):
                     print('[goto.check_mission_status] robot has cancelled moving task')
-                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Failed)
 
                 self.door_agent_start = False
                 self.door_agent_finish = True  # door-agent logic
@@ -1025,6 +1026,35 @@ class Robot:
         except:
             return False
 
+    def robocore_call_lift2(self, target_floor_int):  
+            try:
+                # keep calling the lift
+                # keep checking if lift is arrived
+                while(True):
+                    if(self.emsdlift.occupied):
+                        # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                        print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
+                        time.sleep(2)
+                        continue
+                    elif(self.emsdlift.is_arrived(target_floor_int) and not self.emsdlift.is_anykey_pressed()):
+                        is_open_and_hold = self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                        if(is_open_and_hold):
+                            print(f'[robocore_call_lift] arrived!')
+                            print(f'[robocore_call_lift] hold the lift door for 5 minutes!')
+                            break                    
+                    else:
+                        is_pressed = self.emsdlift.rm_to(target_floor_int)
+                        if(is_pressed):
+                            print(f'[robocore_call_lift] pressed button successful, wait for arriving...')
+                        else:
+                            print(f'[robocore_call_lift] press button failed, retry...')                   
+                        time.sleep(2)
+                        continue
+
+                return True
+            except:
+                return False
+
     ## Mission Designer
     ### Delivery
     def delivery_mission_publisher(self):
@@ -1081,13 +1111,12 @@ class Robot:
         return True
 
     ### Lift
-
-    def thread_check_lift_arrive(self, a_lift_mission):
+    def thread_check_lift_arrive(self, target_floor_int):
         # pasue robot first!
         self.rvjoystick.enable()
 
         while(True):
-            if(self.emsdlift.is_arrived(a_lift_mission.target_floor_int)):
+            if(self.emsdlift.is_arrived(target_floor_int)):
                 print(f'[lift_mission] Flag6:  lift is arrived,...')
                 # hold the lift
                 print(f'[robocore_call_lift] Flag6: hold the lift door for 5 minutes!')
@@ -1097,19 +1126,47 @@ class Robot:
                 self.rvjoystick.disable()
 
                 break
-            print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
+            print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {target_floor_int}...')
             time.sleep(0.5)
         print(f'[thread_check_lift_arrive] finished')
+
+    def thread_check_lift_arrive2(self, target_floor_int):
+        try:
+            # pasue robot first!
+            self.rvjoystick.enable()            
+
+            # keep calling the lift
+            while(True):
+                
+                if(self.emsdlift.occupied):
+                    # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                    print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
+                    time.sleep(2)
+                    continue
+                elif(self.emsdlift.is_arrived(target_floor_int) and not self.emsdlift.is_anykey_pressed()):
+                    is_open_and_hold = self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                    if(is_open_and_hold):
+                        print(f'[robocore_call_lift] arrived!')
+                        print(f'[robocore_call_lift] hold the lift door for 5 minutes!')
+                        # release robot manual mode!
+                        time.sleep(1)
+                        self.rvjoystick.disable()
+                        break                    
+                else:
+                    is_pressed = self.emsdlift.rm_to(target_floor_int)
+                    if(is_pressed):
+                        print(f'[robocore_call_lift] pressed button successful, wait for arriving...')
+                    else:
+                        print(f'[robocore_call_lift] press button failed, retry...')                   
+                    time.sleep(2)
+                    continue
+            return True
+        except:
+            return False
 
     def func_lift_pressbutton_releasedoor(self, a_lift_mission):
         print(f'[func_lift_pressbutton_releasedoor] start...')
         while(True):
-            # # check if available
-            # if(self.emsdlift.occupied):
-            #     print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
-            #     time.sleep(2)
-            #     continue
-            # try ask lift
             print(f'press rm_button: {a_lift_mission.target_floor_int}')
             is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
             if(not is_pressed):
@@ -1170,8 +1227,8 @@ class Robot:
         if not done: return False
         print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
         self.rvjoystick.enable()
-        self.robocore_call_lift(a_lift_mission.cur_floor_int)
-        time.sleep(2)
+        self.robocore_call_lift2(a_lift_mission.cur_floor_int)
+        time.sleep(1)
         self.rvjoystick.disable()
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
@@ -1185,7 +1242,8 @@ class Robot:
         if not done: return False
         print(f'[lift_mission] Flag7: to LiftMapOut...')
         # **check if lift is arrived, hold the lift door
-        self.thread_check_lift_arrive(a_lift_mission)
+        # self.thread_check_lift_arrive(a_lift_mission)
+        self.thread_check_lift_arrive2(a_lift_mission.target_floor_int)
         # threading.Thread(target=self.thread_check_lift_arrive, args=(a_lift_mission,)).start()
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning lift mission
@@ -1680,7 +1738,7 @@ if __name__ == '__main__':
 
     # robot.pub_call_lift(a_lift_mission)
 
-    robot.robocore_call_lift()
+    robot.robocore_call_lift2(4)
     # robot.charging_on()
     # robot.charging_off()
     # robot.charging_goto()

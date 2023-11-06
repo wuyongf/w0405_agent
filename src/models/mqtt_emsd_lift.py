@@ -56,8 +56,8 @@ class EMSDLift():
         self.client.on_message = self.on_message
         
         # lift properties & status
-        self.occupied = False
-        self.anykey_pressed = False
+        self.occupied = True
+        self.anykey_pressed = True
         self.pressed_key_robocore = []
         self.current_floor_str = 'G/F'
         self.pressed_floorkey_nw_rm = []
@@ -119,7 +119,7 @@ class EMSDLift():
             # print(f'current_floor: {self.current_floor}')
 
             # check if any key is pressed
-            self.is_anykey_pressed(msg_json)
+            self.func_is_anykey_pressed(msg_json)
 
             # door status
             if(self.is_key_pressed("open")): self.rm_door_state = 2
@@ -173,6 +173,8 @@ class EMSDLift():
 
         time.sleep(1)
         self.request_state()
+        print(f'self.pressed_key_robocore: {self.pressed_key_robocore}')
+        print(keymap_robocore_nw[f'{floor_name}'])
         if(self.pressed_key_robocore == keymap_robocore_nw[f'{floor_name}']): return True
         return False
     
@@ -195,17 +197,31 @@ class EMSDLift():
             print(f'[lift.rm_to] failed')
             return False  
         
-    def open(self, duration = 2):
+    def open(self, duration = 10):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
         msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw['open']).to_json()
         self.client.publish(topic, msg)
 
-    def close(self, duration = 2):
+        time.sleep(1)
+        self.request_state()
+        # print(f'self.pressed_key_robocore: {self.pressed_key_robocore}')
+        # print(keymap_robocore_nw['open'])
+        if(self.pressed_key_robocore == keymap_robocore_nw['open']): return True
+        return False
+
+    def close(self, duration = 10):
         topic = f'Lift_Robo/{self.lift_id}/Control_Panel/Key_Press'
         msg = LiftSchema.Message(timestamp = get_unix_timestamp(), Press_Time = duration, error_code = 0, Key_Press = keymap_robocore_nw['close']).to_json()
         self.client.publish(topic, msg)
 
-    def is_anykey_pressed(self, msg_json):
+        time.sleep(1)
+        self.request_state()
+        # print(f'self.pressed_key_robocore: {self.pressed_key_robocore}')
+        # print(keymap_robocore_nw['close'])
+        if(self.pressed_key_robocore == keymap_robocore_nw['close']): return True
+        return False
+
+    def func_is_anykey_pressed(self, msg_json):
 
         # Given hex number
         hex_number = msg_json['Button_Bitmap']
@@ -224,6 +240,12 @@ class EMSDLift():
             # print("Binary representation:", binary_string)
             # print("pressed key list:", self.indexes_of_pressed_key)
         pass
+
+    def is_anykey_pressed(self):
+        self.request_state()
+        time.sleep(0.2)
+        if self.anykey_pressed: return True
+        return False
 
     def is_key_pressed(self, floor_name):
         self.request_state()

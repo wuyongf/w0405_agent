@@ -2,8 +2,9 @@ from enum import Enum
 
 class TaskStatusType(Enum):
     Executing = 1
-    Complete = 2
-    Fail = 3
+    Completed = 2
+    Failed = 3
+    Cancelled = 4
 
 class MissionStatus(Enum):
     Completed = 1
