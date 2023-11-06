@@ -206,7 +206,7 @@ class EMSDLift():
         self.request_state()
         # print(f'self.pressed_key_robocore: {self.pressed_key_robocore}')
         # print(keymap_robocore_nw['open'])
-        if(self.pressed_key_robocore == keymap_robocore_nw['open']): return True
+        if(keymap_robocore_nw['open'][0] in self.pressed_key_robocore): return True
         return False
 
     def close(self, duration = 10):

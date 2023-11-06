@@ -367,7 +367,7 @@ class Robot:
                 # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
                 # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
                 rm_task_data = RMSchema.Task(task_json)
-                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Cancelled)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                 time.sleep(1)
 
                 
@@ -1034,16 +1034,19 @@ class Robot:
                     if(self.emsdlift.occupied):
                         # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
                         print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
-                        time.sleep(2)
+                        time.sleep(1)
                         continue
                     elif(self.emsdlift.is_arrived(target_floor_int) and not self.emsdlift.is_anykey_pressed()):
                         is_open_and_hold = self.emsdlift.open(10 * 60 * 5) # 10 = 1s
                         if(is_open_and_hold):
                             print(f'[robocore_call_lift] arrived!')
                             print(f'[robocore_call_lift] hold the lift door for 5 minutes!')
-                            break                    
+                            break
+                        else:
+                            self.emsdlift.release_all_keys()
                     else:
                         is_pressed = self.emsdlift.rm_to(target_floor_int)
+                        print(f'target_floor_int; {target_floor_int}')
                         if(is_pressed):
                             print(f'[robocore_call_lift] pressed button successful, wait for arriving...')
                         else:
@@ -1151,7 +1154,9 @@ class Robot:
                         # release robot manual mode!
                         time.sleep(1)
                         self.rvjoystick.disable()
-                        break                    
+                        break
+                    else:
+                        self.emsdlift.release_all_keys()                  
                 else:
                     is_pressed = self.emsdlift.rm_to(target_floor_int)
                     if(is_pressed):
