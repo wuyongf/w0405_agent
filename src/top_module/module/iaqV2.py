@@ -201,6 +201,7 @@ class IaqSensor():
             if self.task_mode is True:
                 self.displacement = self.get_robot_displacement()
                 print("[iaqV2] displacement: ", self.displacement)
+                self.update_capture_position()
             # time.sleep(0.5)
             time.sleep(2)
 
@@ -210,6 +211,10 @@ class IaqSensor():
         delta_y = current_y - self.capture_y
         displacement = (delta_x ** 2 + delta_y ** 2) ** 0.5
         return displacement
+
+    def update_capture_position(self):
+        current_x, current_y = self.get_current_postition()
+        self.set_capture_position(x=current_x, y=current_y)
 
     def stream_thread(self):
         self.data_stream(self.result)
