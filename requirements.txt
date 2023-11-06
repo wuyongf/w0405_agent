@@ -15,9 +15,10 @@ tensorflow-io==0.33.0
 pydub
 scikit-learn
 opencv-python
-numpy==1.26.1
+numpy
 matplotlib==3.8.0
 shapely==2.0.2
+gTTS
 
 # for SMS
 twilio
