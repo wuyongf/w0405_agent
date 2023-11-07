@@ -1,5 +1,5 @@
 import os
-from AudioUtils import AudioUtils
+from src.ai_module.lift_noise.AudioUtils import AudioUtils
 import tensorflow as tf
 import numpy as np
 import json

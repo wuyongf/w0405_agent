@@ -9,18 +9,8 @@ import configparser
 
 
 class AudioUtils:
-    def __init__(self) -> None:
-        self.config = self.load_config('cfg/config.properties')
-
-    def load_config(self, config_addr):
-        # Load config file
-        configs = configparser.ConfigParser()
-        try:
-            configs.read(config_addr)
-        except:
-            print("Error loading properties file, check the correct directory")
-        return configs
-
+    def __init__(self):
+        pass
 
     def load_wav_16k_mono(self, filename):
         """Load .wav file and resample to 16k sample rate"""
@@ -65,11 +55,11 @@ class AudioUtils:
         return filtered_audio
     
 
-    
-
-    def split(self, file_path, output_dir):
+    def split(self, file_path, file_name, output_dir):
         '''Split audio file into 5-second slices with 1-sec overlap'''
         # Input audio file to be sliced
+        # print(file_path)
+        # print(output_dir)
         audio = AudioSegment.from_wav(file_path)
 
         # normalized_sound = self.match_target_amplitude(audio, -30.0)
@@ -135,19 +125,24 @@ class AudioUtils:
 
 if __name__ == "__main__":
 
-    config = configparser.ConfigParser()
-    try:
-        config.read('cfg/config.properties')
-    except:
-        print("Error loading properties file, check the correct directory")
+    file_path = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996/recording_1699332347.8895252.wav'
+    out_dir = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996'
+    audio = AudioUtils()
+    audio.split(file_path, out_dir)
 
-    # Example for splitting audio files in the folder
-    # and save to subfolder "chunk"
+    # config = configparser.ConfigParser()
+    # try:
+    #     config.read('cfg/config.properties')
+    # except:
+    #     print("Error loading properties file, check the correct directory")
+
+    # # Example for splitting audio files in the folder
+    # # and save to subfolder "chunk"
     
-    for file_name in os.listdir(config.get("RECORDING", 'original_path')):
-        file_path = os.path.join(config.get("RECORDING", 'original_path'), file_name)
-        audio = AudioUtils()
-        audio.split(file_path, config.get("RECORDING", 'chunk_path'))
+    # for file_name in os.listdir(config.get("RECORDING", 'original_path')):
+    #     file_path = os.path.join(config.get("RECORDING", 'original_path'), file_name)
+    #     audio = AudioUtils()
+    #     audio.split(file_path, config.get("RECORDING", 'chunk_path'))
 
     # original_path
     # Record/{current_date}/{mission_id}

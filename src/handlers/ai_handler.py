@@ -1,5 +1,5 @@
 # NW AI Agent - Rev01 -  2023.10.31
-import math, time, threading
+import math, time, threading, os
 import src.models.robot as Robot
 import src.utils.methods as umethods
 # from src.models.schema.nw import Door, DoorRegion
@@ -24,7 +24,7 @@ class AIAgent:
         self.audio_utils = AudioUtils()
         
         # for inference
-        self.audio_detector = AudioAnomalyDetector(self.audio_chunk_path)
+        self.audio_detector = AudioAnomalyDetector(config)
         
     # Logic
     def update_audio_record_path(self, audio_record_path):
@@ -33,6 +33,7 @@ class AIAgent:
         '''
         self.audio_record_path = audio_record_path
         self.audio_recorder.update_save_path(self.audio_record_path)
+        if not os.path.exists(self.audio_record_path): os.makedirs(self.audio_record_path)
 
         # self.video_record_path = video_record_path
         pass
@@ -42,6 +43,7 @@ class AIAgent:
         Chunk/{current_date}/{mission_id}/
         '''
         self.audio_chunk_path = audio_chunk_path
+        if not os.path.exists(self.audio_chunk_path): os.makedirs(self.audio_chunk_path)
         pass
 
     def start_recording(self):
@@ -55,17 +57,19 @@ class AIAgent:
     def stop_recording(self):
         try:
             print(f'[ai_handler.stop_recording] stop recording, saving...')
-            self.audio_recorder.save_record(self.audio_record_path)
+            self.audio_recorder.save_record()
             print(f'[ai_handler.stop_recording] finished.')
             return True
         except:
             return False
 
-    def start_preporcessing(self):
+    def start_slicing(self):
         try:
-            print(f'[ai_handler.start_preporcessing] start preporcessing...')
-            self.audio_utils.split(self.audio_record_path, self.audio_chunk_path)
-            print(f'[ai_handler.start_preporcessing] finished.')
+            print(f'[ai_handler.start_slicing] start slicing...')
+            for file_name in os.listdir(self.audio_record_path):
+                file_path = os.path.join(self.audio_record_path, file_name)
+                self.audio_utils.split(file_path, file_name, self.audio_chunk_path)
+            print(f'[ai_handler.start_slicing] finished.')
             return True
         except:
             return False
@@ -85,8 +89,23 @@ class AIAgent:
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
-    robot = Robot.Robot(config,port_config)
+    skill_config_path = '../models/conf/rm_skill.properties'
+    ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
+    robot = Robot.Robot(config,port_config,skill_config_path)
+    ai_handler = AIAgent(ai_config,robot)
 
-    ai_handler = AIAgent(robot)
+    # Init
+    ai_handler.update_audio_record_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996')
+    ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
+
+    # # Sound - Record
+    # ai_handler.start_recording()
+    # time.sleep(1)
+    # ai_handler.stop_recording()
+
+    ai_handler.start_slicing()
+
     
+    
+
     

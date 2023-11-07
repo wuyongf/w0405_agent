@@ -1,6 +1,7 @@
 import pyaudio
 import wave
 import os, time
+import threading
 
 class Recorder:
     def __init__(self):
@@ -18,17 +19,24 @@ class Recorder:
                             frames_per_buffer=self.frames_per_buffer)
         self.frames = []
 
+        # logic
+        self.record_flag = True
+
     def update_save_path(self, path):
         self.path = path # "/home/nw/Desktop/Sounds"
         pass
     
     def start_recording(self):   
-        while True:
+        threading.Thread(target=self.thread_recording).start()
+
+    def thread_recording(self):
+        while self.record_flag:
             data = self.stream.read(self.frames_per_buffer)
             self.frames.append(data)
-   
 
     def save_record(self):
+        self.record_flag = False
+        time.sleep(1)
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
@@ -41,7 +49,7 @@ class Recorder:
         sound_file.writeframes(b''.join(self.frames))
         sound_file.close()
 
-        print("Saved" + file_name)
+        print("Saved: " + file_name)
 
 if __name__ == "__main__":
     recorder = Recorder()
