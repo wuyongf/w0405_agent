@@ -1,94 +1,62 @@
 import cv2
+import threading
 
 class RGBCamera:
 
     def __init__(self, index):
         self.index = index
         self.cap = cv2.VideoCapture(self.index)
-        # check
+        
+        # Check if the camera is opened
         if not self.cap.isOpened():
             print(f"Error: Could not open camera {index}.")
-            pass
+            return
+        
         # Define the codec and create VideoWriter objects for recording
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        self.out = cv2.VideoWriter('output1.avi', self.fourcc, 20.0, (640, 480))
-
-        # logic
-        self.flag = True
+        self.out = None  # This will be initialized in start_recording method
+        
+        # Logic
+        self.record_flag = False  # Recording is off by default
 
     def update_save_path(self, path):
-        self.path = path # "/home/nw/Desktop/Videos"
-        pass
+        # Set the output file path for video recording
+        self.out = cv2.VideoWriter(path, self.fourcc, 20.0, (640, 480))
 
-    def start_recording(self):   
+    def start_recording(self):
+        # Start recording video
+        if self.out is not None and not self.record_flag:
+            self.record_flag = True
+            threading.Thread(target=self.record).start() 
 
+    def stop_and_save_record(self):
+        # Stop recording and save the recorded video
+        if self.record_flag:
+            self.record_flag = False
+            self.out.release()  # Release the video writer
+
+    def record(self):
         while True:
-            # Read frames from the first camera
-            ret, frame = self.cap.read()
+            if self.record_flag:
+                ret, frame = self.cap.read()
+                if not ret:
+                    print("Error: Could not read frame.")
+                    break
+                self.out.write(frame)  # Write the frame to the video file
 
-            # If both frames were read successfully, record them
-            if ret:
-                self.out.write(frame)
+    def release(self):
+        # Release the video capture and writer objects
+        self.cap.release()
+        if self.out is not None:
+            self.out.release()
 
-                # # Display the frames (optional)
-                # cv2.imshow(f'Camera {self.index}', frame)
+if __name__ == "__main__":
+    camera = RGBCamera(0)  # Initialize camera with index 0
+    camera.update_save_path('output1.avi')  # Set the output file path
+    camera.start_recording()  # Start recording
 
-    def save_record(self):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.audio.terminate()
+    # You can stop recording and save the video using the following line if needed
+    # camera.stop_and_save_record()
 
-        file_name = os.path.join(self.path, "recording_" + str(time.time()) + ".wav")
-        sound_file = wave.open(file_name, "wb")
-        sound_file.setnchannels(self.n_channels)
-        sound_file.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))
-        sound_file.setframerate(self.sampling_rate)
-        sound_file.writeframes(b''.join(self.frames))
-        sound_file.close()
-
-        print("Saved" + file_name)
-
-# Open the first camera
-cap1 = cv2.VideoCapture(0)  # Use the appropriate index for your first camera
-
-# Open the second camera
-cap2 = cv2.VideoCapture(2)  # Use the appropriate index for your second camera
-
-# Check if the cameras opened successfully
-if not cap1.isOpened() or not cap2.isOpened():
-    print("Error: Could not open one or both cameras.")
-    exit(1)
-
-# Define the codec and create VideoWriter objects for recording
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out1 = cv2.VideoWriter('output1.avi', fourcc, 20.0, (640, 480))
-out2 = cv2.VideoWriter('output2.avi', fourcc, 20.0, (640, 480))
-
-while True:
-    # Read frames from the first camera
-    ret1, frame1 = cap1.read()
-
-    # Read frames from the second camera
-    ret2, frame2 = cap2.read()
-
-    # If both frames were read successfully, record them
-    if ret1 and ret2:
-        out1.write(frame1)
-        out2.write(frame2)
-
-        # Display the frames (optional)
-        cv2.imshow('Camera 1', frame1)
-        cv2.imshow('Camera 2', frame2)
-
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the VideoCapture and VideoWriter objects
-cap1.release()
-cap2.release()
-out1.release()
-out2.release()
-
-# Close all OpenCV windows
-cv2.destroyAllWindows()
+    # Don't forget to release the camera at the end
+    # camera.release()

@@ -34,7 +34,7 @@ class Recorder:
             data = self.stream.read(self.frames_per_buffer)
             self.frames.append(data)
 
-    def save_record(self):
+    def stop_and_save_record(self):
         self.record_flag = False
         time.sleep(1)
         self.stream.stop_stream()
@@ -57,4 +57,4 @@ if __name__ == "__main__":
         recorder.update_save_path("/home/nw/Desktop/Sounds")
         recorder.start_recording()
     except KeyboardInterrupt:
-        recorder.save_record()
+        recorder.stop_and_save_record()

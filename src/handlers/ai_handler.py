@@ -60,11 +60,11 @@ class AIAgent:
         except:
             return False
 
-    def stop_recording(self):
+    def stop_and_save_recording(self):
         try:
-            print(f'[ai_handler.stop_recording] stop recording, saving...')
-            self.audio_recorder.save_record()
-            print(f'[ai_handler.stop_recording] finished.')
+            print(f'[ai_handler.stop_and_save_recording] stop recording, saving...')
+            self.audio_recorder.stop_and_save_record()
+            print(f'[ai_handler.stop_and_save_recording] finished.')
             return True
         except:
             return False
@@ -144,10 +144,10 @@ if __name__ == '__main__':
     ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
     ai_handler.update_audio_infer_result_path('/home/nw/Documents/GitHub/w0405_agent/results/sounds/Chunk/20231107/996')
 
-    # # Sound - Record
-    # ai_handler.start_recording()
-    # time.sleep(1)
-    # ai_handler.stop_recording()
+    # Sound - Record
+    ai_handler.start_recording()
+    time.sleep(1)
+    ai_handler.stop_and_save_recording()
 
     # # Sound - Slicing
     # ai_handler.start_slicing()
