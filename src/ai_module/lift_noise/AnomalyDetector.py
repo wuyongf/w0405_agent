@@ -9,26 +9,35 @@ import configparser
 class AnomalyDetector:
     def __init__(self, config):
 
+        self.config = config 
+        self.ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
+        with open(self.ae_config_path, "r") as f:
+            self.ae_config = json.load(f)
+
+        self.result_path = ''
+
         BASE_PATH = os.getcwd()
+        # # # Read config
+        # # config_file = os.path.join(BASE_PATH, "anomaly_detector_config.json")
+        # # with open(config_file, "r") as f:
+        # #     self.config = json.load(f)
 
-        # # Read config
-        # config_file = os.path.join(BASE_PATH, "anomaly_detector_config.json")
-        # with open(config_file, "r") as f:
-        #     self.config = json.load(f)
+        # # self.config = self.load_config('cfg/config.properties')
+        # # ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
+        # # with open(ae_config_path, "r") as f:
+        # #     self.ae_config = json.load(f)
 
-        # self.config = self.load_config('cfg/config.properties')
+        
         # ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
         # with open(ae_config_path, "r") as f:
         #     self.ae_config = json.load(f)
 
-        self.config = config 
-        ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
-        with open(ae_config_path, "r") as f:
-            self.ae_config = json.load(f)
-
     def update_test_data_dir(self, test_data_dir):
         self.test_data_dir = test_data_dir
         pass
+
+    def update_infer_result_path(self, result_path):
+        self.result_path = result_path
 
     def import_test_data(self, file_name_list, test_data_path):
         ab_x, ab_x_names = [], []
@@ -79,56 +88,61 @@ class AnomalyDetector:
             "door": door,
             "no class": noclass
         }
-        out_file = self.config.get('RESULT_PATH', 'classifier')
+        out_file = os.path.join(self.result_path, 'classification_predictions.json') #self.config.get('RESULT_PATH', 'classifier')
         with open(out_file, "w") as f:
             json.dump(out_dict, f, indent=4)
 
 
     def inference_detector(self, target_class):
-        # BASE_PATH = os.getcwd()
-        # MODEL_PATH = os.path.join(BASE_PATH, "model")
 
-        self.density_threshold = self.ae_config[target_class]["density_threshold"]
-        self.reconstruction_error_threshold = self.ae_config[target_class]["reconstruction_error_threshold"]
-        self.out_vector_shape = self.ae_config[target_class]["out_vector_shape"]
-        self.encoded_images_vector = self.ae_config[target_class]["encoded_images_vector"]
-        self.kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(self.encoded_images_vector)
+        try:
+            self.density_threshold = self.ae_config[target_class]["density_threshold"]
+            self.reconstruction_error_threshold = self.ae_config[target_class]["reconstruction_error_threshold"]
+            self.out_vector_shape = self.ae_config[target_class]["out_vector_shape"]
+            self.encoded_images_vector = self.ae_config[target_class]["encoded_images_vector"]
+            self.kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(self.encoded_images_vector)
 
-        # self.detector_path = os.path.join(MODEL_PATH, "anomalydetector", target_class, "1")
-        self.detector_path = self.config.get('MODEL_PATH', target_class)
+            # self.detector_path = os.path.join(MODEL_PATH, "anomalydetector", target_class, "1")
+            self.detector_path = self.config.get('MODEL_PATH', target_class)
 
-        # Load model
-        self.detector = tf.keras.models.load_model(self.detector_path)
-        self.detector.summary()
+            # Load model
+            self.detector = tf.keras.models.load_model(self.detector_path)
+            self.detector.summary()
 
-        # Get prediction results
-        with open(self.config.get('RESULT_PATH', 'classifier'), "r") as f:
-            preds = json.load(f)
+            # Get prediction results
+            with open(os.path.join(self.result_path, 'classification_predictions.json'), "r") as f:
+                preds = json.load(f)
 
-        test_data_files = preds[target_class]
+            test_data_files = preds[target_class]
 
-        # Process data
-        ab_x, ab_x_names = self.import_test_data(test_data_files, self.test_data_dir)
-        
-        # check anomaly
-        normal_list, abnormal_list = [], []
-        for i, data in enumerate(ab_x):
-            if self.check_anomaly(data, self.density_threshold, 
-                        self.reconstruction_error_threshold, self.kde, self.out_vector_shape, 
-                        self.detector):
-                abnormal_list.append(ab_x_names[i])
-            else: normal_list.append(ab_x_names[i])
-        
-        # Output results to json file
-        out_dict = {
-            "abnormal": abnormal_list,
-            "normal": normal_list,
-        }
-        out_file = self.config.get('RESULT_PATH', target_class)
-        with open(out_file, "w") as f:
-            json.dump(out_dict, f, indent=4)
+            # Process data
+            ab_x, ab_x_names = self.import_test_data(test_data_files, self.test_data_dir)
 
-        print(f'[AnomalyDetector.inference_detector] class {target_class}: inference process finished!')
+            # check anomaly
+            normal_list, abnormal_list = [], []
+            for i, data in enumerate(ab_x):
+                if self.check_anomaly(data, self.density_threshold, 
+                            self.reconstruction_error_threshold, self.kde, self.out_vector_shape, 
+                            self.detector):
+                    abnormal_list.append(ab_x_names[i])
+                else: normal_list.append(ab_x_names[i])
+            
+            # Output results to json file
+            out_dict = {
+                "abnormal": abnormal_list,
+                "normal": normal_list,
+            }
+            out_file = os.path.join(self.result_path, f'{target_class}.json')#self.config.get('RESULT_PATH', target_class)
+            with open(out_file, "w") as f:
+                json.dump(out_dict, f, indent=4)
+
+            print(f'[AnomalyDetector.inference_detector] class {target_class}: inference process finished!')
+
+            return True
+        except:
+            return False
+
+
 
 
     def check_anomaly(self, img, density_threshold, reconstruction_error_threshold,

@@ -223,6 +223,10 @@ class RVAPI(api.AuthenticatedAPI):
     def put_safety_zone_minimum(self):
         return self.put('/baseControl/v1/safetyZone/MINIMUM')
     
+    # Maximun Speed
+    def put_maximum_speed(self, max_speed):
+        return self.put(f'/baseControl/v1/speed/{max_speed}')
+    
     # Check Boot Up Successful
     def wait_for_ready(self):
         

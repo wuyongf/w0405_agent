@@ -10,6 +10,7 @@ import configparser
 
 class AudioUtils:
     def __init__(self):
+        self.overlap_sec = 1
         pass
 
     def load_wav_16k_mono(self, filename):
@@ -76,7 +77,7 @@ class AudioUtils:
         interval = 5 * 1000
         
         # Length of audio to overlap.
-        overlap = 1 * 1000
+        overlap = self.overlap_sec * 1000
         
         # Initialize start and end seconds to 0
         start = 0

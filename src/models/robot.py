@@ -110,6 +110,7 @@ class Robot:
         self.rvapi.wait_for_ready()
         self.rvapi.put_safety_zone_minimum()
         self.rvapi.change_mode_navigation()
+        self.rvapi.put_maximum_speed(0.3)
         print(f'[robot.init]: Finish...')
         pass
 
