@@ -1115,6 +1115,76 @@ class Robot:
         return True
 
     ### Lift
+    def lift_mission_publisher(self):
+
+        target_map_rm_guid = self.last_goto_json['parameters']['mapId']
+        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{target_map_rm_guid}"')
+        print(f'[lift-debug] target_map_rm_guid: {target_map_rm_guid}')
+        print(f'[lift-debug] target_layout_id: {target_layout_id}')
+                
+        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, target_layout_id)
+
+        # to CurWaitingPos
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
+        if not done: return False
+        print(f'[lift_mission] Flag1: to CurWaitingPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # localization to liftmap
+        done = self.pub_localize_liftmap_pos(a_lift_mission, NWEnum.LiftPositionType.LiftMapIn)
+        if not done: return False
+        print(f'[lift_mission] Flag2: Localize LiftMapIn...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # to LiftMapTransitPos, Pause Robot, Call Lift, Unpasue Robot
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapTransit)
+        if not done: return False
+        print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
+        self.rvjoystick.enable()
+        self.robocore_call_lift2(a_lift_mission.cur_floor_int)
+        time.sleep(1)
+        self.rvjoystick.disable()
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+        
+        # to press target floor button and release the door
+        self.func_lift_pressbutton_releasedoor(a_lift_mission)
+        # threading.Thread(target=self.func_lift_pressbutton_releasedoor, args=(a_lift_mission)).start()
+
+        # to LiftMapOut
+        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapOut)
+        if not done: return False
+        print(f'[lift_mission] Flag7: to LiftMapOut...')
+        # **check if lift is arrived, hold the lift door
+        # self.thread_check_lift_arrive(a_lift_mission)
+        self.thread_check_lift_arrive2(a_lift_mission.target_floor_int)
+        # threading.Thread(target=self.thread_check_lift_arrive, args=(a_lift_mission,)).start()
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        print(f'[lift_mission] Flag8:  close lift door...')
+
+        # localization to liftmap
+        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetOutPos)
+        if not done: return False
+        print(f'[lift_mission] Flag2: Localize TargetOutPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        # to Last GOTO Position
+        done = self.pub_last_goto()
+        if not done: return False
+        print(f'[lift_mission] Flag9: to LastGotoPos...')
+        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        if not done: return False  # stop assigning lift mission
+
+        return True
+    
     def thread_check_lift_arrive(self, target_floor_int):
         # pasue robot first!
         self.rvjoystick.enable()
@@ -1205,76 +1275,6 @@ class Robot:
             print(f'[lift_mission] Flag6:  wait for lift arriving at target_floor_int {a_lift_mission.target_floor_int}...')
             time.sleep(2)
         
-    def lift_mission_publisher(self):
-
-        target_map_rm_guid = self.last_goto_json['parameters']['mapId']
-        target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', f'"{target_map_rm_guid}"')
-        print(f'[lift-debug] target_map_rm_guid: {target_map_rm_guid}')
-        print(f'[lift-debug] target_layout_id: {target_layout_id}')
-                
-        a_lift_mission = self.get_lift_mission_detail(self.layout_nw_id, target_layout_id)
-
-        # to CurWaitingPos
-        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.CurWaitingPos)
-        if not done: return False
-        print(f'[lift_mission] Flag1: to CurWaitingPos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-
-        # localization to liftmap
-        done = self.pub_localize_liftmap_pos(a_lift_mission, NWEnum.LiftPositionType.LiftMapIn)
-        if not done: return False
-        print(f'[lift_mission] Flag2: Localize LiftMapIn...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-
-        # to LiftMapTransitPos, Pause Robot, Call Lift, Unpasue Robot
-        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapTransit)
-        if not done: return False
-        print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
-        self.rvjoystick.enable()
-        self.robocore_call_lift2(a_lift_mission.cur_floor_int)
-        time.sleep(1)
-        self.rvjoystick.disable()
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-        
-        # to press target floor button and release the door
-        self.func_lift_pressbutton_releasedoor(a_lift_mission)
-        # threading.Thread(target=self.func_lift_pressbutton_releasedoor, args=(a_lift_mission)).start()
-
-        # to LiftMapOut
-        done = self.pub_goto_liftpos(a_lift_mission, NWEnum.LiftPositionType.LiftMapOut)
-        if not done: return False
-        print(f'[lift_mission] Flag7: to LiftMapOut...')
-        # **check if lift is arrived, hold the lift door
-        # self.thread_check_lift_arrive(a_lift_mission)
-        self.thread_check_lift_arrive2(a_lift_mission.target_floor_int)
-        # threading.Thread(target=self.thread_check_lift_arrive, args=(a_lift_mission,)).start()
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-
-        # **release the lift door
-        self.emsdlift.release_all_keys()
-        self.emsdlift.close()
-        print(f'[lift_mission] Flag8:  close lift door...')
-
-        # localization to liftmap
-        done = self.pub_localize_liftpos(a_lift_mission, NWEnum.LiftPositionType.TargetOutPos)
-        if not done: return False
-        print(f'[lift_mission] Flag2: Localize TargetOutPos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-
-        # to Last GOTO Position
-        done = self.pub_last_goto()
-        if not done: return False
-        print(f'[lift_mission] Flag9: to LastGotoPos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
-
-        return True
-
     ## Publish RM Mission
     ### Delivery
     def pub_delivery_goto_charging_station(self, charging_station: NWSchema.ChargingStation):
