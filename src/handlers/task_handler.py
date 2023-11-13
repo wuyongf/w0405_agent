@@ -118,6 +118,11 @@ class TaskHandler:
 
         self.task_status_callback(
             task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
+        
+        # match task.taskType:
+            
+        #     case 'RM-LOCALIZE':
+        #         pass
 
         if task.taskType == 'RM-LOCALIZE':
             res = self.robot.localize(task_json)
@@ -257,16 +262,6 @@ class TaskHandler:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
             else:
                 return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-
-        if task.taskType == 'NW-BASIC-SLEEP1S':
-            try:
-                time.sleep(1)
-                self.task_status_callback(
-                    task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
-            except:
-                print('[NW-BASIC-SLEEP1S] Error: Please check the workflow.')
-                self.task_status_callback(
-                    task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
 
 if __name__ == "__main__":

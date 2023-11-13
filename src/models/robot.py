@@ -572,7 +572,6 @@ class Robot:
         except:
             return False
 
-
     # Module - Lift Inspection
     # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
 
