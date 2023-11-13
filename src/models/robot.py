@@ -86,6 +86,9 @@ class Robot:
 
         ## lift related
         self.last_goto_json = None
+        self.lift_task_json = None
+        self.is_moving = True
+        self.has_arrived = False
         
         ## nw-door-agent
         self.door_agent_start = False
@@ -357,23 +360,24 @@ class Robot:
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
         '''
         try:
-            if(self.is_another_floor(task_json)):
+            # ## Lift Integration - Rev01
+            # if(self.is_another_floor(task_json)):
 
-                self.last_goto_json = task_json
-                # init goto_across_floor
-                print(f'[robot.goto] init goto_across_floor...')
+            #     self.last_goto_json = task_json
+            #     # init goto_across_floor
+            #     print(f'[robot.goto] init goto_across_floor...')
 
-                # cur_layout_id = self.layout_nw_id
-                # target_map_rm_guid = task_json['parameters']['mapId']
-                # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
-                # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
-                rm_task_data = RMSchema.Task(task_json)
-                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
-                time.sleep(1)
+            #     # cur_layout_id = self.layout_nw_id
+            #     # target_map_rm_guid = task_json['parameters']['mapId']
+            #     # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+            #     # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
+            #     rm_task_data = RMSchema.Task(task_json)
+            #     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+            #     time.sleep(1)
 
                 
-                threading.Thread(target=self.lift_mission_publisher).start()
-                return True
+            #     threading.Thread(target=self.lift_mission_publisher).start()
+            #     return True
 
             self.door_agent_start = True  # door-agent logic
             self.door_agent_finish = False
@@ -432,20 +436,37 @@ class Robot:
 
         print('[charging.check_mission_status] Exiting...')
 
+    def wait_for_robot_arrived(self):
+        while (True):
+            time.sleep(0.5)
+            if (self.has_arrived):
+                print('[wait_for_arrived] robot has arrived!')
+                self.has_arrived = False
+                break
+            print('[wait_for_arrived] robot is moving...')
+        pass
+    
     def thread_check_mission_status(self, task_json, status_callback):
 
         print('[goto.check_mission_status] Starting...')
         rm_task_data = RMSchema.Task(task_json)
+        self.is_moving = True
+        self.has_arrived = False
+
         continue_flag = True
         while (continue_flag):
-            time.sleep(2)
+            time.sleep(1)
             if (self.rvapi.get_robot_is_moving()):
                 print('[goto.check_mission_status] robot is moving...')
-                time.sleep(1)
+                # time.sleep(1)
                 continue
             else:
                 continue_flag = False
-                time.sleep(1)
+
+                self.is_moving = False
+                self.has_arrived = True
+
+                # time.sleep(1)
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
@@ -966,9 +987,48 @@ class Robot:
         except:
             
             return False      
-         
+        
     ## Methods
     ### Lift
+    def nw_lift_in(self, task_json, status_callback):
+        
+        try:
+            self.lift_task_json = task_json
+
+            self.goto(task_json, status_callback)
+
+            self.rvjoystick.enable()
+            self.call_lift_and_check_arrive(task_json['parameters']['current_floor'])
+            time.sleep(1)
+            self.rvjoystick.disable()
+            self.wait_for_robot_arrived()
+            
+            self.func_lift_pressbutton_releasedoor(task_json['parameters']['target_floor'])
+
+            return True
+        except:
+            return False
+
+
+    def nw_lift_out(self, task_json, status_callback):
+
+        try:
+            self.goto(task_json, status_callback)
+
+            self.rvjoystick.enable()
+            self.call_lift_and_check_arrive(self.lift_task_json['parameters']['target_floor'])
+            time.sleep(1)
+            self.rvjoystick.disable()
+            self.wait_for_robot_arrived()
+            
+            # **release the lift door
+            self.emsdlift.release_all_keys()
+            self.emsdlift.close()
+
+            return True
+        except:
+            return False
+
     def robocore_call_lift(self, target_floor_int):  
         try:
             # # print(f'robocore_call_lift: {task_json}')
@@ -1026,7 +1086,7 @@ class Robot:
         except:
             return False
 
-    def robocore_call_lift2(self, target_floor_int):  
+    def call_lift_and_check_arrive(self, target_floor_int):  
             try:
                 # keep calling the lift
                 # keep checking if lift is arrived
@@ -1142,14 +1202,14 @@ class Robot:
         if not done: return False
         print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
         self.rvjoystick.enable()
-        self.robocore_call_lift2(a_lift_mission.cur_floor_int)
+        self.call_lift_and_check_arrive(a_lift_mission.cur_floor_int)
         time.sleep(1)
         self.rvjoystick.disable()
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
         
         # to press target floor button and release the door
-        self.func_lift_pressbutton_releasedoor(a_lift_mission)
+        self.func_lift_pressbutton_releasedoor(a_lift_mission.target_floor_int)
         # threading.Thread(target=self.func_lift_pressbutton_releasedoor, args=(a_lift_mission)).start()
 
         # to LiftMapOut
@@ -1158,7 +1218,7 @@ class Robot:
         print(f'[lift_mission] Flag7: to LiftMapOut...')
         # **check if lift is arrived, hold the lift door
         # self.thread_check_lift_arrive(a_lift_mission)
-        self.thread_check_lift_arrive2(a_lift_mission.target_floor_int)
+        self.check_lift_arrive(a_lift_mission.target_floor_int)
         # threading.Thread(target=self.thread_check_lift_arrive, args=(a_lift_mission,)).start()
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning lift mission
@@ -1203,7 +1263,7 @@ class Robot:
             time.sleep(0.5)
         print(f'[thread_check_lift_arrive] finished')
 
-    def thread_check_lift_arrive2(self, target_floor_int):
+    def check_lift_arrive(self, target_floor_int):
         try:
             # pasue robot first!
             self.rvjoystick.enable()            
@@ -1239,11 +1299,11 @@ class Robot:
         except:
             return False
 
-    def func_lift_pressbutton_releasedoor(self, a_lift_mission):
+    def func_lift_pressbutton_releasedoor(self, target_floor_int):
         print(f'[func_lift_pressbutton_releasedoor] start...')
         while(True):
-            print(f'press rm_button: {a_lift_mission.target_floor_int}')
-            is_pressed  = self.emsdlift.rm_to(a_lift_mission.target_floor_int)
+            print(f'press rm_button: {target_floor_int}')
+            is_pressed  = self.emsdlift.rm_to(target_floor_int)
             if(not is_pressed):
                 print(f'[robocore_call_lift] try to call emsd lift... press button failed, retry...')    
                 
@@ -1743,7 +1803,7 @@ if __name__ == '__main__':
 
     # robot.pub_call_lift(a_lift_mission)
 
-    robot.robocore_call_lift2(4)
+    robot.call_lift_and_check_arrive(4)
     # robot.charging_on()
     # robot.charging_off()
     # robot.charging_goto()
