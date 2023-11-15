@@ -16,15 +16,17 @@ pydub
 scikit-learn
 opencv-python
 numpy
-matplotlib==3.8.0
+matplotlib
 shapely==2.0.2
 gTTS
 # pyaudio
+azure-storage-blob 
+azure-identity
 
 
 twilio # SMS
 
-
+# sudo apt-get install ffmpeg
 # sudo apt install portaudio19-dev
 # conda create -n "w0405" python=3.10.11 ipython
 # pip install -r requirements.txt

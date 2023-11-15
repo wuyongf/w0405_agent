@@ -236,6 +236,21 @@ class AudioUtils:
         output_list = [[temp_list[x][1], temp_list[y][2]] for x,y in temp2_list]
 
         return output_list
+    
+    # Convertor
+    def convert_to_mp3(self, input_wav_path):
+
+        # Load the WAV file
+        audio = AudioSegment.from_wav(input_wav_path)
+
+        # Replace 'output_audio.mp3' with the desired name for your output MP3 file
+        output_mp3 = "output_audio.mp3"
+
+        # Export the audio in MP3 format
+        audio.export(output_mp3, format="mp3")
+        pass
+
+
 
 
 if __name__ == "__main__":

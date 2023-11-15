@@ -162,13 +162,15 @@ if __name__ == '__main__':
     # ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
     # ai_handler.update_audio_infer_result_path('/home/nw/Documents/GitHub/w0405_agent/results/sounds/Chunk/20231107/996')
 
-    ai_handler.update_audio_record_path('/home/yf/dev/w0405_agent/data/sounds/Records/20231112/996')
-    ai_handler.update_audio_chunk_path('/home/yf/dev/w0405_agent/data/sounds/Chunk/20231112/996')
-    ai_handler.update_audio_infer_result_path('/home/yf/dev/w0405_agent/results/sounds/Chunk/20231112/996')
+    ai_handler.update_audio_record_path('../../data/sounds/Records/20231115/996')
+    ai_handler.update_audio_chunk_path('../../data/sounds/Chunk/20231115/996')
+    ai_handler.update_audio_infer_result_path('../../results/sounds/Chunk/20231115/996')
 
-    # Sound - Record
+    
+
+    # # Sound - Record
     # ai_handler.start_recording()
-    # time.sleep(10)
+    # time.sleep(240)
     # ai_handler.stop_and_save_recording()
 
     # # Sound - Slicing
@@ -178,17 +180,19 @@ if __name__ == '__main__':
     # ai_handler.start_analysing()
 
     # # Sound - Group Abnormal Sound
-    sound_json = ai_handler.get_abnormal_sound('door')
+    # sound_json = ai_handler.get_abnormal_sound('door')
     # print(sound_json)
-
-    processor = ai_handler.audio_utils.group_init(sound_json)
-    grouped_intervals = ai_handler.audio_utils.group_overlapping_intervals()
-    formatted_output = ai_handler.audio_utils.format_grouped_intervals(grouped_intervals)
-
-    print(formatted_output) 
+    # processor = ai_handler.audio_utils.group_init(sound_json)
+    # grouped_intervals = ai_handler.audio_utils.group_overlapping_intervals()
+    # formatted_output = ai_handler.audio_utils.format_grouped_intervals(grouped_intervals)
+    # print(formatted_output) 
     
+
+
     # # Sound - Notify User
-    # - convert to mp3 
+    ### convert to mp3 
+    # ai_handler.audio_utils.convert_to_mp3('../../data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
+
     # - upload to cloud
     # - notify user
 

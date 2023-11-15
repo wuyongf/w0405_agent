@@ -235,18 +235,18 @@ class RGBCamera:
         self.cap.release()
 
 if __name__ == "__main__":
-    rgb_camera = RGBCamera()
+    rgb_camera = RGBCamera(device_index=2)
     rgb_camera.update_output_info(output_dir='', output_file_name='output_video.mp4')
     rgb_camera.capture_and_save_video()
-    time.sleep(5)
+    time.sleep(300)
     rgb_camera.stop_and_save_record()
     print('First video recording stopped and saved.')
 
-    rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
-    rgb_camera.capture_and_save_video()
-    time.sleep(5)
-    rgb_camera.stop_and_save_record()
-    print('Second video recording stopped and saved.')
+    # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
+    # rgb_camera.capture_and_save_video()
+    # time.sleep(5)
+    # rgb_camera.stop_and_save_record()
+    # print('Second video recording stopped and saved.')
 
     rgb_camera.close()
 
