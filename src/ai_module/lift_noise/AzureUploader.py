@@ -1,4 +1,5 @@
 import os, uuid
+from pathlib import Path
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
@@ -16,14 +17,19 @@ class AzureBlobStorageHandler():
 
         self.container_client = self.blob_service_client.get_container_client('image-ui')
 
-    def upload_blobs(self, file_path):
+    def update_container_name(self, container_name):
+        self.container_name = container_name
+    
+    def upload_blobs(self, upload_file_path):
         
+        file_path = Path(upload_file_path)
+
         # Create a file in the local data directory to upload and download
-        local_file_name = str(uuid.uuid4()) + ".txt"
-        upload_file_path = os.path.join(local_path, local_file_name)
+        local_file_name = file_path.name
+        upload_file_path = str(file_path)
 
         # Create a blob client using the local file name as the name for the blob
-        blob_client = self.blob_service_client.get_blob_client(container='lift-sound', blob=local_file_name)
+        blob_client = self.blob_service_client.get_blob_client(container='lift-sound/wav', blob=local_file_name)
 
         print("\nUploading to Azure Storage as blob:\n\t" + local_file_name)
 
@@ -49,7 +55,24 @@ class AzureBlobStorageHandler():
 
 if __name__ == '__main__':
     
+    file_path = '/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav'
+
+    ## Method 1
+    # file_name = file_path.split('/')[-1]
+    # print(file_name)
+
+    ## Method 2
+    
+
+    file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
+    print(file_path)
+
+    print(file_path.name)
+    print(file_path.suffix)
+    print(file_path.stem)
+
     blob_handler = AzureBlobStorageHandler()
-    blob_handler.list_blobs()
+    # blob_handler.list_blobs()
+    blob_handler.upload_blobs(str(file_path))
 
     pass
