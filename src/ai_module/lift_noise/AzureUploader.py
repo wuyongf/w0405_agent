@@ -2,23 +2,39 @@ import os, uuid
 from pathlib import Path
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+import src.utils.methods as umethods
+from src.models.enums.azure import ContainerName
 
 class AzureBlobStorageHandler():
     
-    def __init__(self):
+    def __init__(self, config):
         print("Azure Blob Storage Python quickstart sample")
 
+        self.config = config
+
         # Quickstart code goes here
-        self.account_url = "https://nwistorage.blob.core.windows.net"
+        self.account_url = self.config.get('Azure','account_url')
         self.default_credential = DefaultAzureCredential()
 
         # Create the BlobServiceClient object
         self.blob_service_client = BlobServiceClient(self.account_url, credential=self.default_credential)
 
-        self.container_client = self.blob_service_client.get_container_client('image-ui')
+        # Init Container Name 
+        self.container_name = None
 
-    def update_container_name(self, container_name):
-        self.container_name = container_name
+    def update_container_name(self, container_name : ContainerName):
+
+        match container_name:
+            case ContainerName.LiftInspection_Sound:
+                self.container_name = self.config.get('Azure', 'container_li_sound')
+            case ContainerName.LiftInspection_VideoFront:
+                self.container_name = self.config.get('Azure', 'container_li_video_front')
+            case ContainerName.LiftInspection_VideoRear:
+                self.container_name = self.config.get('Azure', 'container_li_video_rear')
+            case ContainerName.WaterLeakage_Thermal:
+                self.container_name = self.config.get('Azure', 'container_wl_thermal_image')
+            case ContainerName.WaterLeakage_VideoRear:
+                self.container_name = self.config.get('Azure', 'container_wl_video_rear')
     
     def upload_blobs(self, upload_file_path):
         
@@ -29,7 +45,7 @@ class AzureBlobStorageHandler():
         upload_file_path = str(file_path)
 
         # Create a blob client using the local file name as the name for the blob
-        blob_client = self.blob_service_client.get_blob_client(container='lift-sound/wav', blob=local_file_name)
+        blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=local_file_name)
 
         print("\nUploading to Azure Storage as blob:\n\t" + local_file_name)
 
@@ -40,8 +56,8 @@ class AzureBlobStorageHandler():
         pass
 
     def list_blobs(self):
-
         try:
+            self.container_client = self.blob_service_client.get_container_client(self.container_name)
             print("\nListing blobs...")
             # List the blobs in the container
             blob_list = self.container_client.list_blobs()
@@ -64,15 +80,23 @@ if __name__ == '__main__':
     ## Method 2
     
 
-    file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
-    print(file_path)
+    # file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
+    file_path = Path('/home/yf/dev/w0405_agent/data/sounds/Records/20231113/996/recording_1699881437.2285242.wav')
+    # print(file_path)
+    # print(file_path.name)
+    # print(file_path.suffix)
+    # print(file_path.stem)
 
-    print(file_path.name)
-    print(file_path.suffix)
-    print(file_path.stem)
-
-    blob_handler = AzureBlobStorageHandler()
+    config = umethods.load_config('../../../conf/config.properties')
+    blob_handler = AzureBlobStorageHandler(config)
+    # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
     # blob_handler.list_blobs()
-    blob_handler.upload_blobs(str(file_path))
+
+    ## to azure container
+    # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
+    # blob_handler.upload_blobs(str(file_path))
+
+    ## to nwdb - sound/video_front/video_rear
+
 
     pass

@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Container(Enum):
+class ContainerName(Enum):
     LiftInspection_Sound = 0
     LiftInspection_VideoFront = 1
     LiftInspection_VideoRear = 2
