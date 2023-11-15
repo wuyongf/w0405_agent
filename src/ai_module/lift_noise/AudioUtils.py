@@ -121,15 +121,133 @@ class AudioUtils:
         change_in_dBFS = target_dBFS - sound.dBFS
         return sound.apply_gain(change_in_dBFS)
 
+    ### Group Sliced Files - Rev01
 
+    def group_init(self, vocal_files):
+        self.vocal_files = vocal_files
+        self.intervals = [self.parse_filename_to_interval(filename) for filename in vocal_files]
+
+    @staticmethod
+    def parse_filename_to_interval(filename):
+        """Parse the filename to extract slice number, start time, and end time,
+        and return them as a tuple."""
+        parts = filename.split("_")
+        slice_number = int(parts[2])
+        start_time = int(parts[3])
+        end_time = int(parts[4].split(".")[0])
+        return (start_time, end_time, slice_number)
+
+    def group_overlapping_intervals(self):
+        """Group overlapping intervals and return consolidated groups."""
+        intervals = sorted(self.intervals)  # Sort by start time
+        grouped_intervals = []
+        current_group = [intervals[0]]
+
+        for i in range(1, len(intervals)):
+            _, current_end, _ = current_group[-1]
+            next_start, next_end, next_slice = intervals[i]
+
+            if current_end >= next_start:  # Overlap
+                current_group.append((next_start, next_end, next_slice))
+            else:
+                grouped_intervals.append(current_group)
+                current_group = [(next_start, next_end, next_slice)]
+
+        grouped_intervals.append(current_group)  # Add the last group
+        return grouped_intervals
+
+    def format_grouped_intervals(self, grouped_intervals):
+        """Format the grouped intervals for output."""
+        output = []
+        group_number = 1
+        for group in grouped_intervals:
+            start_time = group[0][0]
+            end_time = max(end for _, end, _ in group)
+            slice_numbers = [str(slice_num) for _, _, slice_num in group]
+            slice_count = len(group)
+
+            # output.append(f"# {group_number} start_time: {start_time}, end_time: {end_time}, "
+            #               f"no. of files: {slice_count}, slice number: {', '.join(slice_numbers)}")
+            
+            output.append(f"{group_number},{start_time},{end_time},{slice_count}")
+            
+            group_number += 1
+
+        return "\n".join(output)
+    
+    # Group - Rev02
+    def composite_slices(self, audio_list):
+
+        dash_count = 0
+        audio_parent = ""
+        for chr in audio_list[0]:
+            if chr == "_": dash_count += 1
+            if dash_count == 2: break
+            else: audio_parent += chr
+
+        parent_len = len(audio_parent)
+
+        temp_list = []
+        for audio_name in audio_list:
+            temp = ""
+            dash_count = 0
+            slice_num, start_time, end_time = "","",""
+            for i, chr in enumerate(audio_name[parent_len+1:]):
+                if chr == "_": 
+                    dash_count += 1
+
+                    if dash_count == 1: 
+                        slice_num = temp
+                        temp = ""
+                    elif dash_count == 2:
+                        start_time = temp
+                        end_time = audio_name[parent_len+1+i+1:-4]
+                        temp = ""
+                        break
+                    
+                else: temp += chr
+   
+            temp_list.append([int(slice_num), int(start_time), int(end_time)])
+        temp_list.sort()
+
+        temp2_list = []
+
+        start_idx = 0
+        target_idx = start_idx + 1
+        last_idx = len(temp_list) - 1
+        counter = 1
+        while start_idx < last_idx:
+
+            if temp_list[target_idx][0] - temp_list[start_idx][0] != counter:
+                temp2_list.append((start_idx, target_idx-1))
+                start_idx = target_idx
+                target_idx = start_idx + 1
+                counter = 1  
+                if target_idx > last_idx: 
+                    temp2_list.append((start_idx, target_idx-1))
+                    
+            else: 
+                target_idx += 1
+                counter += 1
+                if target_idx > last_idx: 
+                    temp2_list.append((start_idx, target_idx-1))
+                    break
+
+        output_list = [[temp_list[x][1], temp_list[y][2]] for x,y in temp2_list]
+
+        return output_list
 
 
 if __name__ == "__main__":
 
+    # split files
     file_path = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996/recording_1699332347.8895252.wav'
     out_dir = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996'
     audio = AudioUtils()
     audio.split(file_path, out_dir)
+
+    # group files
+
 
     # config = configparser.ConfigParser()
     # try:

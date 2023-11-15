@@ -1,6 +1,6 @@
 # NW AI Agent - Rev01 -  2023.10.31
 import math, time, threading, os
-import src.models.robot as Robot
+# import src.models.robot as Robot
 import src.utils.methods as umethods
 # from src.models.schema.nw import Door, DoorRegion
 # from src.top_module.analysis.region_handler import RegionHandler
@@ -10,8 +10,8 @@ from src.ai_module.lift_noise.AnomalyDetector import AnomalyDetector as AudioAno
 from src.ai_module.lift_noise.AudioRecorder import Recorder as AudioRecorder
 
 class AIAgent:
-    def __init__(self, config, robot: Robot.Robot):
-        self.robot = robot
+    def __init__(self, config):
+        # self.robot = robot
 
         # params
         self.audio_record_path = ''
@@ -51,6 +51,24 @@ class AIAgent:
         self.audio_infer_result_path = audio_infer_result_path
         if not os.path.exists(self.audio_infer_result_path): os.makedirs(self.audio_infer_result_path)
         pass
+
+    def get_abnormal_sound(self, item):
+        import json
+
+        # Assuming your JSON file is named 'your_file.json'
+        result_path = self.audio_infer_result_path
+        file_name = item + '.json'
+        file_path = os.path.join(result_path, file_name)
+
+        # Read the JSON file
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        # Get the content of 'abnormal'
+        abnormal_content = data['abnormal']
+
+        # print(abnormal_content)
+        return abnormal_content
 
     def start_recording(self):
         try:
@@ -136,56 +154,43 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../conf/port_config.properties')
     skill_config_path = '../models/conf/rm_skill.properties'
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
-    robot = Robot.Robot(config,port_config,skill_config_path)
-    ai_handler = AIAgent(ai_config,robot)
+    # robot = Robot.Robot(config,port_config,skill_config_path)
+    ai_handler = AIAgent(ai_config)
 
     # Init
-    ai_handler.update_audio_record_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996')
-    ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
-    ai_handler.update_audio_infer_result_path('/home/nw/Documents/GitHub/w0405_agent/results/sounds/Chunk/20231107/996')
+    # ai_handler.update_audio_record_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996')
+    # ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
+    # ai_handler.update_audio_infer_result_path('/home/nw/Documents/GitHub/w0405_agent/results/sounds/Chunk/20231107/996')
+
+    ai_handler.update_audio_record_path('/home/yf/dev/w0405_agent/data/sounds/Records/20231112/996')
+    ai_handler.update_audio_chunk_path('/home/yf/dev/w0405_agent/data/sounds/Chunk/20231112/996')
+    ai_handler.update_audio_infer_result_path('/home/yf/dev/w0405_agent/results/sounds/Chunk/20231112/996')
 
     # Sound - Record
-    ai_handler.start_recording()
-    time.sleep(1)
-    ai_handler.stop_and_save_recording()
+    # ai_handler.start_recording()
+    # time.sleep(10)
+    # ai_handler.stop_and_save_recording()
 
     # # Sound - Slicing
     # ai_handler.start_slicing()
 
-    # Sound - Analyse
+    # # Sound - Analyse
     # ai_handler.start_analysing()
 
-    vocal = [
-        "recording_1699332347.8895252_5_16000_21000.wav",
-        "recording_1699332347.8895252_8_28000_33000.wav",
-        "recording_1699332347.8895252_15_56000_60163.wav",
-        "recording_1699332347.8895252_4_12000_17000.wav",
-        "recording_1699332347.8895252_14_52000_57000.wav",
-        "recording_1699332347.8895252_3_8000_13000.wav",
-        "recording_1699332347.8895252_1_0_5000.wav",
-        "recording_1699332347.8895252_13_48000_53000.wav",
-        "recording_1699332347.8895252_6_20000_25000.wav"
-    ]
+    # # Sound - Group Abnormal Sound
+    sound_json = ai_handler.get_abnormal_sound('door')
+    # print(sound_json)
 
-    # 1  3456 8 131415
+    processor = ai_handler.audio_utils.group_init(sound_json)
+    grouped_intervals = ai_handler.audio_utils.group_overlapping_intervals()
+    formatted_output = ai_handler.audio_utils.format_grouped_intervals(grouped_intervals)
 
-    merged_clips =  ai_handler.start_merging(vocal)
-    # print("Merged Clips:", merged_clips)
-
-
-
-
-    print("Merged Clips:", merged_clips)
-
-    # Find how many clips can be merged
-    print(f"Number of Merged Clips: {len(merged_clips)}")
-
-    # Point out the start and end times of each merged clip
-    for idx, clip in enumerate(merged_clips):
-        start, end = clip.split("_")
-        print(f"Clip {idx + 1}: Start Time {start}, End Time {end}")
-
+    print(formatted_output) 
     
+    # # Sound - Notify User
+    # - convert to mp3 
+    # - upload to cloud
+    # - notify user
 
     
     

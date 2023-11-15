@@ -19,9 +19,12 @@ numpy
 matplotlib==3.8.0
 shapely==2.0.2
 gTTS
+# pyaudio
 
-# for SMS
-twilio
 
+twilio # SMS
+
+
+# sudo apt install portaudio19-dev
 # conda create -n "w0405" python=3.10.11 ipython
 # pip install -r requirements.txt
