@@ -26,7 +26,7 @@ class AzureBlobStorageHandler():
 
         match container_name:
             case ContainerName.LiftInspection_Sound:
-                self.container_name = self.config.get('Azure', 'container_li_sound')
+                self.container_name = self.config.get('Azure', 'container_li_audio')
             case ContainerName.LiftInspection_VideoFront:
                 self.container_name = self.config.get('Azure', 'container_li_video_front')
             case ContainerName.LiftInspection_VideoRear:
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     # print(file_path.suffix)
     # print(file_path.stem)
 
-    config = umethods.load_config('../../../conf/config.properties')
+    config = umethods.load_config('../../conf/config.properties')
     blob_handler = AzureBlobStorageHandler(config)
     # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
     # blob_handler.list_blobs()

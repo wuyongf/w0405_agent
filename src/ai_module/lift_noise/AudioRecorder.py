@@ -50,6 +50,7 @@ class Recorder:
         sound_file.close()
 
         print("Saved: " + file_name)
+        return file_name
 
 if __name__ == "__main__":
     recorder = Recorder()

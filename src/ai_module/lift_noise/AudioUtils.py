@@ -5,7 +5,8 @@ import numpy as np
 import os
 from pydub import AudioSegment
 from scipy import signal
-import configparser 
+import configparser
+from pathlib import Path 
 
 
 class AudioUtils:
@@ -239,16 +240,29 @@ class AudioUtils:
     
     # Convertor
     def convert_to_mp3(self, input_wav_path):
+        '''
+        convert to mp3 file and the return current file path
+        '''
+
+        wav_path = Path(input_wav_path)
+
+        # Construct the desire save path
+        sounds_folder = wav_path.parents[3]
+        mission_id = str(wav_path.parents[0]).split('/')[-1]
+        date = str(wav_path.parents[1]).split('/')[-1]
+        save_folder = sounds_folder / 'Records_mp3' / date / mission_id
+        save_folder.mkdir(parents= True, exist_ok=True)
 
         # Load the WAV file
-        audio = AudioSegment.from_wav(input_wav_path)
+        audio = AudioSegment.from_wav(str(wav_path))
 
-        # Replace 'output_audio.mp3' with the desired name for your output MP3 file
-        output_mp3 = "output_audio.mp3"
+        # Set output file name
+        output_mp3_name = wav_path.stem + '.mp3'
 
         # Export the audio in MP3 format
-        audio.export(output_mp3, format="mp3")
-        pass
+        audio.export(save_folder / output_mp3_name, format="mp3")
+
+        return str(save_folder / output_mp3_name)
 
 
 

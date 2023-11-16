@@ -1,10 +1,8 @@
 # NW AI Agent - Rev01 -  2023.10.31
+from pathlib import Path
 import math, time, threading, os
 # import src.models.robot as Robot
 import src.utils.methods as umethods
-# from src.models.schema.nw import Door, DoorRegion
-# from src.top_module.analysis.region_handler import RegionHandler
-
 from src.ai_module.lift_noise.AudioUtils import AudioUtils
 from src.ai_module.lift_noise.AnomalyDetector import AnomalyDetector as AudioAnomalyDetector
 from src.ai_module.lift_noise.AudioRecorder import Recorder as AudioRecorder
@@ -28,7 +26,7 @@ class AIAgent:
         self.audio_detector = AudioAnomalyDetector(config)
         
     # Logic
-    def update_audio_record_path(self, audio_record_path):
+    def audio_update_record_path(self, audio_record_path):
         '''
         Record/{current_date}/{mission_id}/
         '''
@@ -36,21 +34,21 @@ class AIAgent:
         self.audio_recorder.update_save_path(self.audio_record_path)
         if not os.path.exists(self.audio_record_path): os.makedirs(self.audio_record_path)
 
-        # self.video_record_path = video_record_path
-        pass
+        return(str(Path(self.audio_record_path).absolute()))
 
-    def update_audio_chunk_path(self, audio_chunk_path):
+    def audio_update_chunk_path(self, audio_chunk_path):
         '''
         Chunk/{current_date}/{mission_id}/
         '''
         self.audio_chunk_path = audio_chunk_path
         if not os.path.exists(self.audio_chunk_path): os.makedirs(self.audio_chunk_path)
-        pass
+        
+        return(str(Path(self.audio_chunk_path).absolute()))
 
-    def update_audio_infer_result_path(self, audio_infer_result_path):
+    def audio_update_infer_result_path(self, audio_infer_result_path):
         self.audio_infer_result_path = audio_infer_result_path
         if not os.path.exists(self.audio_infer_result_path): os.makedirs(self.audio_infer_result_path)
-        pass
+        return(str(Path(self.audio_infer_result_path).absolute()))
 
     def get_abnormal_sound(self, item):
         import json
@@ -70,7 +68,7 @@ class AIAgent:
         # print(abnormal_content)
         return abnormal_content
 
-    def start_recording(self):
+    def audio_start_recording(self):
         try:
             print(f'[ai_handler.start_recording] start recording...')
             self.audio_recorder.start_recording()
@@ -78,12 +76,16 @@ class AIAgent:
         except:
             return False
 
-    def stop_and_save_recording(self):
+    def audio_stop_and_save_recording(self):
+        '''
+        return wav file path
+        '''
         try:
             print(f'[ai_handler.stop_and_save_recording] stop recording, saving...')
-            self.audio_recorder.stop_and_save_record()
+            wav_file_name = self.audio_recorder.stop_and_save_record()
             print(f'[ai_handler.stop_and_save_recording] finished.')
-            return True
+
+            return wav_file_name
         except:
             return False
 
@@ -162,24 +164,24 @@ if __name__ == '__main__':
     # ai_handler.update_audio_chunk_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996')
     # ai_handler.update_audio_infer_result_path('/home/nw/Documents/GitHub/w0405_agent/results/sounds/Chunk/20231107/996')
 
-    ai_handler.update_audio_record_path('../../data/sounds/Records/20231115/996')
-    ai_handler.update_audio_chunk_path('../../data/sounds/Chunk/20231115/996')
-    ai_handler.update_audio_infer_result_path('../../results/sounds/Chunk/20231115/996')
+    audio_record_path = ai_handler.audio_update_record_path('../../data/lift_inspection/audio/Records/20231116/996')
+    audio_chunk_path = ai_handler.audio_update_chunk_path('../../data/lift_inspection/audio/Chunk/20231116/996')
+    audio_infer_result_path = ai_handler.audio_update_infer_result_path('../../results/lift_inspection/audio/Chunk/20231116/996')
 
-    
+    ## Sound - Record
+    ai_handler.audio_start_recording()
+    time.sleep(5)
+    wav_file_name = ai_handler.audio_stop_and_save_recording()
 
-    # # Sound - Record
-    # ai_handler.start_recording()
-    # time.sleep(240)
-    # ai_handler.stop_and_save_recording()
+    print(wav_file_name)
 
-    # # Sound - Slicing
+    ## Sound - Slicing
     # ai_handler.start_slicing()
 
-    # # Sound - Analyse
+    ## Sound - Analyse
     # ai_handler.start_analysing()
 
-    # # Sound - Group Abnormal Sound
+    ## Sound - Group Abnormal Sound
     # sound_json = ai_handler.get_abnormal_sound('door')
     # print(sound_json)
     # processor = ai_handler.audio_utils.group_init(sound_json)
@@ -187,13 +189,12 @@ if __name__ == '__main__':
     # formatted_output = ai_handler.audio_utils.format_grouped_intervals(grouped_intervals)
     # print(formatted_output) 
     
-
-
-    # # Sound - Notify User
+    ##  Sound - Notify User
     ### convert to mp3 
-    # ai_handler.audio_utils.convert_to_mp3('../../data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
+    mp3_file_path  = ai_handler.audio_utils.convert_to_mp3(wav_file_name)
 
-    # - upload to cloud
+    # - upload to cloud (1. Azure Container) (2. NWDB)
+    
     # - notify user
 
     
