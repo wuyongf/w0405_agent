@@ -533,6 +533,27 @@ class Robot:
         except:
             return False
 
+    # Module - Mic
+    def mic_cam_on(self, task_json):
+        try:
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.IAQ)
+            mission_id = self.nwdb.get_latest_mission_id()
+
+            # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
+            print(f'mission_id: {mission_id}')
+            # self.mo_iaq.set_task_mode(e=True, task_id=mission_id)
+            return True
+        except:
+            return False
+
+    def mic_cam_off(self, task_json):
+        try:
+            # self.mo_iaq.set_task_mode(False)
+            return True
+        except:
+            return False
 
     # Follow Me
     def follow_me_mode(self, task_json):

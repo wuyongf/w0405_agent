@@ -40,8 +40,10 @@ class Recorder:
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
-
+        
+        # print(self.path)
         file_name = os.path.join(self.path, "recording_" + str(time.time()) + ".wav")
+        
         sound_file = wave.open(file_name, "wb")
         sound_file.setnchannels(self.n_channels)
         sound_file.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))

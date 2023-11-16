@@ -92,7 +92,7 @@ class EventPublisher:
         
     def add_empty_medias(self):
         root_path = os.path.abspath('../../')
-        event_path = os.path.join(root_path, "data/event_images")
+        event_path = os.path.join(root_path, "data/event-images")
         task_id = '20230331_145659_0001'
         img_name = 'front_right.png'
         event_img_path = os.path.join(event_path, task_id, img_name)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     event_handler.start()
 
     root_path = os.path.abspath('../../')
-    event_path = os.path.join(root_path, "data/event_images")
+    event_path = os.path.join(root_path, "data/event-images")
     task_id = '20230331_145659_0001'
     img_name = 'front_right.png'
     event_img_path = os.path.join(event_path, task_id, img_name)

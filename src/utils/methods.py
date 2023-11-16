@@ -17,6 +17,10 @@ def get_current_time():
     now = datetime.datetime.utcnow()
     return now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
+def get_current_date():
+    now = datetime.datetime.utcnow()
+    return now.strftime("%Y%m%d")
+
 def is_future_time(scheduled, current):
     # Compare the datetime objects
     if scheduled is not None:
@@ -63,5 +67,5 @@ if __name__ == '__main__':
     #     check_network_connection()
     #     time.sleep(1)
 
-    timestamp = get_unix_timestamp()
+    timestamp = get_current_date()
     print(timestamp)

@@ -250,14 +250,6 @@ class TaskHandler:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-            
-            # case 'ROBOCORE-CALL-LIFT':
-            #     print(f'ROBOCORE-CALL-LIFT JSON: {task_json}')
-            #     res = self.robot.robocore_call_lift()
-            #     if (res):
-            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
-            #     else:
-            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
             case 'NW-LIFT-IN':
                 print(f'NW-LIFT-IN JSON: {task_json}')
@@ -270,6 +262,22 @@ class TaskHandler:
             case 'NW-LIFT-OUT':
                 print(f'NW-LIFT-OUT JSON: {task_json}')
                 res = self.robot.nw_lift_out(task_json, self.task_status_callback)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                
+            case 'MIC-CAM-ON':
+                print(f'MIC-ON JSON: {task_json}')
+                res = self.robot.mic_cam_on(task_json)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+
+            case 'MIC-CAM-OFF':
+                print(f'MIC-OFF JSON: {task_json}')
+                res = self.robot.mic_cam_off(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:

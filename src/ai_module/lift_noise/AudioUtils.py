@@ -140,6 +140,7 @@ class AudioUtils:
 
     def group_overlapping_intervals(self):
         """Group overlapping intervals and return consolidated groups."""
+        # if(self.intervals.__len__ == 0): return 0
         intervals = sorted(self.intervals)  # Sort by start time
         grouped_intervals = []
         current_group = [intervals[0]]
@@ -159,6 +160,7 @@ class AudioUtils:
 
     def format_grouped_intervals(self, grouped_intervals):
         """Format the grouped intervals for output."""
+        # if(grouped_intervals == 0): return None
         output = []
         group_number = 1
         for group in grouped_intervals:
@@ -174,7 +176,7 @@ class AudioUtils:
             
             group_number += 1
 
-        return "\n".join(output)
+        return output
     
     # Group - Rev02
     def composite_slices(self, audio_list):
@@ -269,11 +271,15 @@ class AudioUtils:
 
 if __name__ == "__main__":
 
-    # split files
-    file_path = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996/recording_1699332347.8895252.wav'
-    out_dir = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996'
-    audio = AudioUtils()
-    audio.split(file_path, out_dir)
+    # # split files
+    # file_path = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996/recording_1699332347.8895252.wav'
+    # out_dir = '/home/nw/Documents/GitHub/w0405_agent/data/sounds/Chunk/20231107/996'
+    # audio = AudioUtils()
+    # audio.split(file_path, out_dir)
+
+
+    list_a = [1,2,3,4]
+    print(list_a[0])
 
     # group files
 

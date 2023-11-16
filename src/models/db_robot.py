@@ -257,6 +257,35 @@ class robotDBHandler(db.AzureDB):
         except:
             print('[db_robot.update_ui_display_status] error')
 
+    # AI
+    def insert_new_audio_id(self,robot_id, mission_id, audio_file_name, is_abnormal):
+        statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio` (robot_id, mission_id, audio_file_name, is_abnormal, created_date) VALUES \
+                                                                ({robot_id}, {mission_id}, "{audio_file_name}", {is_abnormal}, "{self.now()}")'
+        return self.Insert(statement)
+
+    def get_latest_audio_id(self):
+        statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.lift_inspection.audio`"
+        return self.Select(statement)
+    
+    def insert_new_audio_analysis(self, audio_id, formatted_output_list, audio_type: NWEnums.AudioType):
+
+        for formatted_output in formatted_output_list:
+            
+            formatted_output = list(formatted_output.split(','))
+            order = formatted_output[0]
+            start_time = formatted_output[1]
+            end_time = formatted_output[2]
+            slice_count = formatted_output[3]
+
+            statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio.analysis`\
+                        (audio_id, `order`, slice_count, audio_type, start_time, end_time, created_date) VALUES \
+                        ({audio_id}, {order}, {slice_count}, {audio_type.value}, {start_time}, {end_time}, "{self.now()}")'
+            
+            print(statement)
+            self.Insert(statement)
+        
+        return True
+
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

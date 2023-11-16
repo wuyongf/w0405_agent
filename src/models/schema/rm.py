@@ -134,6 +134,19 @@ class Meida:
         self.__dict__['360View'] = view360
 
 
+class EventWithoutMedia:
+    def __init__(self, title, severity, description, mapPose=mapPose):
+        self.eventId = str(uuid.uuid1())
+        self.title = title
+        self.severity = severity  # 1: critical 2: normal
+        self.description = description
+        # self.medias = medias
+        self.mapPose = mapPose
+        # self.metadata = metadata
+
+    def to_json(self):
+        return json.dumps(self.__dict__, default=lambda o: o.__dict__)
+
 class Event:
     def __init__(self, title, severity, description, mapPose=mapPose, medias=[], metadata={}):
         self.eventId = str(uuid.uuid1())
@@ -186,8 +199,8 @@ class Door:
 
 if __name__ == '__main__':
     # media_info_list = []
-    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right", False))
-    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event_images/front_right.png", 1, "Front Right", False))
+    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event-images/front_right.png", 1, "Front Right", False))
+    # media_info_list.append(Meidas("C:/dev/w0405_agent/useful_functions/ncs_demo_codes/event-images/front_right.png", 1, "Front Right", False))
     # media_json = json.dumps(media_info_list, default=lambda o: o.__dict__)
     # print(media_json)
 
@@ -212,7 +225,7 @@ if __name__ == '__main__':
     # 5.
     medias = []
     medias.append(
-        Meida("D:/Dev/w0405_agent/src/data/event_images/20230331_145659_0001/front_right.png", 1, "Front Right"))
+        Meida("D:/Dev/w0405_agent/src/data/event-images/20230331_145659_0001/front_right.png", 1, "Front Right"))
 
     print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 

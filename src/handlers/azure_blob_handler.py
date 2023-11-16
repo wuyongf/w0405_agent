@@ -5,7 +5,7 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 import src.utils.methods as umethods
 from src.models.enums.azure import ContainerName
 
-class AzureBlobStorageHandler():
+class AzureBlobHandler():
     
     def __init__(self, config):
         print("Azure Blob Storage Python quickstart sample")
@@ -25,7 +25,7 @@ class AzureBlobStorageHandler():
     def update_container_name(self, container_name : ContainerName):
 
         match container_name:
-            case ContainerName.LiftInspection_Sound:
+            case ContainerName.LiftInspection_Audio:
                 self.container_name = self.config.get('Azure', 'container_li_audio')
             case ContainerName.LiftInspection_VideoFront:
                 self.container_name = self.config.get('Azure', 'container_li_video_front')
@@ -35,7 +35,15 @@ class AzureBlobStorageHandler():
                 self.container_name = self.config.get('Azure', 'container_wl_thermal_image')
             case ContainerName.WaterLeakage_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_wl_video_rear')
-    
+            case ContainerName.Surveillance_Audio:
+                self.container_name = self.config.get('Azure', 'container_s_audio')
+            case ContainerName.Surveillance_VideoFront:
+                self.container_name = self.config.get('Azure', 'container_s_video_front')
+            case ContainerName.Surveillance_VideoRear:
+                self.container_name = self.config.get('Azure', 'container_s_video_rear')
+            case ContainerName.Surveillance_Thermal:
+                self.container_name = self.config.get('Azure', 'container_s_thermal_image')
+
     def upload_blobs(self, upload_file_path):
         
         file_path = Path(upload_file_path)
@@ -88,13 +96,13 @@ if __name__ == '__main__':
     # print(file_path.stem)
 
     config = umethods.load_config('../../conf/config.properties')
-    blob_handler = AzureBlobStorageHandler(config)
+    blob_handler = AzureBlobHandler(config)
     # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
     # blob_handler.list_blobs()
 
     ## to azure container
-    # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
-    # blob_handler.upload_blobs(str(file_path))
+    blob_handler.update_container_name(ContainerName.LiftInspection_Audio)
+    blob_handler.upload_blobs(str(file_path))
 
     ## to nwdb - sound/video_front/video_rear
 

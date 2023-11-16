@@ -1,14 +1,30 @@
 from enum import Enum
 
+# AI - NWDB
+class AudioType(Enum):
+    Ambient = 1
+    Door    = 2
+    Vocal   = 3
+
+# AI - IPC Data
+class InspectionType(Enum):
+    LiftInspection = 1
+    Surveillance   = 2
+    WaterLeakage   = 3
+
 class MissionType(Enum):
-    NULL             = 1
-    IAQ              = 2
-    WaterLeakage     = 3
-    LiftVibration    = 4
-    LiftDoorNoise    = 5
-    LiftDoorDamage   = 6
-    LiftAcc          = 7
-    LiftLevelling    = 8
+    NULL            = 1
+    IAQ             = 2
+    WaterLeakage    = 3
+    LiftVibration   = 4
+    LiftDoorNoise   = 5
+    LiftDoorDamage  = 6
+    LiftAcc         = 7
+    LiftLevelling   = 8
+    Delivery        = 9
+    Basic_GOTO      = 10
+    Basic_Remote    = 11 
+    Basic_DoorOpening  = 12 
 
 class Protocol(Enum):
     RVMQTT = 1
