@@ -86,10 +86,9 @@ if __name__ == '__main__':
     # print(file_name)
 
     ## Method 2
-    
 
     # file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
-    file_path = Path('/home/yf/dev/w0405_agent/data/sounds/Records/20231113/996/recording_1699881437.2285242.wav')
+    file_path = Path('/home/yf/dev/w0405_agent/src/handlers/video_000.999.mp4')
     # print(file_path)
     # print(file_path.name)
     # print(file_path.suffix)
@@ -101,7 +100,7 @@ if __name__ == '__main__':
     # blob_handler.list_blobs()
 
     ## to azure container
-    blob_handler.update_container_name(ContainerName.LiftInspection_Audio)
+    blob_handler.update_container_name(ContainerName.LiftInspection_VideoRear)
     blob_handler.upload_blobs(str(file_path))
 
     ## to nwdb - sound/video_front/video_rear
