@@ -44,6 +44,13 @@ class AzureBlobHandler():
             case ContainerName.Surveillance_Thermal:
                 self.container_name = self.config.get('Azure', 'container_s_thermal_image')
 
+    def upload_folder(self, upload_folder_path, folder_name):
+        
+        self.container_name = self.container_name + '/' +folder_name
+        for file in Path(upload_folder_path).iterdir():
+            self.upload_blobs(str(file))
+        pass
+    
     def upload_blobs(self, upload_file_path):
         
         file_path = Path(upload_file_path)
@@ -79,31 +86,42 @@ class AzureBlobHandler():
 
 if __name__ == '__main__':
     
-    file_path = '/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav'
+    # # file_path = '/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav'
 
-    ## Method 1
-    # file_name = file_path.split('/')[-1]
-    # print(file_name)
+    # ## Method 1
+    # # file_name = file_path.split('/')[-1]
+    # # print(file_name)
 
-    ## Method 2
+    # ## Method 2
 
-    # file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
-    file_path = Path('/home/yf/dev/w0405_agent/src/handlers/video_000.999.mp4')
-    # print(file_path)
-    # print(file_path.name)
-    # print(file_path.suffix)
-    # print(file_path.stem)
+    # # file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/sounds/Records/20231115/996/recording_1700015268.066069.wav')
+    # file_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/src/handlers/20230906')
+    # # print(file_path)
+    # # print(file_path.name)
+    # # print(file_path.suffix)
+    # # print(file_path.stem)
 
+    # config = umethods.load_config('../../conf/config.properties')
+    # blob_handler = AzureBlobHandler(config)
+    # # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
+    # # blob_handler.list_blobs()
+
+    # ## to azure container
+    # blob_handler.update_container_name(ContainerName.WaterLeakage_Thermal)
+    # blob_handler.upload_blobs(str(file_path))
+
+    # ## to nwdb - sound/video_front/video_rear
+
+    ### [thermal]
+    ### Method 3 Upload folder with folder name
+    folder_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/src/handlers/20230906')
+    
     config = umethods.load_config('../../conf/config.properties')
     blob_handler = AzureBlobHandler(config)
-    # blob_handler.update_container_name(ContainerName.LiftInspection_Sound)
-    # blob_handler.list_blobs()
 
     ## to azure container
-    blob_handler.update_container_name(ContainerName.LiftInspection_VideoRear)
-    blob_handler.upload_blobs(str(file_path))
-
-    ## to nwdb - sound/video_front/video_rear
+    blob_handler.update_container_name(ContainerName.WaterLeakage_Thermal)
+    blob_handler.upload_folder(str(folder_path), '0001')
 
 
     pass

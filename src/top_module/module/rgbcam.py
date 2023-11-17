@@ -15,19 +15,22 @@ class RGBCamRecorder:
         if not self.cap.isOpened():
             raise Exception(f"Could not open video device {self.device_index}")
 
-    def update_output_info(self, output_dir, output_file_name):
+    def update_save_path(self, output_dir):
         if self.record_flag:
             # If recording is already in progress, stop it before starting a new one
             self.stop_and_save_record()
 
         # Set the output file
-        self.output_file = os.path.join(output_dir, output_file_name)
+        self.output_dir = output_dir
 
     def capture_and_save_video(self):
 
         # Get the camera's frame width and height
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        output_file_name = 'video_' + str(time.time()) + '.mp4'
+        self.output_file = os.path.join(self.output_dir, output_file_name)
 
         if self.output_file is not None:
             # Destroy any previous OpenCV window
@@ -39,7 +42,7 @@ class RGBCamRecorder:
             self.record_flag = True
             threading.Thread(target=self.record).start()
         else:
-            print("Output file not specified. Use update_output_info to set it.")
+            print("Output file not specified. Use update_save_path to set it.")
 
     def record(self):
         while self.cap.isOpened() and self.record_flag:
@@ -66,6 +69,8 @@ class RGBCamRecorder:
         else:
             print("Recording is not in progress.")
 
+        return self.output_file
+
     def close(self):
         if self.record_flag:
             self.stop_and_save_record()
@@ -73,7 +78,7 @@ class RGBCamRecorder:
 
 if __name__ == "__main__":
     rgb_camera = RGBCamRecorder(device_index=0)
-    rgb_camera.update_output_info(output_dir='', output_file_name='video_000.999.mp4')
+    rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
     rgb_camera.capture_and_save_video()
     time.sleep(60)
     rgb_camera.stop_and_save_record()

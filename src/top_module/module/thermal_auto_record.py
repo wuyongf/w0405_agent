@@ -20,8 +20,6 @@ class ThermalCam:
         self.image_path = None
         self.debug = debug
 
-        self.set_save_folder("/home/nw/Desktop/Images")
-
         if self.debug:
             self.stream_video_in_window()
 
@@ -168,6 +166,7 @@ class ThermalCam:
 
 if __name__ == '__main__':
     camera = ThermalCam(debug=False)
+    camera.set_save_folder("/home/nw/Desktop/Images")
 
     # Init
     interval_min = 1 #s

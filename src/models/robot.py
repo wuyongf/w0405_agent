@@ -3,6 +3,7 @@ import threading
 import logging
 import uuid
 import json
+from pathlib import Path
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
@@ -22,6 +23,7 @@ import src.models.schema.rv as RVSchema
 # Enum
 import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
+import src.models.enums.azure as AzureEnum
 # top module
 import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module.lift_levelling_module import LiftLevellingModule
@@ -30,10 +32,15 @@ from src.top_module.module.iaqV2 import IaqSensor
 from src.top_module.module.locker import Locker
 from src.top_module.module.access_control_module import AccessControl
 from src.top_module.sensor.gyro import Gyro as MoGyro
+# AI
+from src.handlers.ai_audio_handler import AudioAgent
+from src.handlers.azure_blob_handler import AzureBlobHandler
+from src.handlers.ai_rgbcam_handler import RGBCamAgent
+from src.handlers.ai_thermalcam_handler import ThermalCamAgent
 
 
 class Robot:
-    def __init__(self, config, port_config, skill_config_path):
+    def __init__(self, config, port_config, skill_config_path, ai_config):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
@@ -45,6 +52,14 @@ class Robot:
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
         self.T_RM = Trans.RMLayoutMapTransform()
+        ## AI-INIT
+        self.audio_handler = AudioAgent(config, ai_config)
+        self.blob_handler  = AzureBlobHandler(config)
+        self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
+        self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
+        self.thermalcam_handler = ThermalCamAgent(config)
+
+        #
         self.config = config
         self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
@@ -69,7 +84,7 @@ class Robot:
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
 
-        # # # module - models/sensors
+        ## module - models/sensors
         self.mo_lift_levelling = LiftLevellingModule(self.modb, config, port_config, self.status_summary)
         self.mo_iaq = IaqSensor(self.modb, config, port_config, self.status_summary, Ti=1)
         self.mo_locker = Locker(port_config)
@@ -93,6 +108,12 @@ class Robot:
         ## nw-door-agent
         self.door_agent_start = False
         self.door_agent_finish = False
+
+        ## ai related
+        self.lnd_mission_id     = None
+        self.lnd_wav_file_name  = None
+        self.wld_mission_id     = None
+        self.wld_image_folder_path = None
 
     def sensor_start(self):
         self.mo_iaq.start()
@@ -533,28 +554,159 @@ class Robot:
         except:
             return False
 
-    # Module - Mic
-    def mic_cam_on(self, task_json):
+    # LIFT-NOISE-DETECT-START
+    # LIFT-NOISE-DETECT-END
+    # LIFT-NOISE-DETECT-ANALYSIS
+
+    # LIFT-VIBRATION-DETECT-START
+    # LIFT-VIBRATION-DETECT-END
+    # LIFT-VIBRATION-DETECT-ANALYSIS
+
+    # AI
+    def lift_noise_detect_start(self, task_json):
         try:
+           
+            ### add mission_id to nwdb
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftInspection)
+            self.lnd_mission_id = self.nwdb.get_latest_mission_id()
+            print(f'mission_id: {self.lnd_mission_id}')
 
-            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.IAQ)
-            mission_id = self.nwdb.get_latest_mission_id()
+            ### [audio]
+            self.audio_handler.construct_folder_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection)
+            self.audio_handler.start_recording()
 
-            # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
-            print(f'mission_id: {mission_id}')
-            # self.mo_iaq.set_task_mode(e=True, task_id=mission_id)
+            ### [video_front]
+            self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
+            self.rgbcam_front_handler.start_recording()
+
+            # ### [video_rear]
+            # self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
+            # self.rgbcam_rear_handler.start_recording()
+
             return True
         except:
             return False
 
-    def mic_cam_off(self, task_json):
+    def lift_noise_detect_end(self):
         try:
-            # self.mo_iaq.set_task_mode(False)
+            ### [audio]
+            self.lnd_wav_file_name = self.audio_handler.stop_and_save_recording()
+
+            ### [video_front]
+            self.video_front_file_path = self.rgbcam_front_handler.stop_and_save_recording()
+
+            # ### [video_rear]
+            # self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+
             return True
         except:
             return False
 
+    def lift_noise_detect_analysis(self):
+        try:
+            ### [audio] analysis
+            self.audio_handler.start_slicing()
+            self.audio_handler.start_analysing()
+
+            ### [audio] grouop abnormal sounds
+            abnormal_sound_vocal    = self.audio_handler.group_abnormal_sound('vocal')
+            abnormal_sound_ambient  = self.audio_handler.group_abnormal_sound('ambient')
+            abnormal_sound_door     = self.audio_handler.group_abnormal_sound('door')
+
+            ### [audio] convert to mp3 
+            mp3_file_path  = self.audio_handler.audio_utils.convert_to_mp3(self.lnd_wav_file_name)
+
+            ### [audio] upload to cloud 
+            ### (1) Azure Containe
+            self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_Audio)
+            self.blob_handler.upload_blobs(mp3_file_path)
+            ### (2) NWDB
+            mp3_file_name = Path(mp3_file_path).name
+
+            if(abnormal_sound_door or abnormal_sound_ambient or abnormal_sound_vocal is not None): 
+                self.nwdb.insert_new_audio_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, audio_file_name=mp3_file_name, is_abnormal=True)
+            else:
+                self.nwdb.insert_new_audio_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, audio_file_name=mp3_file_name, is_abnormal=False)
+            
+            audio_id = self.nwdb.get_latest_audio_id()
+            # if(abnormal_sound_vocal is not None):  self.nwdb.insert_new_audio_analysis(audio_id=audio_id, formatted_output_list=abnormal_sound_vocal, audio_type=NWEnum.AudioType.Vocal)
+            # if(abnormal_sound_ambient is not None):self.nwdb.insert_new_audio_analysis(audio_id=audio_id, formatted_output_list=abnormal_sound_ambient, audio_type=NWEnum.AudioType.Ambient)
+            if(abnormal_sound_door is not None):  self.nwdb.insert_new_audio_analysis(audio_id=audio_id, formatted_output_list=abnormal_sound_door, audio_type=NWEnum.AudioType.Door)
+            
+            ### [video_front] upload to cloud
+            ### (1) Azure Containe
+            self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoFront)
+            self.blob_handler.upload_blobs(self.video_front_file_path)
+            ### (2) NWDB
+            front_mp4_file_name = Path(self.video_front_file_path).name
+            self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Front, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=front_mp4_file_name)
+
+            # ### [video_rear] upload to cloud
+            # ### (1) Azure Containe
+            # self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
+            # self.blob_handler.upload_blobs(self.video_rear_file_path)
+            # ### (2) NWDB
+            # rear_mp4_file_name = Path(self.video_rear_file_path).name
+            # self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
+
+            return True
+        except:
+            return False
+
+    def water_leakage_detect_start(self, task_json):
+        try:
+           
+            ### add mission_id to nwdb
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.WaterLeakage)
+            self.wld_mission_id = self.nwdb.get_latest_mission_id()
+            print(f'wld_mission_id: {self.wld_mission_id}')
+
+            ### [thermalcam]
+            self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
+            self.thermalcam_handler.start_capturing()
+
+            return True
+        except:
+            return False
+
+    def water_leakage_detect_end(self):
+        try:
+            ### [thermalcam]
+            self.wld_image_folder_path = self.thermalcam_handler.stop_capturing()
+
+            # ### [video_rear]
+            # self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+
+            return True
+        except:
+            return False
+
+    def water_leakage_detect_analysis(self):
+        try:
+
+            ### [thermalcam] upload to cloud
+            ### (1) Azure Containe
+            self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
+            self.blob_handler.upload_folder(self.wld_image_folder_path, str(self.wld_mission_id))
+            ### (2) NWDB
+            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, image_folder_name=str(self.wld_mission_id))
+
+            # ### [video_rear] upload to cloud
+            # ### (1) Azure Containe
+            # self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
+            # self.blob_handler.upload_blobs(self.video_rear_file_path)
+            # ### (2) NWDB
+            # rear_mp4_file_name = Path(self.video_rear_file_path).name
+            # self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
+
+            return True
+        except:
+            return False
+    
+    
+    
     # Follow Me
     def follow_me_mode(self, task_json):
         try:
@@ -1817,8 +1969,9 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
     skill_config_path = './conf/rm_skill.properties'
+    ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
-    robot = Robot(config, port_config, skill_config_path)
+    robot = Robot(config, port_config, skill_config_path, ai_config)
 
     # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 

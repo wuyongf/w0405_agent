@@ -1,4 +1,4 @@
-# NW Audio Agent - Rev01 -  2023.10.31
+# NW AI Agent - Rev01 -  2023.10.31
 from pathlib import Path
 import shutil
 import math, time, threading, os
@@ -33,7 +33,7 @@ class AudioAgent:
         self.audio_detector = AudioAnomalyDetector(ai_config)
     
     # Logic - Level 2
-    def construct_paths(self, mission_id, inspection_type: InspectionType):
+    def construct_folder_paths(self, mission_id, inspection_type: InspectionType):
         '''
         create 3 paths:
         1. audio_record_path
@@ -122,6 +122,20 @@ class AudioAgent:
 
         # print(abnormal_content)
         return abnormal_content
+    
+    def group_abnormal_sound(self, item):
+        sound_json = audio_handler.get_abnormal_sound(item)
+        # print(sound_json)
+        if(len(sound_json) != 0):
+            audio_handler.audio_utils.group_init(sound_json)
+            grouped_intervals = audio_handler.audio_utils.group_overlapping_intervals()
+            formatted_output = audio_handler.audio_utils.format_grouped_intervals(grouped_intervals)
+            print(formatted_output)
+            return formatted_output
+        else:
+            print(f'[group_abnormal_sound][{item}] Did not find any abnormal sound!')
+            return None
+
 
     def start_recording(self):
         try:
@@ -175,7 +189,7 @@ if __name__ == '__main__':
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
     audio_handler = AudioAgent(config, ai_config)
 
-    audio_handler.construct_paths(mission_id=991, inspection_type=InspectionType.LiftInspection)
+    audio_handler.construct_folder_paths(mission_id=991, inspection_type=InspectionType.LiftInspection)
 
     # Init
     # ai_handler.update_audio_record_path('/home/nw/Documents/GitHub/w0405_agent/data/sounds/Records/20231107/996')
@@ -186,37 +200,38 @@ if __name__ == '__main__':
     # audio_chunk_path = audio_handler.update_chunk_path('../../data/lift-inspection/audio/Chunk/20231116/996')
     # audio_infer_result_path = audio_handler.update_infer_result_path('../../results/lift-inspection/audio/Chunk/20231116/996')
 
-    ## Sound - Record
-    # audio_handler.start_recording()
-    # time.sleep(60)
-    # wav_file_name = audio_handler.stop_and_save_recording()
-    # print(wav_file_name)
+    # Sound - Record
+    audio_handler.start_recording()
+    time.sleep(60)
+    wav_file_name = audio_handler.stop_and_save_recording()
+    print(wav_file_name)
 
-    # # Sound - Slicing
-    # audio_handler.start_slicing()
+    # Sound - Slicing
+    audio_handler.start_slicing()
 
-    # # Sound - Analyse
-    # audio_handler.start_analysing()
+    # Sound - Analyse
+    audio_handler.start_analysing()
 
     # Sound - Group Abnormal Sound
-    sound_json = audio_handler.get_abnormal_sound('vocal')
-    print(sound_json)
-    if(len(sound_json) != 0):
-        processor = audio_handler.audio_utils.group_init(sound_json)
-        grouped_intervals = audio_handler.audio_utils.group_overlapping_intervals()
-        formatted_output = audio_handler.audio_utils.format_grouped_intervals(grouped_intervals)
-        print(formatted_output)
-    else:
-        print(f'Did not find any abnormal sound!')
+    formatted_output = audio_handler.group_abnormal_sound('vocal')
+    # sound_json = audio_handler.get_abnormal_sound('vocal')
+    # print(sound_json)
+    # if(len(sound_json) != 0):
+    #     processor = audio_handler.audio_utils.group_init(sound_json)
+    #     grouped_intervals = audio_handler.audio_utils.group_overlapping_intervals()
+    #     formatted_output = audio_handler.audio_utils.format_grouped_intervals(grouped_intervals)
+    #     print(formatted_output)
+    # else:
+    #     print(f'Did not find any abnormal sound!')
     
     ##  Sound - Notify User
     ### convert to mp3 
     mp3_file_path  = audio_handler.audio_utils.convert_to_mp3('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/data/lift-inspection/audio/Records/20231116/991/recording_1697180728.747398.wav')
 
     # # Sound - upload to cloud (1. Azure Container) 
-    # blob_handler = AzureBlobHandler(config)
-    # blob_handler.update_container_name(ContainerName.LiftInspection_Audio)
-    # blob_handler.upload_blobs(mp3_file_path)
+    blob_handler = AzureBlobHandler(config)
+    blob_handler.update_container_name(ContainerName.LiftInspection_Audio)
+    blob_handler.upload_blobs(mp3_file_path)
 
     mp3_file_name = Path(mp3_file_path).name
     print(str(mp3_file_name))

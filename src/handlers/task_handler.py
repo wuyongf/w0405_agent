@@ -169,36 +169,36 @@ class TaskHandler:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
-            case 'FUNC-LIFTLEVLLING':
-                res = self.robot.inspect_lift_levelling(task_json)
-                if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
-                else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
-            case 'FUNC-IAQ-ON':
+                    
+            case 'IAQ-ON':
                 res = self.robot.iaq_on(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 
-            case 'FUNC-IAQ-OFF':
+            case 'IAQ-OFF':
                 res = self.robot.iaq_off(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
-            case 'FUNC-LIFTVIBRATION-ON':  
+            case 'LIFT-LEVLLING':
+                res = self.robot.inspect_lift_levelling(task_json)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+            
+            case 'LIFT-VIBRATION-ON':  
                 res = self.robot.lift_vibration_on(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)  
 
-            case 'FUNC-LIFTVIBRATION-OFF':
+            case 'LIFT-VIBRATION-OFF':
                 res = self.robot.lift_vibration_off(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
@@ -267,22 +267,53 @@ class TaskHandler:
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 
-            case 'MIC-CAM-ON':
-                print(f'MIC-ON JSON: {task_json}')
-                res = self.robot.mic_cam_on(task_json)
+            case 'LIFT-NOISE-DETECT-START':
+                print(f'LIFT-NOISE-DETECT-START JSON: {task_json}')
+                res = self.robot.lift_noise_detect_start(task_json)
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
-            case 'MIC-CAM-OFF':
-                print(f'MIC-OFF JSON: {task_json}')
-                res = self.robot.mic_cam_off(task_json)
+            case 'LIFT-NOISE-DETECT-END':
+                # print(f'LIFT-NOISE-DETECT-END JSON: {task_json}')
+                res = self.robot.lift_noise_detect_end()
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+            
+            case 'LIFT-NOISE-DETECT-ANALYSIS':
+                # print(f'LIFT-NOISE-DETECT-END JSON: {task_json}')
+                res = self.robot.lift_noise_detect_analysis()
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
+            case 'WATER-LEAKAGE-DETECT-START':
+                print(f'WATER-LEAKAGE-DETECT-START JSON: {task_json}')
+                res = self.robot.water_leakage_detect_start(task_json)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                
+            case 'WATER-LEAKAGE-DETECT-END':
+                # print(f'WATER-LEAKAGE-DETECT-END JSON: {task_json}')
+                res = self.robot.water_leakage_detect_end()
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+            
+            case 'WATER-LEAKAGE-DETECT-ANALYSIS':
+                # print(f'WATER-LEAKAGE-DETECT-END JSON: {task_json}')
+                res = self.robot.water_leakage_detect_analysis()
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
         # if task.taskType == 'RM-LOCALIZE':
         #     res = self.robot.localize(task_json)
         #     if (res):

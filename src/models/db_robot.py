@@ -258,6 +258,28 @@ class robotDBHandler(db.AzureDB):
             print('[db_robot.update_ui_display_status] error')
 
     # AI
+
+    ### rgbcam
+    def insert_new_video_id(self, camera_position: NWEnums.CameraPosition, robot_id, mission_id, video_file_name):
+        statement = None
+        if camera_position == NWEnums.CameraPosition.Front:
+            statement = f'INSERT INTO {self.database}.`ai.lift_inspection.video.front` (robot_id, mission_id, video_file_name, created_date) VALUES \
+                          ({robot_id}, {mission_id}, "{video_file_name}", "{self.now()}")'
+        if camera_position == NWEnums.CameraPosition.Rear:
+            statement = f'INSERT INTO {self.database}.`ai.lift_inspection.video.rear` (robot_id, mission_id, video_file_name, created_date) VALUES \
+                          ({robot_id}, {mission_id}, "{video_file_name}", "{self.now()}")'        
+        # print(statement)
+        return self.Insert(statement)
+
+    def get_latest_video_id(self, camera_position: NWEnums.CameraPosition):
+        statement = None
+        if camera_position == NWEnums.CameraPosition.Front:
+            statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.lift_inspection.video.front`"
+        if camera_position == NWEnums.CameraPosition.Rear:
+            statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.lift_inspection.video.rear`"        
+        return self.Select(statement)
+
+    ### mic
     def insert_new_audio_id(self,robot_id, mission_id, audio_file_name, is_abnormal):
         statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio` (robot_id, mission_id, audio_file_name, is_abnormal, created_date) VALUES \
                                                                 ({robot_id}, {mission_id}, "{audio_file_name}", {is_abnormal}, "{self.now()}")'
@@ -286,7 +308,19 @@ class robotDBHandler(db.AzureDB):
         
         return True
 
-
+    ### thermal
+    def insert_new_thermal_id(self,robot_id, mission_id, image_folder_name, is_abnormal):
+        statement = f'INSERT INTO {self.database}.`ai.water_leakage.thermal` (robot_id, mission_id, image_folder_name, is_abnormal, created_date) VALUES \
+                                                                ({robot_id}, {mission_id}, "{image_folder_name}", {is_abnormal}, "{self.now()}")'
+        return self.Insert(statement) 
+      
+    def get_latest_thermal_id(self):
+        statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.water_leakage.thermal`"
+        return self.Select(statement)
+    
+    def insert_new_thermal_analysis(self):
+        pass
+    
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
