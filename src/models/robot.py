@@ -38,7 +38,6 @@ from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
 
-
 class Robot:
     def __init__(self, config, port_config, skill_config_path, ai_config):
         self.rvapi = RVAPI.RVAPI(config)
@@ -91,13 +90,14 @@ class Robot:
         self.mo_access_control = AccessControl(self.modb, config, port_config)
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
         
-        ## delivery related
-        #region ROBOT CONFIGURATION
+        ## ROBOT CONFIGURATION
         self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid, skill_config_path)
         # print(f'[new_delivery_mission]: write Robot Skill...')
         self.skill_config = umethods.load_config(skill_config_path)
         # print(f'[new_delivery_mission]: Loaded Robot Skill...')
-        #endregion
+        
+        ## delivery related
+        self.nw_goto_done = False
 
         ## lift related
         self.last_goto_json = None
@@ -376,6 +376,69 @@ class Robot:
         return False
 
     # status_callback: check task_handler3.py
+    def nw_goto(self, task_json, status_callback):
+        '''
+        No TMat Transformation!!! Just RM_MAP -> RV_MAP
+        '''
+        try:
+            ## info delivery publisher
+            self.nw_goto_done = False
+
+            ## Lift Integration - Rev01
+            if(self.is_another_floor(task_json)):
+
+                self.last_goto_json = task_json
+                # init goto_across_floor
+                print(f'[robot.goto] init goto_across_floor...')
+
+                # cur_layout_id = self.layout_nw_id
+                # target_map_rm_guid = task_json['parameters']['mapId']
+                # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+                # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
+                rm_task_data = RMSchema.Task(task_json)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+                time.sleep(1)
+
+                threading.Thread(target=self.lift_mission_publisher).start()
+                return True
+
+            self.door_agent_start = True  # door-agent logic
+            self.door_agent_finish = False
+            time.sleep(1)
+
+            # step 0. init. clear current task
+            self.cancel_moving_task()
+            # step 1. get rm_map_id, rv_map_name, map_metadata
+            # print('step1')
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
+            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            # step 2. transformation. rm2rv
+            # print('step2')
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
+                                      rv_map_metadata.y, rv_map_metadata.angle)
+            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+            # step3. rv. create point base on rm. localization.
+            # print('step3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            pose_name = 'TEMP'
+            time.sleep(1)
+            print(f'goto--rm_map_x: {rm_map_metadata.x}')
+            print(f'goto--rm_map_y: {rm_map_metadata.y}')
+            print(f'goto--rm_map_heading: {rm_map_metadata.heading}')
+            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            time.sleep(1)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
+
+            thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
+            thread.setDaemon(True)
+            thread.start()
+
+            return True
+        except:
+            return False
+
     def goto(self, task_json, status_callback):
         '''
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
@@ -492,6 +555,9 @@ class Robot:
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+
+                    ## info delivery publisher
+                    self.nw_goto_done = True
 
                 # # if error
                 # if(self.check_goto_has_error):
@@ -691,7 +757,8 @@ class Robot:
             self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
             self.blob_handler.upload_folder(self.wld_image_folder_path, str(self.wld_mission_id))
             ### (2) NWDB
-            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, image_folder_name=str(self.wld_mission_id))
+            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, 
+                                            image_folder_name=str(self.wld_mission_id), is_abnormal=True)
 
             # ### [video_rear] upload to cloud
             # ### (1) Azure Containe
@@ -916,6 +983,26 @@ class Robot:
             return False
     
     ## Delivery Publisher Methods
+    def wait_for_nw_goto_done(self, duration_min):
+
+        self.nw_goto_done = False
+
+        print(f'[robot.wait_for_job_done]: duration: {duration_min} minutes')
+        start_time = time.time()
+        time.sleep(0.5)
+        while True:
+            # Check if the job is done (replace with your own condition)
+            if self.nw_goto_done == True:
+                return True
+
+            # Check if the specified duration has elapsed
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= (duration_min * 60):  # Convert minutes to seconds
+                return False
+
+            # Wait for a short interval before checking again
+            time.sleep(0.2)
+
     def wait_for_job_done(self, duration_min):
         print(f'[robot.wait_for_job_done]: duration: {duration_min} minutes')
         start_time = time.time()
@@ -1040,7 +1127,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(charging_station.layout_rm_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
                                         charging_station.layout_rm_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1301,7 +1388,8 @@ class Robot:
         done = self.pub_delivery_goto_sender(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
+        done = self.wait_for_nw_goto_done(duration_min=25)
+        # done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # loading package
@@ -1315,14 +1403,14 @@ class Robot:
         done = self.pub_delivery_goto_receiver(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=25)  # wait for job is done
+        done = self.wait_for_nw_goto_done(duration_min=25)
+        # done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # unloading package
         done = self.pub_delivery_wait_for_unloading(a_delivery_mission)
         if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,
-                                         self.a_delivery_mission.ID)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,self.a_delivery_mission.ID)
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
@@ -1331,7 +1419,8 @@ class Robot:
         done = self.charging_goto()
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        done = self.wait_for_nw_goto_done(duration_min=25)
+        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # 2. charging
@@ -1408,12 +1497,15 @@ class Robot:
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
         if not done: return False  # stop assigning lift mission
 
-        # to Last GOTO Position
-        done = self.pub_last_goto()
-        if not done: return False
-        print(f'[lift_mission] Flag9: to LastGotoPos...')
-        done = self.wait_for_job_done(duration_min=10)  # wait for job is done
-        if not done: return False  # stop assigning lift mission
+        ## info delivery publisher
+        self.nw_goto_done = True
+
+        # # to Last GOTO Position
+        # done = self.pub_last_goto()
+        # if not done: return False
+        # print(f'[lift_mission] Flag9: to LastGotoPos...')
+        # done = self.wait_for_job_done(duration_min=10)  # wait for job is done
+        # if not done: return False  # stop assigning lift mission
 
         return True
     
@@ -1535,7 +1627,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
                                         pos_origin.layout_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1582,7 +1674,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
                                         pos_origin.layout_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1627,7 +1719,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
                                         pos_destination.layout_guid,
                                         latest_marker_id,
                                         order=1,
