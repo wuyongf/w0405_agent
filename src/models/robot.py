@@ -118,7 +118,7 @@ class Robot:
     def sensor_start(self):
         self.mo_iaq.start()
         self.nwmqttpub.fans_off("all")
-        self.nwmqttpub.rotate_camera(90)
+        self.nwmqttpub.rotate_camera(0)
 
         # delivery
         self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
@@ -247,12 +247,12 @@ class Robot:
 
             map_rm_guid = self.status.mapPose.mapId
             self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
-            print('<debug>layout_pose 1')
+            # print('<debug>layout_pose 1')
             params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
-            print('<debug>layout_pose 2')
+            # print('<debug>layout_pose 2')
             self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                               params.scale, params.angle, params.translate)
-            print('<debug>layout_pose 3')
+            # print('<debug>layout_pose 3')
             cur_layout_point = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 
                                                                self.status.mapPose.y,
                                                                self.status.mapPose.heading)
@@ -658,6 +658,7 @@ class Robot:
         try:
             ### [audio]
             self.lnd_wav_file_name = self.audio_handler.stop_and_save_recording()
+            print(f'self.lnd_wav_file_name: {self.lnd_wav_file_name}')
 
             ### [video_front]
             self.video_front_file_path = self.rgbcam_front_handler.stop_and_save_recording()
@@ -679,7 +680,8 @@ class Robot:
             abnormal_sound_vocal    = self.audio_handler.group_abnormal_sound('vocal')
             abnormal_sound_ambient  = self.audio_handler.group_abnormal_sound('ambient')
             abnormal_sound_door     = self.audio_handler.group_abnormal_sound('door')
-
+            abnormal_sounds = [abnormal_sound_door, abnormal_sound_ambient, abnormal_sound_vocal]
+            print(f'##2')
             ### [audio] convert to mp3 
             mp3_file_path  = self.audio_handler.audio_utils.convert_to_mp3(self.lnd_wav_file_name)
 
@@ -690,7 +692,12 @@ class Robot:
             ### (2) NWDB
             mp3_file_name = Path(mp3_file_path).name
 
-            if(abnormal_sound_door or abnormal_sound_ambient or abnormal_sound_vocal is not None): 
+            # if(abnormal_sound_door or abnormal_sound_ambient or abnormal_sound_vocal is not None): 
+            if all(sound is None for sound in abnormal_sounds):
+                print(f'all sounds are not valid')
+                return False
+
+            if any(sound is not None for sound in abnormal_sounds):
                 self.nwdb.insert_new_audio_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, audio_file_name=mp3_file_name, is_abnormal=True)
             else:
                 self.nwdb.insert_new_audio_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, audio_file_name=mp3_file_name, is_abnormal=False)
@@ -757,7 +764,7 @@ class Robot:
             self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
             self.blob_handler.upload_folder(self.wld_image_folder_path, str(self.wld_mission_id))
             ### (2) NWDB
-            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, 
+            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.wld_mission_id, 
                                             image_folder_name=str(self.wld_mission_id), is_abnormal=True)
 
             # ### [video_rear] upload to cloud
@@ -1258,12 +1265,12 @@ class Robot:
             self.goto(task_json, status_callback)
 
             self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(task_json['parameters']['current_floor'])
+            self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
             time.sleep(1)
             self.rvjoystick.disable()
             self.wait_for_robot_arrived()
             
-            self.func_lift_pressbutton_releasedoor(task_json['parameters']['target_floor'])
+            self.func_lift_pressbutton_releasedoor(int(task_json['parameters']['target_floor']))
 
             return True
         except:
@@ -1276,7 +1283,7 @@ class Robot:
             self.goto(task_json, status_callback)
 
             self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(self.lift_task_json['parameters']['target_floor'])
+            self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
             time.sleep(1)
             self.rvjoystick.disable()
             self.wait_for_robot_arrived()

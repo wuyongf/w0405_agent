@@ -2,6 +2,7 @@
 from pathlib import Path
 import shutil
 import math, time, threading, os
+from multiprocessing import Process
 import src.utils.methods as umethods
 
 from src.top_module.module.thermalcam import ThermalCam
@@ -73,7 +74,7 @@ class ThermalCamAgent:
         try:
             print(f'[ai_thermalcam_handler.start_capturing] start capturing...')
             interval = 1
-            threading.Thread(target=self.recorder.thread_start_capturing, args=(interval, )).start()
+            Process(target=self.recorder.thread_start_capturing, args=(interval, )).start()
             return True
         except:
             return False
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     ###  Video - upload to cloud (1. Azure Container) 
     blob_handler = AzureBlobHandler(config)
     blob_handler.update_container_name(ContainerName.WaterLeakage_Thermal)
-    folder_name = image_folder_path.split('/')[-1]
+    folder_name = str(image_folder_path).split('/')[-1]
     blob_handler.upload_folder(image_folder_path, folder_name)
 
     # mp4_file_name = Path(video_file_path).name
@@ -119,8 +120,8 @@ if __name__ == '__main__':
 
     # Video - upload to cloud (2. NWDB)
     nwdb = robotDBHandler(config)
-    nwdb.insert_new_thermal_id(robot_id=1, mission_id=3, image_folder_name=folder_name)
-    video_id = nwdb.get_latest_thermal_id(NWEnums.CameraPosition.Front)
+    nwdb.insert_new_thermal_id(robot_id=1, mission_id=3, image_folder_name=folder_name, is_abnormal= True)
+    video_id = nwdb.get_latest_thermal_id()
     # nwdb.insert_new_audio_analysis(audio_id=video_id, formatted_output_list=formatted_output, audio_type=NWEnums.AudioType.Door)
 
     # - notify user

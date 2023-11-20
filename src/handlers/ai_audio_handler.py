@@ -2,6 +2,7 @@
 from pathlib import Path
 import shutil
 import math, time, threading, os
+import json
 # import src.models.robot as Robot
 import src.utils.methods as umethods
 from src.ai_module.lift_noise.AudioUtils import AudioUtils
@@ -106,12 +107,17 @@ class AudioAgent:
     #     return(str(Path(self.audio_infer_result_path).absolute()))
 
     def get_abnormal_sound(self, item):
-        import json
+
+        print(f'item: {item}')
 
         # Assuming your JSON file is named 'your_file.json'
         result_path = str(self.audio_infer_result_path)
+
+        print(f'result_path: {result_path}')
         file_name = item + '.json'
         file_path = os.path.join(result_path, file_name)
+
+        print(file_path)
 
         # Read the JSON file
         with open(file_path, 'r') as file:
@@ -124,16 +130,23 @@ class AudioAgent:
         return abnormal_content
     
     def group_abnormal_sound(self, item):
-        sound_json = audio_handler.get_abnormal_sound(item)
-        # print(sound_json)
-        if(len(sound_json) != 0):
-            audio_handler.audio_utils.group_init(sound_json)
-            grouped_intervals = audio_handler.audio_utils.group_overlapping_intervals()
-            formatted_output = audio_handler.audio_utils.format_grouped_intervals(grouped_intervals)
-            print(formatted_output)
-            return formatted_output
-        else:
-            print(f'[group_abnormal_sound][{item}] Did not find any abnormal sound!')
+        try:
+            sound_json = self.get_abnormal_sound(item)
+            print(f'sound_json: {sound_json}')
+            if(len(sound_json) != 0):
+                self.audio_utils.group_init(sound_json)
+                print(f'xx1')
+                grouped_intervals = self.audio_utils.group_overlapping_intervals()
+                print(f'xx2')
+                formatted_output = self.audio_utils.format_grouped_intervals(grouped_intervals)
+                print(f'xx3')
+                print(formatted_output)
+                return formatted_output
+            else:
+                print(f'[group_abnormal_sound][{item}] Did not find any abnormal sound!')
+                return None
+        except:
+            print(f'xx4')
             return None
 
 

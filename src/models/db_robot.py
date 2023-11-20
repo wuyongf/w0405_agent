@@ -283,6 +283,7 @@ class robotDBHandler(db.AzureDB):
     def insert_new_audio_id(self,robot_id, mission_id, audio_file_name, is_abnormal):
         statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio` (robot_id, mission_id, audio_file_name, is_abnormal, created_date) VALUES \
                                                                 ({robot_id}, {mission_id}, "{audio_file_name}", {is_abnormal}, "{self.now()}")'
+        print(f'statement: {statement}')
         return self.Insert(statement)
 
     def get_latest_audio_id(self):

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import rpc
+import copy
+from src.top_module.module import rpc
 import struct
 import os
 import time
@@ -133,8 +134,8 @@ class ThermalCam:
         if not os.path.exists(path):
             print("Please make sure the directory exists for saving thermal image data.")
         else:
-            datestring = time.strftime("%Y%m%d", time.localtime())
-            self.save_folder = os.path.join(path, datestring)
+            # datestring = time.strftime("%Y%m%d", time.localtime())
+            self.save_folder = path #os.path.join(path, datestring)
             os.makedirs(self.save_folder, exist_ok=True)
 
             if self.debug:
@@ -145,12 +146,16 @@ class ThermalCam:
     def capture_image(self):
         image = self.__get_frame_buffer_call_back()
         if image is not None:
+            temp_image = copy.deepcopy(image)
             filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
             filepath = os.path.join(self.save_folder, filename)
 
-            image = np.asarray(image, dtype="uint8")
-            image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
-            cv2.imwrite(filepath, image)
+            temp_image = np.asarray(temp_image, dtype="uint8")
+            temp_image = cv2.imdecode(temp_image, cv2.IMREAD_GRAYSCALE)
+            if temp_image is None: 
+                print(f'thermal image is NONE!!!')
+                return None
+            cv2.imwrite(filepath, temp_image)
             return filepath
         else:
             return None

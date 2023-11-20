@@ -19,7 +19,7 @@ numpy
 matplotlib
 shapely==2.0.2
 gTTS
-# pyaudio
+pyaudio
 azure-storage-blob 
 azure-identity
 

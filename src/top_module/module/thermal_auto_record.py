@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
 
     # Define the interval in seconds (30 minutes)
-    interval_seconds = interval_min * 60
+    interval_seconds = interval_min #* 60
 
     # Define the start time (18:05)
     # start_time = datetime.now().replace(hour=start_time_hour, minute=start_time_min, second=0, microsecond=0)

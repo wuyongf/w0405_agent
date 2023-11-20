@@ -83,7 +83,7 @@ class TaskParams:
             self.positionName = dct['positionName']
             self.x = dct['x']
             self.y = dct['y']
-            self.heading = dct['heading']
+            self.heading = int(dct['heading'])
 
 
 # to receive mtqq task json

@@ -145,6 +145,9 @@ class AudioUtils:
         grouped_intervals = []
         current_group = [intervals[0]]
 
+        if(len(intervals) == 1):
+            return grouped_intervals.append(current_group)
+
         for i in range(1, len(intervals)):
             _, current_end, _ = current_group[-1]
             next_start, next_end, next_slice = intervals[i]
@@ -278,10 +281,8 @@ if __name__ == "__main__":
     # audio.split(file_path, out_dir)
 
 
-    list_a = [1,2,3,4]
-    print(list_a[0])
-
     # group files
+    pass
 
 
     # config = configparser.ConfigParser()
