@@ -262,7 +262,7 @@ class TaskHandler:
                 print(f'NW-LIFT-IN JSON: {task_json}')
                 res = self.robot.nw_lift_in(task_json, self.task_status_callback)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    return
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
@@ -270,7 +270,7 @@ class TaskHandler:
                 print(f'NW-LIFT-OUT JSON: {task_json}')
                 res = self.robot.nw_lift_out(task_json, self.task_status_callback)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    return
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 

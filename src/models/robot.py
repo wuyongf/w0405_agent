@@ -1,5 +1,6 @@
 import time
 import threading
+from multiprocessing import Process
 import logging
 import uuid
 import json
@@ -548,13 +549,15 @@ class Robot:
                 continue_flag = False
 
                 self.is_moving = False
-                self.has_arrived = True
 
                 # time.sleep(1)
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+                    
+                    ## info [robot.wait_for_robot_arrived]
+                    self.has_arrived = True
 
                     ## info delivery publisher
                     self.nw_goto_done = True
@@ -1257,33 +1260,39 @@ class Robot:
         
     ## Methods
     ### Lift
+    def process_lift_in(self, cur_floor_int, target_floor_int):
+            self.rvjoystick.enable()
+            self.call_lift_and_check_arrive(cur_floor_int)
+            time.sleep(1)
+            self.rvjoystick.disable()
+            self.wait_for_robot_arrived()            
+            self.func_lift_pressbutton_releasedoor(target_floor_int)
+
     def nw_lift_in(self, task_json, status_callback):
         
         try:
             self.lift_task_json = task_json
-
             self.goto(task_json, status_callback)
 
-            self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
-            time.sleep(1)
-            self.rvjoystick.disable()
-            self.wait_for_robot_arrived()
-            
-            self.func_lift_pressbutton_releasedoor(int(task_json['parameters']['target_floor']))
+            cur_floor_int = int(task_json['parameters']['current_floor'])
+            target_floor_int = int(task_json['parameters']['target_floor'])
+
+            Process(target=self.process_lift_in, args=(cur_floor_int,target_floor_int)).start()
+
+            # self.rvjoystick.enable()
+            # self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
+            # time.sleep(1)
+            # self.rvjoystick.disable()
+            # self.wait_for_robot_arrived()            
+            # self.func_lift_pressbutton_releasedoor(int(task_json['parameters']['target_floor']))
 
             return True
         except:
             return False
 
-
-    def nw_lift_out(self, task_json, status_callback):
-
-        try:
-            self.goto(task_json, status_callback)
-
+    def process_lift_out(self, target_floor_int):
             self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
+            self.call_lift_and_check_arrive(target_floor_int)
             time.sleep(1)
             self.rvjoystick.disable()
             self.wait_for_robot_arrived()
@@ -1291,6 +1300,25 @@ class Robot:
             # **release the lift door
             self.emsdlift.release_all_keys()
             self.emsdlift.close()
+
+    def nw_lift_out(self, task_json, status_callback):
+
+        try:
+            self.goto(task_json, status_callback)
+
+            target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
+
+            Process(target=self.process_lift_in, args=(target_floor_int,)).start()
+
+            # self.rvjoystick.enable()
+            # self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
+            # time.sleep(1)
+            # self.rvjoystick.disable()
+            # self.wait_for_robot_arrived()
+            
+            # # **release the lift door
+            # self.emsdlift.release_all_keys()
+            # self.emsdlift.close()
 
             return True
         except:
