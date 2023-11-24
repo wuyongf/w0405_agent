@@ -479,8 +479,10 @@ class Robot:
             # print('step2')
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+                                                rm_map_metadata.y, rm_map_metadata.heading )
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -1265,7 +1267,7 @@ class Robot:
             self.call_lift_and_check_arrive(cur_floor_int)
             time.sleep(1)
             self.rvjoystick.disable()
-            self.wait_for_robot_arrived()            
+            # self.wait_for_robot_arrived()            
             self.func_lift_pressbutton_releasedoor(target_floor_int)
 
     def nw_lift_in(self, task_json, status_callback):
@@ -1277,7 +1279,7 @@ class Robot:
             cur_floor_int = int(task_json['parameters']['current_floor'])
             target_floor_int = int(task_json['parameters']['target_floor'])
 
-            Process(target=self.process_lift_in, args=(cur_floor_int,target_floor_int)).start()
+            threading.Thread(target=self.process_lift_in, args=(cur_floor_int,target_floor_int)).start()
 
             # self.rvjoystick.enable()
             # self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
@@ -1308,7 +1310,7 @@ class Robot:
 
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
 
-            Process(target=self.process_lift_in, args=(target_floor_int,)).start()
+            threading.Thread(target=self.process_lift_in, args=(target_floor_int,)).start()
 
             # self.rvjoystick.enable()
             # self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
@@ -1387,6 +1389,7 @@ class Robot:
                 # keep checking if lift is arrived
                 while(True):
                     if(self.emsdlift.occupied):
+                        print(f'[robot_call_lift] self.emsdlift.occupied {self.emsdlift.occupied}')
                         # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
                         print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
                         time.sleep(1)
@@ -2099,10 +2102,12 @@ if __name__ == '__main__':
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
+    robot.sensor_start()
 
     # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 
     # robot.pub_call_lift(a_lift_mission)
+    # robot.process_lift_in(4,6)
 
     robot.call_lift_and_check_arrive(4)
     # robot.charging_on()

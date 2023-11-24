@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import threading
+from multiprocessing import Process
 # yf
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
@@ -296,7 +297,8 @@ if __name__ == "__main__":
     while(True):
         time.sleep(2)
         lift.get_state()
-        res = lift.is_arrived(target_floor_int = 6)
+        lift.release_all_keys()
+        res = lift.occupied
         print(res)
         # lift.update_motion_state()
         # res = lift.is_available()
