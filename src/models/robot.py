@@ -1267,7 +1267,7 @@ class Robot:
             self.call_lift_and_check_arrive(cur_floor_int)
             time.sleep(1)
             self.rvjoystick.disable()
-            # self.wait_for_robot_arrived()            
+            self.wait_for_robot_arrived()            
             self.func_lift_pressbutton_releasedoor(target_floor_int)
 
     def nw_lift_in(self, task_json, status_callback):
@@ -1310,7 +1310,7 @@ class Robot:
 
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
 
-            threading.Thread(target=self.process_lift_in, args=(target_floor_int,)).start()
+            threading.Thread(target=self.process_lift_out, args=(target_floor_int,)).start()
 
             # self.rvjoystick.enable()
             # self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
