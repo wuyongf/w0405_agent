@@ -83,10 +83,9 @@ class TaskParams:
             self.positionName = dct['positionName']
             self.x = dct['x']
             self.y = dct['y']
-            self.heading = dct['heading']
-            if(type(self.heading == str)):
-                self.heading = int(self.heading)
-
+            self.heading = int(dct['heading'])
+            # if(type(self.heading == str)):
+            #     self.heading = int(self.heading)
 
 # to receive mtqq task json
 class Task:
