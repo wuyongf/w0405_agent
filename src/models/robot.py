@@ -559,10 +559,9 @@ class Robot:
                 continue
             else:
                 continue_flag = False
-
                 self.is_moving = False
 
-                # time.sleep(1)
+                time.sleep(0.5)
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
@@ -776,7 +775,8 @@ class Robot:
             # record_path = Path(self.wld_image_folder_dir)
 
             # upload to nwdb: add new thermal_id
-            folder_name = self.wld_image_folder_dir.split('/')[-1]
+            print(f'self.wld_image_folder_dir {self.wld_image_folder_dir}')
+            folder_name = self.wld_mission_id
             self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.wld_mission_id, image_folder_name=folder_name, is_abnormal = False)
             thermal_id = self.nwdb.get_latest_thermal_id()
 
@@ -785,29 +785,34 @@ class Robot:
                 
                 # init - file name
                 file_name = img_path.stem
+                print(f'<debug 1>')
                 name_info = file_name.split('_')
                 year, month, day, hour, minute, second = int(name_info[0]), int(name_info[1]), int(name_info[2]), int(name_info[3]), int(name_info[4]), int(name_info[5])
                 dt = datetime.datetime(year, month, day, hour, minute, second)
+                print(f'<debug 2>')
                 formatted_timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
-                layout_id, robot_x, robot_y = int(name_info[6]), float(name_info[7]), float(name_info[8])
-
+                layout_id = int(float(name_info[6]))
+                robot_x = float(name_info[7])
+                robot_y = float(name_info[8])
+                print(f'<debug 3>')
                 # init - predict
+                print(str(img_path))
                 data = self.thermalcam_handler.water_detector.predict(str(img_path))
                 predict_image = self.thermalcam_handler.water_detector.get_image(img_path)
-                
+                print(f'<debug 4>')
                 # analysis
                 if(len(data) == 0): is_abnormal = False
                 else: is_abnormal = True
                 abnormal_list.append(is_abnormal)
-
+                print(f'<debug 5>')
                 # save result image
                 predict_img_dir = os.path.join(str(self.thermalcam_handler.image_predict_result_path), img_path.name)
                 self.thermalcam_handler.water_detector.save_image(predict_img_dir, predict_image)
-                
+                print(f'<debug 6>')
                 # upload to azure - raw image
                 self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
                 self.blob_handler.upload_blobs(str(img_path))
-
+                print(f'<debug 7>')
                  # upload to azure - predict image
                 self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal_Result)
                 self.blob_handler.upload_blobs(predict_img_dir)

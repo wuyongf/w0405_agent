@@ -146,10 +146,13 @@ class ThermalCam:
 
     def capture_image(self):
         image = self.__get_frame_buffer_call_back()
+        # print(self.robot_position)
         if image is not None:
             temp_image = copy.deepcopy(image)
             timestamp = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
             filename = f'{timestamp}_{self.robot_position[0]}_{self.robot_position[1]}_{self.robot_position[2]}.jpg'
+            # filename = f'{timestamp}.jpg'
+            print(filename)
             # filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
             filepath = os.path.join(self.save_folder, filename)
             temp_image = np.asarray(temp_image, dtype="uint8")
@@ -175,8 +178,10 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
 
-    def process_start_capturing(self, interval):
+    def process_start_capturing(self, interval, shm_name):
         print(f'[thermalcam] start capturing...')
+        existing_shm = shared_memory.SharedMemory(name=shm_name)
+        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
         while(self.capture_flag):
             self.capture_image()

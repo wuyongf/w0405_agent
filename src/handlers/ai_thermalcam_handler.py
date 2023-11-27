@@ -11,15 +11,15 @@ from src.models.enums.azure import ContainerName
 from src.models.db_robot import robotDBHandler
 import src.models.enums.nw as NWEnums
 from src.ai_module.water_detect.inference import WaterDetector
-from src.models.robot import Robot
+
 
 class ThermalCamAgent:
-    def __init__(self, config, robot: Robot, blob_handler: AzureBlobHandler, nwdb: robotDBHandler):
+    def __init__(self, config):
         
         self.config = config
-        self.robot = robot
-        self.blob_handler = blob_handler
-        self.nwdb = nwdb
+        # self.robot = robot
+        # self.blob_handler = blob_handler
+        # self.nwdb = nwdb
 
         # params
         self.image_record_path = ''
@@ -28,9 +28,10 @@ class ThermalCamAgent:
         self.recorder = ThermalCam(debug=False)
 
         # for inference
+        repo = self.config.get('Water_Leakage', 'repo')
         model_path = self.config.get('Water_Leakage', 'model_path')
         model_confidence = self.config.get('Water_Leakage', 'model_confidence')
-        self.water_detector = WaterDetector(model_path, model_confidence)
+        self.water_detector = WaterDetector(repo, model_path, model_confidence)
     
     # Logic - Level 2
     def construct_paths(self, mission_id, inspection_type: InspectionType):
@@ -83,8 +84,9 @@ class ThermalCamAgent:
         try:
             print(f'[ai_thermalcam_handler.start_capturing] start capturing...')
             interval = 1
-            self.recorder.init_shared_memory(shm_name)
-            Process(target=self.recorder.process_start_capturing, args=(interval, )).start()
+            # self.recorder.init_shared_memory(shm_name)
+            self.process = Process(target=self.recorder.process_start_capturing, args=(interval, shm_name))
+            self.process.start()
             return True
         except:
             return False
@@ -96,6 +98,7 @@ class ThermalCamAgent:
         try:
             print(f'[ai_thermalcam_handler.stop_capturing] stop capturing, saving...')
             save_folder_dir = self.recorder.stop_capturing()
+            self.process.terminate()
             print(f'[ai_thermalcam_handler.stop_capturing] finished.')
 
             return save_folder_dir
