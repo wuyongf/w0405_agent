@@ -1,3 +1,6 @@
+# w0405-agent requirements
+# Usage: pip install -r requirements.txt
+
 pyserial==3.5
 mysql==0.0.3
 mysqlclient==2.1.1
@@ -14,17 +17,40 @@ tensorflow==2.13.0
 tensorflow-io==0.33.0
 pydub
 scikit-learn
-opencv-python
-numpy
-matplotlib
+# opencv-python
+# numpy
+# matplotlib
 shapely==2.0.2
 gTTS
 pyaudio
 azure-storage-blob 
 azure-identity
 
+# YOLOv5-Base ------------------------------------------------------------------------
+gitpython>=3.1.30
+matplotlib>=3.3
+numpy>=1.22.2
+opencv-python>=4.1.1
+Pillow>=10.0.1
+psutil  # system resources
+PyYAML>=5.3.1
+requests>=2.23.0
+scipy>=1.4.1
+thop>=0.1.1  # FLOPs computation
+torch>=1.8.0  # see https://pytorch.org/get-started/locally (recommended)
+torchvision>=0.9.0
+tqdm>=4.64.0
+ultralytics>=8.0.147
 
-twilio # SMS
+# YOLOv5-Plotting --------------------------------------------------------------------
+pandas>=1.1.4
+seaborn>=0.11.0
+
+# YOLOv5-Deploy ----------------------------------------------------------------------
+setuptools>=65.5.1 # Snyk vulnerability fix
+
+# SMS --------------------------------------------------------------------
+# twilio
 
 # sudo apt-get install ffmpeg
 # sudo apt install portaudio19-dev

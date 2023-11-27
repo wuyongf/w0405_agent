@@ -152,7 +152,7 @@ class AudioAgent:
 
     def start_recording(self):
         try:
-            print(f'[ai_handler.start_recording] start recording...')
+            print(f'[ai_audio_handler.start_recording] start recording...')
             self.audio_recorder.start_recording()
             return True
         except:
@@ -163,9 +163,9 @@ class AudioAgent:
         return wav file path
         '''
         try:
-            print(f'[ai_handler.stop_and_save_recording] stop recording, saving...')
+            print(f'[ai_audio_handler.stop_and_save_recording] stop recording, saving...')
             wav_file_name = self.audio_recorder.stop_and_save_record()
-            print(f'[ai_handler.stop_and_save_recording] finished.')
+            print(f'[ai_audio_handler.stop_and_save_recording] finished.')
 
             return wav_file_name
         except:
@@ -173,18 +173,18 @@ class AudioAgent:
 
     def start_slicing(self):
         try:
-            print(f'[ai_handler.start_slicing] start slicing...')
+            print(f'[ai_audio_handler.start_slicing] start slicing...')
             for file_name in os.listdir(str(self.audio_record_path)):
                 file_path = os.path.join(str(self.audio_record_path), file_name)
                 self.audio_utils.split(file_path, file_name, str(self.audio_chunk_path))
-            print(f'[ai_handler.start_slicing] finished.')
+            print(f'[ai_audio_handler.start_slicing] finished.')
             return True
         except:
             return False
 
     def start_analysing(self):
         try:
-            print(f'[ai_handler.start_analysing] start analysing...')
+            print(f'[ai_audio_handler.start_analysing] start analysing...')
             self.audio_detector.update_test_data_dir(str(self.audio_chunk_path))
             self.audio_detector.update_infer_result_path(str(self.audio_infer_result_path))
             self.audio_detector.inference_classifier()

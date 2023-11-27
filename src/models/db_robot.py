@@ -319,8 +319,14 @@ class robotDBHandler(db.AzureDB):
         statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.water_leakage.thermal`"
         return self.Select(statement)
     
-    def insert_new_thermal_analysis(self):
-        pass
+    def insert_new_thermal_analysis(self, thermal_id, image_name, is_abnormal, layout_id, robot_x, robot_y, created_date):
+
+        statement = f'INSERT INTO {self.database}.`ai.water_leakage.thermal.analysis`\
+                    (thermal_id, `image_name`, is_abnormal, layout_id, robot_x, robot_y, created_date) VALUES \
+                    ({thermal_id}, {image_name}, {is_abnormal}, {layout_id}, {robot_x}, {robot_y}, "{created_date}")'
+        
+        print(statement)
+        return self.Insert(statement)
     
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

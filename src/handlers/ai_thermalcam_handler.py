@@ -4,24 +4,33 @@ import shutil
 import math, time, threading, os
 from multiprocessing import Process
 import src.utils.methods as umethods
-
 from src.top_module.module.thermalcam import ThermalCam
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.models.enums.nw import InspectionType
 from src.models.enums.azure import ContainerName
 from src.models.db_robot import robotDBHandler
 import src.models.enums.nw as NWEnums
+from src.ai_module.water_detect.inference import WaterDetector
+from src.models.robot import Robot
 
 class ThermalCamAgent:
-    def __init__(self, config):
-        # self.robot = robot
-        self.config = config
+    def __init__(self, config, robot: Robot, blob_handler: AzureBlobHandler, nwdb: robotDBHandler):
         
+        self.config = config
+        self.robot = robot
+        self.blob_handler = blob_handler
+        self.nwdb = nwdb
+
         # params
         self.image_record_path = ''
 
         # for recording
         self.recorder = ThermalCam(debug=False)
+
+        # for inference
+        model_path = self.config.get('Water_Leakage', 'model_path')
+        model_confidence = self.config.get('Water_Leakage', 'model_confidence')
+        self.water_detector = WaterDetector(model_path, model_confidence)
     
     # Logic - Level 2
     def construct_paths(self, mission_id, inspection_type: InspectionType):
@@ -43,16 +52,16 @@ class ThermalCamAgent:
         self.data_dir = Path(str(Path().cwd() / self.relative_data_dir / self.container_name))
         self.data_dir.mkdir(exist_ok=True, parents=True)
 
-        self.result_dir = Path(str(Path().cwd() / self.relative_result_dir / self.container_name))
-        self.result_dir.mkdir(exist_ok=True, parents=True)
+        self.result_path = Path(str(Path().cwd() / self.relative_result_dir / self.container_name))
+        self.result_path.mkdir(exist_ok=True, parents=True)
 
         ### construct the folder path
         self.image_record_path = self.data_dir / self.current_date / self.mission_id
-        # self.audio_infer_result_path = self.result_dir /  self.current_date / self.mission_id
+        self.image_predict_result_path = self.result_path /  self.current_date / self.mission_id
 
         ### create folders
         self.image_record_path.mkdir(exist_ok=True, parents=True)
-        # self.audio_infer_result_path.mkdir(exist_ok=True, parents=True)
+        self.image_predict_result_path.mkdir(exist_ok=True, parents=True)
 
         ### clear the folder first
         # shutil.rmtree(self.audio_record_path)
@@ -70,11 +79,12 @@ class ThermalCamAgent:
 
         return str(self.image_record_path)
 
-    def start_capturing(self):
+    def start_capturing(self, shm_name):
         try:
             print(f'[ai_thermalcam_handler.start_capturing] start capturing...')
             interval = 1
-            Process(target=self.recorder.thread_start_capturing, args=(interval, )).start()
+            self.recorder.init_shared_memory(shm_name)
+            Process(target=self.recorder.process_start_capturing, args=(interval, )).start()
             return True
         except:
             return False
@@ -85,15 +95,20 @@ class ThermalCamAgent:
         '''
         try:
             print(f'[ai_thermalcam_handler.stop_capturing] stop capturing, saving...')
-            save_folder = self.recorder.stop_capturing()
+            save_folder_dir = self.recorder.stop_capturing()
             print(f'[ai_thermalcam_handler.stop_capturing] finished.')
 
-            return save_folder
+            return save_folder_dir
         except:
             return False
 
     def start_analysing(self):
-        pass
+        try:
+            print(f'[ai_thermalcam_handler.start_analysing] start analysing...')      
+
+        except:
+            print(f'[ai_thermalcam_handler.start_analysing] failed...')
+            return False
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')

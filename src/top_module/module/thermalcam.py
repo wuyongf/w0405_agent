@@ -6,6 +6,7 @@ import struct
 import os
 import time
 from datetime import datetime, timedelta
+from multiprocessing import shared_memory
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
@@ -147,9 +148,10 @@ class ThermalCam:
         image = self.__get_frame_buffer_call_back()
         if image is not None:
             temp_image = copy.deepcopy(image)
-            filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
+            timestamp = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+            filename = f'{timestamp}_{self.robot_position[0]}_{self.robot_position[1]}_{self.robot_position[2]}.jpg'
+            # filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
             filepath = os.path.join(self.save_folder, filename)
-
             temp_image = np.asarray(temp_image, dtype="uint8")
             temp_image = cv2.imdecode(temp_image, cv2.IMREAD_GRAYSCALE)
             if temp_image is None: 
@@ -169,7 +171,11 @@ class ThermalCam:
         cv2.imwrite(filepath, heatmap)
         return filepath
     
-    def thread_start_capturing(self, interval):
+    def init_shared_memory(self, shm_name):
+        existing_shm = shared_memory.SharedMemory(name=shm_name)
+        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
+
+    def process_start_capturing(self, interval):
         print(f'[thermalcam] start capturing...')
         self.capture_flag = True
         while(self.capture_flag):

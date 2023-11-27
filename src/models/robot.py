@@ -1,10 +1,13 @@
-import time
+# sys
+import time, os
+from pathlib import Path
 import threading
-from multiprocessing import Process
+from multiprocessing import Process, shared_memory
+import datetime
 import logging
 import uuid
 import json
-from pathlib import Path
+# nwsys
 import src.utils.methods as umethods
 import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
@@ -13,9 +16,7 @@ import src.models.api_rm as RMAPI
 from src.models.mqtt_nw import NWMQTT
 from src.models.mqtt_nw_publisher import NWMQTTPub
 from src.models.mqtt_emsd_lift import EMSDLift
-
-import src.models.db_robot as RobotDB
-import src.top_module.db_top_module as TopModuleDB
+from src.models.db_robot import robotDBHandler
 import src.models.trans as Trans
 # Schema
 import src.models.schema.rm as RMSchema
@@ -26,14 +27,15 @@ import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
 import src.models.enums.azure as AzureEnum
 # top module
+import src.top_module.db_top_module as TopModuleDB
 import src.top_module.enums.enums_module_status as MoEnum
 from src.top_module.module.lift_levelling_module import LiftLevellingModule
-# from src.top_module.module.iaq import IaqSensor
 from src.top_module.module.iaqV2 import IaqSensor
 from src.top_module.module.locker import Locker
 from src.top_module.module.access_control_module import AccessControl
 from src.top_module.sensor.gyro import Gyro as MoGyro
 # AI
+import numpy as np
 from src.handlers.ai_audio_handler import AudioAgent
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.ai_rgbcam_handler import RGBCamAgent
@@ -48,7 +50,7 @@ class Robot:
         self.nwmqtt = NWMQTT(config, port_config)
         self.nwmqttpub = NWMQTTPub(config)
         self.emsdlift = EMSDLift(config)
-        self.nwdb = RobotDB.robotDBHandler(config)
+        self.nwdb = robotDBHandler(config)
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
         self.T_RM = Trans.RMLayoutMapTransform()
@@ -114,7 +116,13 @@ class Robot:
         self.lnd_mission_id     = None
         self.lnd_wav_file_name  = None
         self.wld_mission_id     = None
-        self.wld_image_folder_path = None
+        self.wld_image_folder_dir = None
+
+        ## shared memory
+        tmep_arr = np.zeros(3, dtype=np.float32)
+        self.shm = shared_memory.SharedMemory(create=True, size=tmep_arr.nbytes)
+        self.robot_position = np.ndarray(tmep_arr.shape, dtype=tmep_arr.dtype, buffer=self.shm.buf) # [layout_id, robot_x, robot_y]
+        self.robot_position[:] = tmep_arr[:]
 
     def sensor_start(self):
         self.mo_iaq.start()
@@ -162,6 +170,8 @@ class Robot:
                 self.status.layoutPose.x = layout_x
                 self.status.layoutPose.y = layout_y
                 self.status.layoutPose.heading = layout_heading
+                self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
+                
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
 
@@ -743,7 +753,7 @@ class Robot:
 
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
-            self.thermalcam_handler.start_capturing()
+            self.thermalcam_handler.start_capturing(self.shm.name)
 
             return True
         except:
@@ -752,7 +762,7 @@ class Robot:
     def water_leakage_detect_end(self):
         try:
             ### [thermalcam]
-            self.wld_image_folder_path = self.thermalcam_handler.stop_capturing()
+            self.wld_image_folder_dir = self.thermalcam_handler.stop_capturing()
 
             # ### [video_rear]
             # self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
@@ -763,22 +773,53 @@ class Robot:
 
     def water_leakage_detect_analysis(self):
         try:
+            # record_path = Path(self.wld_image_folder_dir)
 
-            ### [thermalcam] upload to cloud
-            ### (1) Azure Containe
-            self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
-            self.blob_handler.upload_folder(self.wld_image_folder_path, str(self.wld_mission_id))
-            ### (2) NWDB
-            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.wld_mission_id, 
-                                            image_folder_name=str(self.wld_mission_id), is_abnormal=True)
+            # upload to nwdb: add new thermal_id
+            folder_name = self.wld_image_folder_dir.split('/')[-1]
+            self.nwdb.insert_new_thermal_id(robot_id=self.robot_nw_id, mission_id=self.wld_mission_id, image_folder_name=folder_name, is_abnormal = False)
+            thermal_id = self.nwdb.get_latest_thermal_id()
 
-            # ### [video_rear] upload to cloud
-            # ### (1) Azure Containe
-            # self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
-            # self.blob_handler.upload_blobs(self.video_rear_file_path)
-            # ### (2) NWDB
-            # rear_mp4_file_name = Path(self.video_rear_file_path).name
-            # self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
+            abnormal_list = []
+            for img_path in self.thermalcam_handler.image_record_path.iterdir():
+                
+                # init - file name
+                file_name = img_path.stem
+                name_info = file_name.split('_')
+                year, month, day, hour, minute, second = int(name_info[0]), int(name_info[1]), int(name_info[2]), int(name_info[3]), int(name_info[4]), int(name_info[5])
+                dt = datetime.datetime(year, month, day, hour, minute, second)
+                formatted_timestamp = dt.strftime("%Y-%m-%d %H:%M:%S")
+                layout_id, robot_x, robot_y = int(name_info[6]), float(name_info[7]), float(name_info[8])
+
+                # init - predict
+                data = self.thermalcam_handler.water_detector.predict(str(img_path))
+                predict_image = self.thermalcam_handler.water_detector.get_image(img_path)
+                
+                # analysis
+                if(len(data) == 0): is_abnormal = False
+                else: is_abnormal = True
+                abnormal_list.append(is_abnormal)
+
+                # save result image
+                predict_img_dir = os.path.join(str(self.thermalcam_handler.image_predict_result_path), img_path.name)
+                self.thermalcam_handler.water_detector.save_image(predict_img_dir, predict_image)
+                
+                # upload to azure - raw image
+                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
+                self.blob_handler.upload_blobs(str(img_path))
+
+                 # upload to azure - predict image
+                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal_Result)
+                self.blob_handler.upload_blobs(predict_img_dir)
+
+                # upload to nwdb
+                self.nwdb.insert_new_thermal_analysis(thermal_id=thermal_id, image_name=img_path.name, is_abnormal=is_abnormal, 
+                                                      layout_id=layout_id, robot_x=robot_x, robot_y=robot_y, created_date=formatted_timestamp)
+            
+            if True in abnormal_list:
+                self.nwdb.update_single_value('ai.water_leakage.thermal', is_abnormal, 1, 'ID', thermal_id)
+            else:
+                self.nwdb.update_single_value('ai.water_leakage.thermal', is_abnormal, 0, 'ID', thermal_id)
 
             return True
         except:

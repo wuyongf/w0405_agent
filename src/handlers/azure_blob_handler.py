@@ -33,6 +33,8 @@ class AzureBlobHandler():
                 self.container_name = self.config.get('Azure', 'container_li_video_rear')
             case ContainerName.WaterLeakage_Thermal:
                 self.container_name = self.config.get('Azure', 'container_wl_thermal_image')
+            case ContainerName.WaterLeakage_Thermal_Result:
+                self.container_name = self.config.get('Azure', 'container_wl_thermal_image_result')
             case ContainerName.WaterLeakage_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_wl_video_rear')
             case ContainerName.Surveillance_Audio:
@@ -51,13 +53,13 @@ class AzureBlobHandler():
             self.upload_blobs(str(file))
         pass
     
-    def upload_blobs(self, upload_file_path):
+    def upload_blobs(self, upload_file_dir: str):
         
-        file_path = Path(upload_file_path)
+        file_path = Path(upload_file_dir)
 
         # Create a file in the local data directory to upload and download
         local_file_name = file_path.name
-        upload_file_path = str(file_path)
+        upload_file_dir = str(file_path)
 
         # Create a blob client using the local file name as the name for the blob
         blob_client = self.blob_service_client.get_blob_client(container=self.container_name, blob=local_file_name)
@@ -65,7 +67,7 @@ class AzureBlobHandler():
         print("\nUploading to Azure Storage as blob:\n\t" + local_file_name)
 
         # Upload the created file
-        with open(file=upload_file_path, mode="rb") as data:
+        with open(file=upload_file_dir, mode="rb") as data:
             blob_client.upload_blob(data)
         
         pass
@@ -114,14 +116,13 @@ if __name__ == '__main__':
 
     ### [thermal]
     ### Method 3 Upload folder with folder name
-    folder_path = Path('/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/src/handlers/20230906')
+    folder_path = Path('/home/yf/dev/w0405_agent/src/ai_module/water_detect/yolov5/data/images/temp')
     
     config = umethods.load_config('../../conf/config.properties')
     blob_handler = AzureBlobHandler(config)
 
     ## to azure container
-    blob_handler.update_container_name(ContainerName.WaterLeakage_Thermal)
-    blob_handler.upload_folder(str(folder_path), '0001')
-
+    blob_handler.update_container_name(ContainerName.WaterLeakage_Thermal_Result)
+    blob_handler.upload_folder(str(folder_path), '237')
 
     pass
