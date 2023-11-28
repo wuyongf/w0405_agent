@@ -336,12 +336,12 @@ if __name__ == '__main__':
     # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
     ### Lift
-    base64 = nwdb.get_single_value('robot.map.layout', 'base64', 'name', "'4F-Layout'")
-    text_file = open("sample.txt", "w")
-    n = text_file.write(base64)
-    text_file.close()
-    print(base64)
-    print(base64)
+    # base64 = nwdb.get_single_value('robot.map.layout', 'base64', 'name', "'GF-Layout'")
+
+    ### Update base64
+    text_file = open("sample.txt", "r")
+    data = text_file.read()
+    nwdb.update_single_value('robot.map', 'base64', f"'{data}'", 'ID', 7)
 
     # ### Lift
     # target_layout_id = nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', "'d6734e98-f53a-4b69-8ed8-cbc42ef58e3a'")
