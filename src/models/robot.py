@@ -561,7 +561,7 @@ class Robot:
                 continue_flag = False
                 self.is_moving = False
 
-                time.sleep(0.5)
+                time.sleep(1)
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
@@ -1720,7 +1720,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
                                         pos_origin.layout_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1767,7 +1767,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
                                         pos_origin.layout_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1812,7 +1812,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'NW-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
                                         pos_destination.layout_guid,
                                         latest_marker_id,
                                         order=1,
