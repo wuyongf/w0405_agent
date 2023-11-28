@@ -911,7 +911,7 @@ class Robot:
 
     # except: return False
 
-    def lift_vibration_off(self, task_json):
+    def lift_vibration_off(self):
         try:
             self.mo_gyro.stop()
             return True
@@ -1308,12 +1308,16 @@ class Robot:
         
     ## Methods
     ### Lift
-    def process_lift_in(self, cur_floor_int, target_floor_int):
+    def process_lift_in(self, cur_floor_int, target_floor_int, task_json):
             self.rvjoystick.enable()
             self.call_lift_and_check_arrive(cur_floor_int)
             time.sleep(1)
             self.rvjoystick.disable()
             self.wait_for_robot_arrived()            
+            # start recording
+            self.lift_noise_detect_start(task_json)
+            self.lift_vibration_on(task_json)
+
             self.func_lift_pressbutton_releasedoor(target_floor_int)
 
     def nw_lift_in(self, task_json, status_callback):
@@ -1325,7 +1329,7 @@ class Robot:
             cur_floor_int = int(task_json['parameters']['current_floor'])
             target_floor_int = int(task_json['parameters']['target_floor'])
 
-            threading.Thread(target=self.process_lift_in, args=(cur_floor_int,target_floor_int)).start()
+            threading.Thread(target=self.process_lift_in, args=(cur_floor_int,target_floor_int, task_json)).start()
 
             # self.rvjoystick.enable()
             # self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
@@ -1342,6 +1346,11 @@ class Robot:
             self.rvjoystick.enable()
             self.call_lift_and_check_arrive(target_floor_int)
             time.sleep(1)
+            
+            # stop recording
+            self.lift_vibration_off()
+            self.lift_noise_detect_end()
+
             self.rvjoystick.disable()
             self.wait_for_robot_arrived()
             

@@ -206,7 +206,7 @@ class TaskHandler:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)  
 
             case 'LIFT-VIBRATION-OFF':
-                res = self.robot.lift_vibration_off(task_json)
+                res = self.robot.lift_vibration_off()
                 if (res):
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
