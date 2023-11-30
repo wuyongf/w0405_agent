@@ -634,14 +634,6 @@ class Robot:
         except:
             return False
 
-    # LIFT-NOISE-DETECT-START
-    # LIFT-NOISE-DETECT-END
-    # LIFT-NOISE-DETECT-ANALYSIS
-
-    # LIFT-VIBRATION-DETECT-START
-    # LIFT-VIBRATION-DETECT-END
-    # LIFT-VIBRATION-DETECT-ANALYSIS
-
     # AI
     def lift_noise_detect_start(self, task_json):
         try:
@@ -829,8 +821,7 @@ class Robot:
             return True
         except:
             return False
-    
-    
+        
     
     # Follow Me
     def follow_me_mode(self, task_json):
@@ -895,21 +886,21 @@ class Robot:
     # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
 
     def lift_vibration_on(self, task_json):
-        # try:
-        self.mo_gyro = MoGyro(self.modb, self.config, self.port_config, self.status_summary)
-        rm_mission_guid = self.rmapi.get_mission_id(task_json)
-        self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
-        mission_id = self.nwdb.get_latest_mission_id()
+        try:
+            self.mo_gyro = MoGyro(self.modb, self.config, self.port_config, self.status_summary)
+            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftAcc)
+            mission_id = self.nwdb.get_latest_mission_id()
 
-        print(f'mission_id: {mission_id}')
+            print(f'mission_id: {mission_id}')
 
-        self.mo_gyro.set_task_id(id=mission_id)
-        time.sleep(0.3)
-        self.mo_gyro.start()
+            self.mo_gyro.set_task_id(id=mission_id)
+            time.sleep(0.3)
+            self.mo_gyro.start()
 
-        return True
+            return True
 
-    # except: return False
+        except: return False
 
     def lift_vibration_off(self):
         try:
@@ -950,13 +941,11 @@ class Robot:
     # Module - Lift Inspection - End
 
     # LIFT
-    # Lift Init
     def get_lift_mission_detail(self, cur_layout_id, target_layout_id):
         self.a_lift_mission = self.nwdb.configure_lift_mission(cur_layout_id, target_layout_id)
         return self.a_lift_mission
     
     # DELIVERY
-    # def configure_delivery_mission(self, available_delivery_ID):
     def locker_unlock(self):
         try:
             self.mo_locker.unlock()
@@ -1781,7 +1770,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-SENDER')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -1826,7 +1815,7 @@ class Robot:
             # TASK END
             print(f'[new_delivery_mission]: configure task end...')
 
-            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
+            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-RECEIVER')
             print(f'[new_delivery_mission]: configure job end...')
 
             return True
@@ -1853,7 +1842,7 @@ class Robot:
             # TASK END
             print(f'[delivery_wait_for_loading]: configure task end...')
 
-            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAITLOADING')
+            self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-WAIT-FOR-LOADING-PACKAGE')
             print(f'[delivery_wait_for_loading]: configure job end...')
 
             return True
@@ -1873,7 +1862,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-UNLOADING-PACKAGE'),
+            task = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-WAIT-FOR-UNLOADING-PACKAGE'),
                                        pos_destination.layout_guid)
             tasks.append(task)
             print(task)
