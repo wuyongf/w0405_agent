@@ -50,20 +50,15 @@ class RMAPI(api.AuthenticatedAPI):
         payload["order"] = [{"column":"created_at", "type":"desc"}]
         return self.post('/mission/list', json.dumps(payload))
     
-    def create_mission(self):
+    def new_mission(self, robot_id, layout_id = '', mission_name = 'New Mission Demo', tasks = []):
+        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
         payload = {}
-        payload["type"] = 1
-        payload["mode"] = 1
-        payload["layoutId"] = 'd3b4f645-023d-45e8-95df-3ef6465497e9'
-        payload["name"] = 'TestMission-Rev03'
-        payload["robotIds"] = ['2658a873-a0a6-4c3f-967f-d179c4073272']
-        payload['tasks'] = [
-        {
-            "skillId": "f8919eca-c5f2-4b33-8efd-d2222107cfba",
-            "layoutId": "d3b4f645-023d-45e8-95df-3ef6465497e6",
-            "order": 1,
-            "layoutMakerId": 1
-        }]
+        payload["type"] = 2
+        # payload["mode"] = 1
+        payload["layoutId"] = layout_id
+        payload["name"] = mission_name
+        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
+        payload['tasks'] = tasks
         return self.post('/mission', json.dumps(payload))
     
     def delete_mission(self, mission_id):
@@ -162,9 +157,7 @@ class RMAPI(api.AuthenticatedAPI):
         return self.delete(f'/layout-markers/{id}')
         pass
     
-    ######
-    # Door
-    ######
+    ### Door
     def list_layout_doors(self, layout_id):
         # https://docs.robotmanager.com/reference/find-makers-by-layout
 
@@ -481,7 +474,6 @@ def goto_charging_staion():
     rmapi.new_job('2658a873-a0a6-4c3f-967f-d179c4073272', charging_station.layout_rm_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
     print(f'[new_delivery_mission]: configure job end...')
 
-
 def pub_localization():
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
@@ -534,14 +526,36 @@ def pub_localization():
 if __name__ == '__main__':
 
     # pub_localization()
-    
     # goto_charging_staion()
-    
+
+    ### [Mission]
+    # 1) init
+    robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+    skill_config_dir = './conf/rm_skill.properties'
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config)
 
-    res = rmapi.get_latest_mission()
-    print(res)
+    rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
+    skill_config = umethods.load_config(skill_config_dir)
+
+    # 2) new task
+    tasks = []
+    t1 = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'),
+                        charging_station_detail.layout_rm_guid)
+
+
+    # 3) new mission
+    layout_rm_guid = '3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece'
+    rmapi.new_mission(robot_rm_guid, layout_rm_guid)
+
+
+
+
+
+
+
+    # res = rmapi.get_latest_mission()
+    # print(res)
 
     # res = rmapi.delete_all_delivery_markers('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
 

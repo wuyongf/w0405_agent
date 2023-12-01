@@ -42,7 +42,7 @@ from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
 
 class Robot:
-    def __init__(self, config, port_config, skill_config_path, ai_config):
+    def __init__(self, config, port_config, skill_config_dir, ai_config):
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
@@ -94,10 +94,10 @@ class Robot:
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
         
         ## ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid, skill_config_path)
-        # print(f'[new_delivery_mission]: write Robot Skill...')
-        self.skill_config = umethods.load_config(skill_config_path)
-        # print(f'[new_delivery_mission]: Loaded Robot Skill...')
+        self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid, skill_config_dir)
+        # print(f'[ROBOT CONFIGURATION]: write Robot Skill...')
+        self.skill_config = umethods.load_config(skill_config_dir)
+        # print(f'[ROBOT CONFIGURATION]: Loaded Robot Skill...')
         
         ## delivery related
         self.nw_goto_done = False
