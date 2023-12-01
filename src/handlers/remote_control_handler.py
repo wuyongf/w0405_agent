@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
-    skill_config_path = '../models/conf/rm_skill.properties'
+    skill_config_path = '../conf/rm_skill.properties'
 
     robot = Robot.Robot(config,port_config,skill_config_path)
     remote_control_handler = RemoteControlHandler(robot)

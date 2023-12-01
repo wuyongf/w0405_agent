@@ -19,12 +19,12 @@ class robotDBHandler(db.AzureDB):
             'ssl_ca':config.get('NWDB','ssl_ca')}
         super().__init__(self.cfg)
         self.database = config.get('NWDB','database')
-        self.robot_guid = config.get('NWDB','robot_guid')
+        self.robot_rm_guid = config.get('NWDB','robot_rm_guid')
         self.robot_id = self.get_robot_id()
         self.nwdb_lift_id = config.get('NWDB_Lift','lift_id')
     
     def get_robot_id(self):
-        statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
+        statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_rm_guid}";'
         # print(statement)
         return self.Select(statement)
 

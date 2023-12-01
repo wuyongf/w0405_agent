@@ -47,7 +47,7 @@ if __name__ == '__main__':
     # # Loading config files
     config = umethods.load_config('../conf/config.properties')
     port_config = umethods.load_config('../conf/port_config.properties')
-    skill_config_dir = './models/conf/rm_skill.properties'
+    skill_config_dir = '../conf/rm_skill.properties'
     ai_config = umethods.load_config('./ai_module/lift_noise/cfg/config.properties')
 
     # Robot

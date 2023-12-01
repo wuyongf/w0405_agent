@@ -1,13 +1,14 @@
-import src.models.api_authenticated as api
+import sys
 import json
 import requests
-import src.utils.methods as umethods
-import sys
+import src.models.api_authenticated as api
 import src.models.enums.rm as RMEnum
 import src.models.schema.rm as RMSchema
+import src.utils.methods as umethods
+from src.models.trans import RMLayoutMapTransform
 
 class RMAPI(api.AuthenticatedAPI):
-    def __init__(self, config):
+    def __init__(self, config, skill_config_dir):
         self.config = config
         self.base_url = self.config.get('RM','base_url')
         self.headers = {
@@ -17,8 +18,14 @@ class RMAPI(api.AuthenticatedAPI):
         super().__init__(base_url=self.base_url, headers=self.headers)
 
         # robot
-        self.robot_guid = self.config.get('NWDB','robot_guid')
+        self.robot_guid = self.config.get('NWDB','robot_rm_guid')
+
+        self.__write_robot_skill_to_properties(self.robot_guid, skill_config_dir)
+        self.skill_config = umethods.load_config(skill_config_dir)
+
+        self.T_rmapi = RMLayoutMapTransform()
     
+    ### [login]
     def __login(self):
         base_url = self.base_url
         endpoint = "/login"
@@ -31,17 +38,47 @@ class RMAPI(api.AuthenticatedAPI):
         response = requests.post(url=base_url + endpoint, headers=headers, data=json.dumps(payload))
         return json.loads(response.text)["token"]
 
+    def __write_robot_skill_to_properties(self,robotId, skill_config_dir):
+        # http://dev.robotmanager.io/api/v2/robot-skills
+
+        # robotId = "2658a873-a0a6-4c3f-967f-d179c4073272" # "2658a873-a0a6-4c3f-967f-d179c4073272"
+        # robot-skills/get-by-robot/{robotId}
+        data = self.get(f'/robot-skills/get-by-robot/{robotId}')
+        results = data['result']
+
+        with open(skill_config_dir, 'w') as config_file:
+            config_file.write('[RM-Skill]' + '\n')
+            # Iterate over each item and extract the "id" and "name"
+            for item in results:
+                item_id = item['id']
+                item_name = item['name']
+                item_name = item_name.replace(' ', '-')
+                config_file.write(f'{item_name} = {item_id}' + '\n')
+                # print(f'skill: {item_name}  skill_id: {item_id}')
+
+    def write_rm_map_to_properties(self,rm_map_dir):
+        # http://dev.robotmanager.io/api/v2/robot-skills
+
+        # robotId = "2658a873-a0a6-4c3f-967f-d179c4073272" # "2658a873-a0a6-4c3f-967f-d179c4073272"
+        # robot-skills/get-by-robot/{robotId}
+        # data = self.get(f'/robot-skills/get-by-robot/{robotId}')
+        data = self.list_maps()
+        results = data['result']["list"]
+
+        with open(rm_map_dir, 'w') as config_file:
+            config_file.write('[RM-MAP-GUID]' + '\n')
+            # Iterate over each item and extract the "id" and "name"
+            for item in results:
+                item_id = item['id']
+                item_name = item['name']
+                item_name = item_name.replace(' ', '-')
+                config_file.write(f'{item_name} = {item_id}' + '\n')
+                # print(f'skill: {item_name}  skill_id: {item_id}')
+
     def get_login_info(self):
         return self.get('/auth/loginInfo')
-
-    def list_maps(self):
-        payload = {}
-        payload["pageNo"] = 1
-        payload["pageSize"] = 10
-        payload["filter"] = []
-        payload["order"] = [{"column":"created_at", "type":"desc"}]
-        return self.post('/map/list', json.dumps(payload))
     
+    ### [mission]
     def list_missions(self):
         payload = {}
         payload["pageNo"] = sys.maxsize
@@ -82,128 +119,7 @@ class RMAPI(api.AuthenticatedAPI):
             print('[api_rm.get_mission_id]: cannot find the mission_id')
             return None
 
-    # New job/mission - Delivery
-    def list_robot_skill(self):
-        # http://dev.robotmanager.io/api/v2/robot-skills
-
-        robotId = "2658a873-a0a6-4c3f-967f-d179c4073272"
-        # robot-skills/get-by-robot/{robotId}
-        data = self.get(f'/robot-skills/get-by-robot/{robotId}')
-
-        results = data['result']
-        # Iterate over each item and extract the "id" and "name"
-        for item in results:
-            item_id = item['id']
-            item_name = item['name']
-            print(f'skill: {item_name}  skill_id: {item_id}')
-    
-    def write_robot_skill_to_properties(self,robotId, skill_config_path):
-        # http://dev.robotmanager.io/api/v2/robot-skills
-
-        # robotId = "2658a873-a0a6-4c3f-967f-d179c4073272" # "2658a873-a0a6-4c3f-967f-d179c4073272"
-        # robot-skills/get-by-robot/{robotId}
-        data = self.get(f'/robot-skills/get-by-robot/{robotId}')
-        results = data['result']
-
-        with open(skill_config_path, 'w') as config_file:
-            config_file.write('[RM-Skill]' + '\n')
-            # Iterate over each item and extract the "id" and "name"
-            for item in results:
-                item_id = item['id']
-                item_name = item['name']
-                item_name = item_name.replace(' ', '-')
-                config_file.write(f'{item_name} = {item_id}' + '\n')
-                # print(f'skill: {item_name}  skill_id: {item_id}')
-
-    def list_layouts(self):
-        payload = {}
-        payload["pageNo"] = 1
-        payload["pageSize"] = 10
-        payload["filter"] = []
-        payload["order"] = [{"column":"created_at", "type":"desc"}]
-        data = self.post('/layouts/list', json.dumps(payload))
-        results = data['result']['list']
-        # Iterate over each item and extract the "id" and "name"
-        for item in results:
-            item_id = item['id']
-            item_name = item['name']
-            print(f'layout: {item_name}  id: {item_id}')
-    
-    def list_layout_markers(self, layout_id):
-        # https://docs.robotmanager.com/reference/find-makers-by-layout
-
-        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
-        data = self.get(f'/layout-markers/{layout_id}')
-
-        results = data['result']
-        print(results)
-        # Iterate over each item and extract the "id" and "name"
-        for item in results:
-            item_id = item['id']
-            item_name = item['name']
-            item_position = item['position']
-            print(f'marker: {item_name}  id: {item_id} position: {item_position}')
-        return results
-    
-    def create_layout_marker(self, layout_id, name):
-        payload = {}
-        payload["layoutId"] = layout_id
-        payload["name"] = name
-        payload["position"] = {"x": 20,"y": 20,"z": 0}
-        return self.post('/layout-markers', json.dumps(payload))
-        pass
-    
-    def delete_layout_marker(self, id):
-        return self.delete(f'/layout-markers/{id}')
-        pass
-    
-    ### Door
-    def list_layout_doors(self, layout_id):
-        # https://docs.robotmanager.com/reference/find-makers-by-layout
-
-        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
-        data = self.get(f'/door?layoutId={layout_id}')
-
-        results = data['result']
-        # # Iterate over each item and extract the "id" and "name"
-        # for item in results:
-        #     item_id = item['id']
-        #     item_name = item['name']
-        #     item_position = item['position']
-        #     print(f'marker: {item_name}  id: {item_id} position: {item_position}')
-        return results
-    
-    def new_job_configure_delivery(self, robot_id):
-        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
-        payload = {}
-        payload["type"] = 1 # 1: job 2: mission
-        payload["mode"] = 1 # 1:Execute immediately
-        payload["layoutId"] = ''
-        payload["name"] = 'Configure Delivery Mission'
-        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
-        payload['tasks'] = [
-        {
-            "skillId": "354a542a-2227-4b74-be44-41cd7b6dcf2c",
-            "layoutId": "ca0ac9aa-9910-4949-90d5-6efb525015b7",
-            "order": 1,
-            "layoutMakerId": 1
-        }]
-        return self.post('/mission', json.dumps(payload))
-
-    def new_job(self, robot_id, layout_id = '', tasks = [], job_name = 'New Job Demo'):
-        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
-        payload = {}
-        payload["type"] = 1 # 1: job 2: mission
-        payload["mode"] = 1 # 1:Execute immediately
-        payload["layoutId"] = layout_id
-        payload["name"] = job_name
-        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
-        payload['tasks'] = tasks
-        print(f'[api_rm.new_job] payload: {payload}')
-        res = self.post('/mission', json.dumps(payload))
-        return res
-
-    # Delivery
+    ### [task]
     def new_task(self, skill_id, layout_id, layoutMarkerId = None, order = 1):
             
         task = {
@@ -215,7 +131,73 @@ class RMAPI(api.AuthenticatedAPI):
         }
 
         return task
+
+    def new_task_goto(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
+        
+        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'RM-GOTO')
+        
+        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
     
+        # print(f'layoutMarkerId: {layoutMarkerId}')
+        # print(f'layout_x: {layout_x}')
+        # print(f'layout_y: {layout_y}')
+
+        def goto_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
+        }     
+
+        return task
+
+    def new_task_localize(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
+        
+        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'RM-LOCALIZE')
+
+        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def position_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
+        }     
+
+        return task
+
     def task_goto(self, skill_id, layout_id, layoutMarkerId = None, order = 1, 
                   map_id = None, pos_name = None, x = None, y = None, heading = None):
         
@@ -262,7 +244,187 @@ class RMAPI(api.AuthenticatedAPI):
 
         return task
 
-        ## for delivery
+    ### [miscellaneous]
+    def list_maps(self):
+        payload = {}
+        payload["pageNo"] = 1
+        payload["pageSize"] = 10
+        payload["filter"] = []
+        payload["order"] = [{"column":"created_at", "type":"desc"}]
+        return self.post('/map/list', json.dumps(payload))
+
+    def list_robot_skill(self):
+        # http://dev.robotmanager.io/api/v2/robot-skills
+
+        robotId = "2658a873-a0a6-4c3f-967f-d179c4073272"
+        # robot-skills/get-by-robot/{robotId}
+        data = self.get(f'/robot-skills/get-by-robot/{robotId}')
+
+        results = data['result']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_name = item['name']
+            print(f'skill: {item_name}  skill_id: {item_id}')
+    
+    def list_layouts(self):
+        payload = {}
+        payload["pageNo"] = 1
+        payload["pageSize"] = 10
+        payload["filter"] = []
+        payload["order"] = [{"column":"created_at", "type":"desc"}]
+        data = self.post('/layouts/list', json.dumps(payload))
+        results = data['result']['list']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_name = item['name']
+            print(f'layout: {item_name}  id: {item_id}')
+
+    def get_layout_guid(self, map_guid):
+        data = self.list_maps()
+        results = data['result']['list']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            if item['layout'] is None: continue
+            else:
+                item_id = item['id']
+                item_layout_id = item['layout']['id']
+                if item_id == map_guid:
+                    return item_layout_id
+
+    def list_layout_markers(self, layout_id):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/layout-markers/{layout_id}')
+
+        results = data['result']
+        print(results)
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_name = item['name']
+            item_position = item['position']
+            print(f'marker: {item_name}  id: {item_id} position: {item_position}')
+        return results
+    
+    def create_layout_marker(self, layout_id, name):
+        payload = {}
+        payload["layoutId"] = layout_id
+        payload["name"] = name
+        payload["position"] = {"x": 20,"y": 20,"z": 0}
+        return self.post('/layout-markers', json.dumps(payload))
+        pass
+    
+    def delete_layout_marker(self, id):
+        return self.delete(f'/layout-markers/{id}')
+        pass
+
+    def get_layout_marker_detail(self, layout_guid, position_name):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/layout-markers/{layout_guid}')
+
+        results = data['result']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            item_id = item['id']
+            item_x  = item['position']['x']
+            item_y  = item['position']['y']
+            item_name = item['name']
+            if position_name == item_name:
+                return item_id, item_x, item_y
+    
+    def get_layout_marker(self, layout_guid, position_name):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/layout-markers/{layout_guid}')
+
+        results = data['result']
+        # Iterate over each item and extract the "id" and "name"
+        for item in results:
+            # item_id = item['id']
+            item_name = item['name']
+            if position_name == item_name:
+                return item
+    
+    def get_layout_map_list(self, layoutIds, mapIds):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        payload = {}
+        # payload["layoutIds"] = ['0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d']
+        # payload["mapIds"] = [f'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a']
+        payload["layoutIds"] = [layoutIds]
+        payload["mapIds"] = [mapIds]
+        data = self.post('/layouts-map/list', json.dumps(payload))
+
+        calibrationData_string = data['result'][0]['calibrationData']
+        calibrationData = json.loads(calibrationData_string)
+        
+        # layoutWidth = calibrationData['layoutWidth']
+        # layoutHeight = calibrationData['layoutHeight']
+        imageWidth = calibrationData['imageWidth']
+        imageHeight = calibrationData['imageHeight']
+        scale = calibrationData['transform']['scale']
+        angle = calibrationData['transform']['angle']        
+        translate = calibrationData['transform']['translate']
+
+        # print(f'calibrationData: {calibrationData}')  
+
+        layout_map_list  =  RMSchema.LayoutMapList(imageWidth, imageHeight, scale, angle, translate)
+        return layout_map_list
+
+    ### [door]
+    def list_layout_doors(self, layout_id):
+        # https://docs.robotmanager.com/reference/find-makers-by-layout
+
+        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
+        data = self.get(f'/door?layoutId={layout_id}')
+
+        results = data['result']
+        # # Iterate over each item and extract the "id" and "name"
+        # for item in results:
+        #     item_id = item['id']
+        #     item_name = item['name']
+        #     item_position = item['position']
+        #     print(f'marker: {item_name}  id: {item_id} position: {item_position}')
+        return results
+    
+    def new_job_configure_delivery(self, robot_id):
+        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
+        payload = {}
+        payload["type"] = 1 # 1: job 2: mission
+        payload["mode"] = 1 # 1:Execute immediately
+        payload["layoutId"] = ''
+        payload["name"] = 'Configure Delivery Mission'
+        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
+        payload['tasks'] = [
+        {
+            "skillId": "354a542a-2227-4b74-be44-41cd7b6dcf2c",
+            "layoutId": "ca0ac9aa-9910-4949-90d5-6efb525015b7",
+            "order": 1,
+            "layoutMakerId": 1
+        }]
+        return self.post('/mission', json.dumps(payload))
+
+    def new_job(self, robot_id, layout_id = '', tasks = [], job_name = 'New Job Demo'):
+        '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
+        payload = {}
+        payload["type"] = 1 # 1: job 2: mission
+        payload["mode"] = 1 # 1:Execute immediately
+        payload["layoutId"] = layout_id
+        payload["name"] = job_name
+        payload["robotIds"] = [f'{robot_id}'] # 2658a873-a0a6-4c3f-967f-d179c4073272
+        payload['tasks'] = tasks
+        print(f'[api_rm.new_job] payload: {payload}')
+        res = self.post('/mission', json.dumps(payload))
+        return res
+
+    ### [delivery]
+    
     def create_delivery_marker(self, layout_id, x, y, heading):
         
         delivery_names = []
@@ -371,58 +533,6 @@ class RMAPI(api.AuthenticatedAPI):
         # print(json_data)
         list_data = json_data['result']['list']
         return list_data[0]
-    
-    def get_layout_guid(self, map_guid):
-        data = self.list_maps()
-        results = data['result']['list']
-        # Iterate over each item and extract the "id" and "name"
-        for item in results:
-            if item['layout'] is None: continue
-            else:
-                item_id = item['id']
-                item_layout_id = item['layout']['id']
-                if item_id == map_guid:
-                    return item_layout_id
-
-    def get_layout_marker_guid(self, layout_guid, position_name):
-        # https://docs.robotmanager.com/reference/find-makers-by-layout
-
-        # layout_id = "ca0ac9aa-9910-4949-90d5-6efb525015b7"
-        data = self.get(f'/layout-markers/{layout_guid}')
-
-        results = data['result']
-        # Iterate over each item and extract the "id" and "name"
-        for item in results:
-            item_id = item['id']
-            item_name = item['name']
-            if position_name == item_name:
-                return item_id
-            
-    def get_layout_map_list(self, layoutIds, mapIds):
-        # https://docs.robotmanager.com/reference/find-makers-by-layout
-
-        payload = {}
-        # payload["layoutIds"] = ['0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d']
-        # payload["mapIds"] = [f'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a']
-        payload["layoutIds"] = [layoutIds]
-        payload["mapIds"] = [mapIds]
-        data = self.post('/layouts-map/list', json.dumps(payload))
-
-        calibrationData_string = data['result'][0]['calibrationData']
-        calibrationData = json.loads(calibrationData_string)
-        
-        # layoutWidth = calibrationData['layoutWidth']
-        # layoutHeight = calibrationData['layoutHeight']
-        imageWidth = calibrationData['imageWidth']
-        imageHeight = calibrationData['imageHeight']
-        scale = calibrationData['transform']['scale']
-        angle = calibrationData['transform']['angle']        
-        translate = calibrationData['transform']['translate']
-
-        # print(f'calibrationData: {calibrationData}')  
-
-        layout_map_list  =  RMSchema.LayoutMapList(imageWidth, imageHeight, scale, angle, translate)
-        return layout_map_list
 
 def goto_charging_staion():
     config = umethods.load_config('../../conf/config.properties')
@@ -486,9 +596,9 @@ def pub_localization():
 
     map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
     layout_guid = '3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece'
+
     params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
-    T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
-                                              params.scale, params.angle, params.translate)
+    T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
 
     ##############
     # Publish GOTO Mission
@@ -530,29 +640,54 @@ if __name__ == '__main__':
 
     ### [Mission]
     # 1) init
-    robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
-    skill_config_dir = './conf/rm_skill.properties'
+
+    skill_config_dir = '../../conf/rm_skill.properties'
     config = umethods.load_config('../../conf/config.properties')
-    rmapi = RMAPI(config)
+    rmapi = RMAPI(config, skill_config_dir)
 
-    rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
-    skill_config = umethods.load_config(skill_config_dir)
+    robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+    map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
+    layout_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
+    print(layout_guid) 
 
-    # 2) new task
+    # res = rmapi.get_layout_marker(layout_guid, 'P0')
+    # print(res)
+
+
+
+    
+    # rmapi.write_rm_map_to_properties("../../conf/rm_map.properties")
+
+    # res= rmapi.get_layout_marker(layout_rm_guid, 'LiftWaitingPoint')
+    # print(res)
+
+    # rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
+    # skill_config = umethods.load_config(skill_config_dir)
+
+    # # 2) implement task detail
+    # rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+    # iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+    # iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+    localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint')
+    goto1 = rmapi.new_task_goto(map_rm_guid, "LiftWaitingPoint")
+
+    # 3) new task
     tasks = []
-    t1 = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'),
-                        charging_station_detail.layout_rm_guid)
+    # tasks.append(iaq_on)
+    tasks.append(localize1)
+    # tasks.append(goto1)
+    # tasks.append(iaq_off)
+
+    # 4) new mission
+    mission_name = 'New Mission Demo1'
+    rmapi.new_mission(robot_rm_guid, layout_guid, mission_name, tasks)
+    
 
 
-    # 3) new mission
-    layout_rm_guid = '3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece'
-    rmapi.new_mission(robot_rm_guid, layout_rm_guid)
 
-
-
-
-
-
+    ### [mission]
+    ### 7/F: Q0 ~ Q5
+    ### 6/F: Q0 ~ Q12
 
     # res = rmapi.get_latest_mission()
     # print(res)

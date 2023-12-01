@@ -46,7 +46,7 @@ class Robot:
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
-        self.rmapi = RMAPI.RMAPI(config)
+        self.rmapi = RMAPI.RMAPI(config, skill_config_dir)
         self.nwmqtt = NWMQTT(config, port_config)
         self.nwmqttpub = NWMQTTPub(config)
         self.emsdlift = EMSDLift(config)
@@ -77,7 +77,7 @@ class Robot:
         self.ipc_ip_addr = config.get('IPC', 'localhost')
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
         self.robot_nw_id = self.nwdb.robot_id
-        self.robot_rm_guid = self.nwdb.robot_guid
+        self.robot_rm_guid = self.nwdb.robot_rm_guid
         self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
         self.map_nw_id = None
         self.layout_nw_id = None
@@ -94,10 +94,8 @@ class Robot:
         self.mo_gyro = MoGyro(self.modb, config, port_config, self.status_summary)
         
         ## ROBOT CONFIGURATION
-        self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid, skill_config_dir)
-        # print(f'[ROBOT CONFIGURATION]: write Robot Skill...')
-        self.skill_config = umethods.load_config(skill_config_dir)
-        # print(f'[ROBOT CONFIGURATION]: Loaded Robot Skill...')
+        self.skill_config = self.rmapi.skill_config
+
         
         ## delivery related
         self.nw_goto_done = False
@@ -345,7 +343,6 @@ class Robot:
             rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             # print('step 2')
-            
             map_rm_guid = self.nwdb.get_map_rm_guid(rv_map_name)
             self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
             params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
@@ -490,9 +487,9 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-            #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+            #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)  ## 0
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading )
+                                                rm_map_metadata.y, rm_map_metadata.heading )  ## 271
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -1066,74 +1063,6 @@ class Robot:
 
             # Wait for a short interval before checking again
             time.sleep(0.2)
-
-    def new_delivery_mission(self, json):
-        try:
-            # check available delivery mission
-            id = self.nwdb.get_available_delivery_id()
-            if id == None:
-                print('There is no any available delivery misssion!!')
-                return False
-
-            # configure the delivery mission
-            # a_delivery_mission: NWSchema
-            a_delivery_mission = self.nwdb.configure_delivery_mission(available_delivery_id=id)
-            print(a_delivery_mission.receiver_id)
-            print(f'[new_delivery_mission]: Get a delivery mission!!!')
-
-            #region Notify the receiver
-            #endregion
-
-            #region ROBOT CONFIGURATION
-            self.rmapi.write_robot_skill_to_properties(self.robot_rm_guid)
-            print(f'[new_delivery_mission]: write Robot Skill...')
-            skill_config = umethods.load_config('./models/conf/rm_skill.properties')
-            #endregion
-            print(f'[new_delivery_mission]: Loaded Robot Skill...')
-
-            # get sender info
-            # get origin location
-            # get receiver info
-            # get destination location
-
-            # pos_origin details
-            # pos_origin: RMSchema
-            pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
-            print(f'[new_delivery_mission]: get_delivery_position_detail...')
-
-            # get destination_id and then create a rm_guid first.
-
-            # Job-Delivery START
-            # TASK START
-            tasks = []
-            self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
-            # configure task-01: create a new position on RM-Layout
-            self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y,
-                                              pos_destination.heading)
-            print(f'layout_id: {pos_destination.layout_guid}')
-            latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
-            print(f'latest_marker_id: {latest_marker_id}')
-            # configure task-01: create a new task
-            goto = self.rmapi.task_goto(skill_config.get('RM-Skill', 'RM-GOTO'),
-                                        pos_destination.layout_guid,
-                                        latest_marker_id,
-                                        order=1,
-                                        map_id=pos_destination.map_guid,
-                                        pos_name=pos_destination.pos_name,
-                                        x=pos_destination.x,
-                                        y=pos_destination.y,
-                                        heading=pos_destination.y)
-            tasks.append(goto)
-            print(goto)
-            # TASK END
-            print(f'[new_delivery_mission]: configure task end...')
-
-            self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-DEMO')
-            print(f'[new_delivery_mission]: configure job end...')
-
-            return True
-        except:
-            return False
 
     # Charging
     def charging_mission_publisher(self, task_json, status_callback):
@@ -2167,8 +2096,6 @@ if __name__ == '__main__':
     #     print(robot.status_summary())
     #     # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
     #     # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
-
-    # robot.new_delivery_mission()
     
     # # followme testing
     # robot.follow_me_mode()

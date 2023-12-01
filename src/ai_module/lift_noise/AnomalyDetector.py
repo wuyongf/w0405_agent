@@ -17,20 +17,6 @@ class AnomalyDetector:
         self.result_path = ''
 
         BASE_PATH = os.getcwd()
-        # # # Read config
-        # # config_file = os.path.join(BASE_PATH, "anomaly_detector_config.json")
-        # # with open(config_file, "r") as f:
-        # #     self.config = json.load(f)
-
-        # # self.config = self.load_config('cfg/config.properties')
-        # # ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
-        # # with open(ae_config_path, "r") as f:
-        # #     self.ae_config = json.load(f)
-
-        
-        # ae_config_path = self.config.get('AUTOENCODER_CONF', 'path')
-        # with open(ae_config_path, "r") as f:
-        #     self.ae_config = json.load(f)
 
     def update_test_data_dir(self, test_data_dir):
         self.test_data_dir = test_data_dir
@@ -54,9 +40,7 @@ class AnomalyDetector:
 
 
     def inference_classifier(self):
-        # BASE_PATH = os.getcwd()
-        # MODEL_PATH = os.path.join(BASE_PATH, "model")
-        # self.classifier_path = os.path.join(MODEL_PATH, "classifier", "1")
+
         self.classifier_path = self.config.get('MODEL_PATH', 'classifier')
 
         # Load model
@@ -141,9 +125,6 @@ class AnomalyDetector:
             return True
         except:
             return False
-
-
-
 
     def check_anomaly(self, img, density_threshold, reconstruction_error_threshold,
                   kde, out_vector_shape, model):

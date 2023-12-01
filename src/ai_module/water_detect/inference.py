@@ -2,6 +2,7 @@ import torch
 import os
 import json
 import cv2
+from pathlib import Path
 
 class WaterDetector:
     def __init__(self, repo, model_path, model_condifence):
@@ -28,7 +29,8 @@ if __name__ == "__main__":
     model_path = "weights/best.pt"
     model_confidence = 0.7
     detector = WaterDetector(repo, model_path, model_confidence)
-    img = "/home/nw/Documents/GitHub/w0405_agent/src/../data/water-leakage/thermal-image/20231127/268/2023_11_27_14_35_03_5.0_1306.916015625_274.3580322265625.jpg"
+    img = "/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/src/ai_module/water_detect/yolov5/data/20231120 14.16.50 gray.jpg"
+    img_path = Path(img)
     data = detector.predict(img)
 
     print(type(data))
@@ -37,6 +39,9 @@ if __name__ == "__main__":
     
     for water in data:
         print(water)
+
+    result_img = detector.get_image(img)
     
-    cv2.imshow("bus", detector.get_image(img))
+    cv2.imshow("water-leakage-detect-result", result_img)
+    detector.save_image(f'{img_path.stem}.jpg',result_img)
     cv2.waitKey(0)
