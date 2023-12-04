@@ -674,7 +674,7 @@ if __name__ == '__main__':
     # rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
     # iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
     # iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
-    localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint')
+    localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint', layout_heading=0)
     # goto1 = rmapi.new_task_goto(map_rm_guid, "P1")
 
     # 3) new task
