@@ -203,7 +203,7 @@ class RMAPI(api.AuthenticatedAPI):
             "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
-            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
+            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, layout_heading)
         }     
 
         return task
@@ -227,9 +227,9 @@ class RMAPI(api.AuthenticatedAPI):
             param_x = {"paramKey": "x", "paramValue": x}
             param_y = {"paramKey": "y", "paramValue": y}
             param_heading = {"paramKey": "heading", "paramValue": heading}
-            param_heading = {"paramKey": "current_floor", "paramValue": current_floor}
-            param_heading = {"paramKey": "target_floor", "paramValue": target_floor}
-            params = [param_map, param_name, param_x, param_y, param_heading]
+            param_current_floor = {"paramKey": "current_floor", "paramValue": current_floor}
+            param_target_floor = {"paramKey": "target_floor", "paramValue": target_floor}
+            params = [param_map, param_name, param_x, param_y, param_heading, param_current_floor, param_target_floor]
             return params
 
         task = {
@@ -711,6 +711,18 @@ def pub_localization():
     rmapi.new_job('2658a873-a0a6-4c3f-967f-d179c4073272', charging_station.layout_rm_guid, tasks=tasks, job_name='Localize-DEMO')
     print(f'[new_delivery_mission]: configure job end...')
 
+dict_map_guid = {
+    999: "1f7f78ab-5a3b-467b-9179-f7508a99ad6e",
+    7: "5f5efd43-8140-43e6-9492-996b8158fe49",
+    6: "d6734e98-f53a-4b69-8ed8-cbc42ef58e3a",
+    5: "454ff88a-c680-4910-a6ee-72a2da44c148",
+    4: "c5f360ec-f4be-4978-a281-0a569dab1174",
+    3: "5df44de9-3ed6-4851-b67a-140256855279",
+    2: "2301bb6e-4c4a-4660-af79-e5583955fb32",
+    1: "c96fd506-ceb0-47ab-908c-2ac043a861c7",
+    0: "d6c31219-5fba-4e94-b651-3e26c9bf43b2"
+}
+
 if __name__ == '__main__':
 
     # pub_localization()
@@ -744,24 +756,56 @@ if __name__ == '__main__':
     rv_charging_off = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
     iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
     iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
-    localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint', layout_heading=0)
+    localize1 = rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
     goto1 = rmapi.new_task_goto(map_rm_guid, "P0", layout_heading= 90)
     goto2 = rmapi.new_task_goto(map_rm_guid, "P1", layout_heading= 90)
     goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
 
+    def new_task_take_lift(current_floor_id, target_floor_id):
+        
+        current_map_rm_guid = dict_map_guid[current_floor_id]
+        target_map_rm_guid = dict_map_guid[target_floor_id]
+        lift_map_rm_guid = dict_map_guid[999]
+
+        tasks = []
+        
+        task1 = rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
+        task2 = rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        
+        if(current_floor_id == 0):
+            task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+        else:
+            task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+        
+        if(target_floor_id == 0):
+            task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
+        else:
+            task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
+
+        task3 = rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
+
+        tasks.append(task1)
+        tasks.append(task2)
+        tasks.append(task_in)
+        tasks.append(task_out)
+        tasks.append(task3)
+
+        return tasks
+
     # 3) new task
-    tasks = []
-    tasks.append(rv_charging_off)
-    tasks.append(iaq_on)
+    tasks = new_task_take_lift(4,6)
+
+    # tasks.append(rv_charging_off)
     # tasks.append(localize1)
-    tasks.append(goto1)
-    tasks.append(goto2)
-    tasks.append(goto_dock)
-    tasks.append(iaq_off)
-    tasks.append(rv_charging_on)
+    # tasks.append(iaq_on)
+    # tasks.append(goto1)
+    # tasks.append(goto2)
+    # tasks.append(goto_dock)
+    # tasks.append(iaq_off)
+    # tasks.append(rv_charging_on)
 
     # 4) new mission
-    mission_name = 'New Mission Demo'
+    mission_name = 'LiftAccess-4to6'
     rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
     
 
