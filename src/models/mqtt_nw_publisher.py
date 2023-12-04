@@ -14,7 +14,7 @@ class NWMQTTPub():
     def __init__(self, config):
         self.broker_address = config.get('IPC', 'localhost')
         self.broker_port = config.get('NWMQTT', 'port')
-        self.robot_guid = config.get('NWDB', 'robot_guid')
+        self.robot_guid = config.get('NWDB', 'robot_rm_guid')
         self.robot_id = config.get('NWDB', 'robot_id')
         self.nw_client = mqtt.Client("nw_mqtt_publisher")
         self.nw_client.on_message = self.__on_message

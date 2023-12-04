@@ -799,21 +799,21 @@ class Robot:
                 self.thermalcam_handler.water_detector.save_image(predict_img_dir, predict_image)
                 print(f'<debug 6>')
                 # upload to azure - raw image
-                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal)
+                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal, str(folder_name))
                 self.blob_handler.upload_blobs(str(img_path))
                 print(f'<debug 7>')
                  # upload to azure - predict image
-                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal_Result)
+                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal_Result, str(folder_name))
                 self.blob_handler.upload_blobs(predict_img_dir)
 
                 # upload to nwdb
                 self.nwdb.insert_new_thermal_analysis(thermal_id=thermal_id, image_name=img_path.name, is_abnormal=is_abnormal, 
                                                       layout_id=layout_id, robot_x=robot_x, robot_y=robot_y, created_date=formatted_timestamp)
-            
+                print(f'<debug 8>')
             if True in abnormal_list:
-                self.nwdb.update_single_value('ai.water_leakage.thermal', is_abnormal, 1, 'ID', thermal_id)
+                self.nwdb.update_single_value('ai.water_leakage.thermal', "is_abnormal", 1, 'ID', thermal_id)
             else:
-                self.nwdb.update_single_value('ai.water_leakage.thermal', is_abnormal, 0, 'ID', thermal_id)
+                self.nwdb.update_single_value('ai.water_leakage.thermal', "is_abnormal", 0, 'ID', thermal_id)
 
             return True
         except:

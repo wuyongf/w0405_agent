@@ -8,13 +8,16 @@ class WaterDetector:
     def __init__(self, repo, model_path, model_condifence):
         # repo = os.path.join(os.getcwd(), "yolov5")
         self.model = torch.hub.load(repo, "custom", path=model_path, source="local")
-        self.model.conf = model_condifence
+        self.model.conf = float(model_condifence)
 
     def predict(self, image):
         try:
+            # print('<debug> try predict...')
             results = self.model(image)
+            # print('<debug> try predict2...')
             return json.loads(results.pandas().xyxy[0].to_json(orient="records"))
-        except:
+        except Exception as e:
+            print(e)
             return None
     
     def get_image(self, image):
@@ -25,11 +28,11 @@ class WaterDetector:
         cv2.imwrite(save_dir, image)
 
 if __name__ == "__main__":
-    repo = 'yolov5'
-    model_path = "weights/best.pt"
+    repo = '/home/nw/Documents/GitHub/w0405_agent/src/ai_module/water_detect/yolov5'
+    model_path = "/home/nw/Documents/GitHub/w0405_agent/src/ai_module/water_detect/weights/best.pt"
     model_confidence = 0.7
     detector = WaterDetector(repo, model_path, model_confidence)
-    img = "/home/yf/SynologyDrive/Google Drive/Job/dev/w0405_agent/src/ai_module/water_detect/yolov5/data/20231120 14.16.50 gray.jpg"
+    img = "/home/nw/Documents/GitHub/w0405_agent/src/../data/water-leakage/thermal-image/20231204/282/2023_12_04_11_12_06_4.0_1305.2509765625_275.9060974121094.jpg"
     img_path = Path(img)
     data = detector.predict(img)
 

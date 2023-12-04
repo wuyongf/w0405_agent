@@ -22,7 +22,7 @@ class AzureBlobHandler():
         # Init Container Name 
         self.container_name = None
 
-    def update_container_name(self, container_name : ContainerName):
+    def update_container_name(self, container_name : ContainerName, folder_name = None):
 
         match container_name:
             case ContainerName.LiftInspection_Audio:
@@ -32,9 +32,9 @@ class AzureBlobHandler():
             case ContainerName.LiftInspection_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_li_video_rear')
             case ContainerName.WaterLeakage_Thermal:
-                self.container_name = self.config.get('Azure', 'container_wl_thermal_image')
+                self.container_name = self.config.get('Azure', 'container_wl_thermal_image') + '/' + folder_name
             case ContainerName.WaterLeakage_Thermal_Result:
-                self.container_name = self.config.get('Azure', 'container_wl_thermal_image_result')
+                self.container_name = self.config.get('Azure', 'container_wl_thermal_image_result') + '/' + folder_name
             case ContainerName.WaterLeakage_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_wl_video_rear')
             case ContainerName.Surveillance_Audio:

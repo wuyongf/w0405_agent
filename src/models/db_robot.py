@@ -323,7 +323,7 @@ class robotDBHandler(db.AzureDB):
 
         statement = f'INSERT INTO {self.database}.`ai.water_leakage.thermal.analysis`\
                     (thermal_id, `image_name`, is_abnormal, layout_id, robot_x, robot_y, created_date) VALUES \
-                    ({thermal_id}, {image_name}, {is_abnormal}, {layout_id}, {robot_x}, {robot_y}, "{created_date}")'
+                    ({thermal_id}, "{image_name}", {is_abnormal}, {layout_id}, {robot_x}, {robot_y}, "{created_date}")'
         
         print(statement)
         return self.Insert(statement)

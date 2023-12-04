@@ -22,7 +22,7 @@ class TopModuleDBHandler(db.AzureDB):
         super().__init__(self.cfg)
         self.database = config.get('NWDB', 'database')
         self.status_summary = status_summary
-        self.robot_guid = config.get('NWDB', 'robot_guid')
+        self.robot_guid = config.get('NWDB', 'robot_rm_guid')
         self.robot_id = self.GetRobotId()
 
     def get_robot_summary(self):
