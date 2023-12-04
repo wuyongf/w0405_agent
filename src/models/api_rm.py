@@ -147,6 +147,12 @@ class RMAPI(api.AuthenticatedAPI):
         # print(f'layout_x: {layout_x}')
         # print(f'layout_y: {layout_y}')
 
+        # def goto_params2(pos_name):
+        #     params = []
+        #     param_name = {"paramKey": "POINT1", "paramValue": str(pos_name)}
+        #     params = [param_name]
+        #     return params
+
         def goto_params(map_id, pos_name, x, y, heading):
             params = []
             param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
@@ -162,6 +168,8 @@ class RMAPI(api.AuthenticatedAPI):
             "layoutId": layout_guid,
             "order": order,
             "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            # "params": goto_params2(layoutMarkerName)
             "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
         }     
 
@@ -193,6 +201,7 @@ class RMAPI(api.AuthenticatedAPI):
             "layoutId": layout_guid,
             "order": order,
             "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
         }     
 
@@ -652,9 +661,6 @@ if __name__ == '__main__':
 
     # res = rmapi.get_layout_marker(layout_guid, 'P0')
     # print(res)
-
-
-
     
     # rmapi.write_rm_map_to_properties("../../conf/rm_map.properties")
 
@@ -669,7 +675,7 @@ if __name__ == '__main__':
     # iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
     # iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
     localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint')
-    goto1 = rmapi.new_task_goto(map_rm_guid, "LiftWaitingPoint")
+    # goto1 = rmapi.new_task_goto(map_rm_guid, "P1")
 
     # 3) new task
     tasks = []
@@ -679,7 +685,7 @@ if __name__ == '__main__':
     # tasks.append(iaq_off)
 
     # 4) new mission
-    mission_name = 'New Mission Demo1'
+    mission_name = 'New Mission Demo3'
     rmapi.new_mission(robot_rm_guid, layout_guid, mission_name, tasks)
     
 

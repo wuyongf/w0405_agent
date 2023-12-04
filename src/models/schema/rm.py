@@ -81,8 +81,8 @@ class TaskParams:
         else:
             self.mapId = dct['mapId']
             self.positionName = dct['positionName']
-            self.x = dct['x']
-            self.y = dct['y']
+            self.x = float(dct['x'])
+            self.y = float(dct['y'])
             self.heading = int(dct['heading'])
             # if(type(self.heading == str)):
             #     self.heading = int(self.heading)
