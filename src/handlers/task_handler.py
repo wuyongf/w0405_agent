@@ -273,6 +273,22 @@ class TaskHandler:
                     return
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+
+            case 'NW-LIFT-TO':
+                print(f'NW-LIFT-TO JSON: {task_json}')
+                res = self.robot.nw_lift_to(task_json)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+
+            case 'NW-LIFT-RELEASE':
+                print(f'NW-LIFT-RELEASE JSON: {task_json}')
+                res = self.robot.nw_lift_release()
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 
             case 'LIFT-NOISE-DETECT-START':
                 print(f'LIFT-NOISE-DETECT-START JSON: {task_json}')

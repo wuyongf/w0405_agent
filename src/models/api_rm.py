@@ -135,10 +135,10 @@ class RMAPI(api.AuthenticatedAPI):
 
     def new_task_goto(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
         
-        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        layout_guid =  self.get_layout_guid(map_rm_guid)
         skill_id = self.skill_config.get('RM-Skill', 'RM-GOTO')
         
-        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
 
         layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
@@ -178,10 +178,10 @@ class RMAPI(api.AuthenticatedAPI):
 
     def new_task_localize(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
         
-        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        layout_guid =  self.get_layout_guid(map_rm_guid)
         skill_id = self.skill_config.get('RM-Skill', 'RM-LOCALIZE')
 
-        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
 
         layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
@@ -207,14 +207,59 @@ class RMAPI(api.AuthenticatedAPI):
         }     
 
         return task
+    
+    def new_task_lift_to(self, map_rm_guid, order = 1, 
+                         target_floor = 0, hold_min =10):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'NW-LIFT-TO')
+
+        def custom_params(target_floor, hold_min):
+            params = []
+            param_target_floor = {"paramKey": "target_floor", "paramValue": target_floor}
+            param_hold_min = {"paramKey": "hold_min", "paramValue": hold_min}
+            params = [param_target_floor, param_hold_min]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "executionType": 1, # 1: series 2: parallel
+            "params": custom_params(target_floor, hold_min)
+        }
+
+        return task
+    
+    def new_task_lift_levelling(self, map_rm_guid, order = 1, 
+                         current_floor = 0):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'LIFT-LEVLLING')
+
+        def custom_params(current_floor):
+            params = []
+            param_current_floor = {"paramKey": "current_floor", "paramValue": current_floor}
+            params = [param_current_floor]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "executionType": 1, # 1: series 2: parallel
+            "params": custom_params(current_floor)
+        }
+
+        return task
 
     def new_task_nw_lift_in(self, map_rm_guid, layoutMarkerName = None, order = 1, 
                             layout_heading = 0, current_floor = 4, target_floor =6):
         
-        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        layout_guid =  self.get_layout_guid(map_rm_guid)
         skill_id = self.skill_config.get('RM-Skill', 'NW-LIFT-IN')
 
-        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
 
         layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
@@ -245,10 +290,10 @@ class RMAPI(api.AuthenticatedAPI):
 
     def new_task_nw_lift_out(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
         
-        layout_guid =  rmapi.get_layout_guid(map_rm_guid)
+        layout_guid =  self.get_layout_guid(map_rm_guid)
         skill_id = self.skill_config.get('RM-Skill', 'NW-LIFT-OUT')
         
-        params = rmapi.get_layout_map_list(layout_guid, map_rm_guid)
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
 
         layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
@@ -738,7 +783,7 @@ if __name__ == '__main__':
     robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
     map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
     layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
-    print(layout_rm_guid) 
+    print(layout_rm_guid)
 
     # res = rmapi.get_layout_marker(layout_guid, 'P0')
     # print(res)

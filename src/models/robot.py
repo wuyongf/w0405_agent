@@ -924,6 +924,9 @@ class Robot:
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftLevelling)
             mission_id = self.nwdb.get_latest_mission_id()
 
+            floor_id = int(task_json['parameters']['current_floor'])
+            self.nwdb.update_single_value('sys.mission', 'floor_id', floor_id, 'ID', mission_id)
+
             self.mo_lift_levelling.set_task_id(id=mission_id)
             self.mo_lift_levelling.start()
             time.sleep(1)
@@ -1230,17 +1233,40 @@ class Robot:
         
     ## Methods
     ### Lift
-    def process_lift_in(self, cur_floor_int, target_floor_int, task_json):
-            self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(cur_floor_int)
-            time.sleep(1)
-            self.rvjoystick.disable()
-            self.wait_for_robot_arrived()            
-            # start recording
-            self.lift_noise_detect_start(task_json)
-            self.lift_vibration_on(task_json)
+    def thread_lift_in(self, cur_floor_int, target_floor_int, task_json):
+        self.rvjoystick.enable()
+        self.call_lift_and_check_arrive(cur_floor_int, 5)
+        time.sleep(1)
+        self.rvjoystick.disable()
 
-            self.func_lift_pressbutton_releasedoor(target_floor_int)
+        # [sensor] start recording: mic + rgbcam
+        self.lift_noise_detect_start(task_json)
+        
+        # robot moving
+        self.wait_for_robot_arrived()
+
+        # [sensor] start recording: gyro
+        self.lift_vibration_on(task_json)
+        self.func_lift_pressbutton_releasedoor(target_floor_int)
+
+    def thread_lift_out(self, target_floor_int):
+        self.rvjoystick.enable()
+        self.call_lift_and_check_arrive(target_floor_int, 5)
+        time.sleep(1)
+
+        # [sensor] stop recording: gyro
+        self.lift_vibration_off()
+        
+        # robot moving
+        self.rvjoystick.disable()
+        self.wait_for_robot_arrived()
+        
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+
+        # [sensor] stop recording: mic + rgbcam
+        self.lift_noise_detect_end()
 
     def nw_lift_in(self, task_json, status_callback):
         
@@ -1251,34 +1277,12 @@ class Robot:
             cur_floor_int = int(task_json['parameters']['current_floor'])
             target_floor_int = int(task_json['parameters']['target_floor'])
 
-            threading.Thread(target=self.process_lift_in, args=(cur_floor_int,target_floor_int, task_json)).start()
-
-            # self.rvjoystick.enable()
-            # self.call_lift_and_check_arrive(int(task_json['parameters']['current_floor']))
-            # time.sleep(1)
-            # self.rvjoystick.disable()
-            # self.wait_for_robot_arrived()            
-            # self.func_lift_pressbutton_releasedoor(int(task_json['parameters']['target_floor']))
+            threading.Thread(target=self.thread_lift_in, args=(cur_floor_int,target_floor_int, task_json)).start()
 
             return True
         except:
             return False
 
-    def process_lift_out(self, target_floor_int):
-            self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(target_floor_int)
-            time.sleep(1)
-            
-            # stop recording
-            self.lift_vibration_off()
-            self.lift_noise_detect_end()
-
-            self.rvjoystick.disable()
-            self.wait_for_robot_arrived()
-            
-            # **release the lift door
-            self.emsdlift.release_all_keys()
-            self.emsdlift.close()
 
     def nw_lift_out(self, task_json, status_callback):
 
@@ -1287,17 +1291,7 @@ class Robot:
 
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
 
-            threading.Thread(target=self.process_lift_out, args=(target_floor_int,)).start()
-
-            # self.rvjoystick.enable()
-            # self.call_lift_and_check_arrive(int(self.lift_task_json['parameters']['target_floor']))
-            # time.sleep(1)
-            # self.rvjoystick.disable()
-            # self.wait_for_robot_arrived()
-            
-            # # **release the lift door
-            # self.emsdlift.release_all_keys()
-            # self.emsdlift.close()
+            threading.Thread(target=self.thread_lift_out, args=(target_floor_int,)).start()
 
             return True
         except:
@@ -1360,7 +1354,7 @@ class Robot:
         except:
             return False
 
-    def call_lift_and_check_arrive(self, target_floor_int):  
+    def call_lift_and_check_arrive(self, target_floor_int, hold_min):  
             try:
                 # keep calling the lift
                 # keep checking if lift is arrived
@@ -1372,10 +1366,10 @@ class Robot:
                         time.sleep(1)
                         continue
                     elif(self.emsdlift.is_arrived(target_floor_int) and not self.emsdlift.is_anykey_pressed()):
-                        is_open_and_hold = self.emsdlift.open(10 * 60 * 5) # 10 = 1s
+                        is_open_and_hold = self.emsdlift.open(10 * 60 * hold_min) # 10 = 1s
                         if(is_open_and_hold):
                             print(f'[robocore_call_lift] arrived!')
-                            print(f'[robocore_call_lift] hold the lift door for 5 minutes!')
+                            print(f'[robocore_call_lift] hold the lift door for {hold_min} minutes!')
                             break
                         else:
                             self.emsdlift.release_all_keys()
@@ -1392,6 +1386,50 @@ class Robot:
                 return True
             except:
                 return False
+
+    def nw_lift_to(self, task_json):
+            '''
+            For lift inspection. robot should be outside/inside the lift. call lift moving to each floor and then hold the lift door.
+            '''
+            try:
+                target_floor_int = int(task_json['parameters']['target_floor'])
+                hold_min = int(task_json['parameters']['hold_min'])
+
+                # keep calling the lift
+                # keep checking if lift is arrived
+                while(True):
+                    if(self.emsdlift.occupied):
+                        print(f'[robot_call_lift] self.emsdlift.occupied {self.emsdlift.occupied}')
+                        # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
+                        print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
+                        time.sleep(1)
+                        continue
+                    elif(self.emsdlift.is_arrived(target_floor_int) and not self.emsdlift.is_anykey_pressed()):
+                        is_open_and_hold = self.emsdlift.open(10 * 60 * hold_min) # 10 = 1s
+                        if(is_open_and_hold):
+                            print(f'[robocore_call_lift] arrived!')
+                            print(f'[robocore_call_lift] hold the lift door for {hold_min} minutes!')
+                            break
+                        else:
+                            self.emsdlift.release_all_keys()
+                    else:
+                        is_pressed = self.emsdlift.rm_to(target_floor_int)
+                        print(f'target_floor_int; {target_floor_int}')
+                        if(is_pressed):
+                            print(f'[robocore_call_lift] pressed button successful, wait for arriving...')
+                        else:
+                            print(f'[robocore_call_lift] press button failed, retry...')                   
+                        time.sleep(2)
+                        continue
+
+                return True
+            except:
+                return False
+    
+    def nw_lift_release(self):
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
 
     ## Mission Designer
     ### Delivery
@@ -1479,7 +1517,7 @@ class Robot:
         if not done: return False
         print(f'[lift_mission] Flag3:  to LiftMapTransitPos...')
         self.rvjoystick.enable()
-        self.call_lift_and_check_arrive(a_lift_mission.cur_floor_int)
+        self.call_lift_and_check_arrive(a_lift_mission.cur_floor_int, 5)
         time.sleep(1)
         self.rvjoystick.disable()
         done = self.wait_for_job_done(duration_min=10)  # wait for job is done
@@ -2086,7 +2124,7 @@ if __name__ == '__main__':
     # robot.pub_call_lift(a_lift_mission)
     # robot.process_lift_in(4,6)
 
-    robot.call_lift_and_check_arrive(4)
+    robot.call_lift_and_check_arrive(4, 5)
     # robot.charging_on()
     # robot.charging_off()
     # robot.charging_goto()
