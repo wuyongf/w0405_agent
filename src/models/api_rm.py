@@ -127,6 +127,7 @@ class RMAPI(api.AuthenticatedAPI):
             "layoutId": layout_id,
             "order": order,
             "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
             # "params": [{"paramKey": "positionName", "paramValue": "delivery-01"}]
         }
 
@@ -724,8 +725,8 @@ if __name__ == '__main__':
 
     robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
     map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
-    layout_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
-    print(layout_guid) 
+    layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
+    print(layout_rm_guid) 
 
     # res = rmapi.get_layout_marker(layout_guid, 'P0')
     # print(res)
@@ -736,25 +737,32 @@ if __name__ == '__main__':
     # print(res)
 
     # rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
-    # skill_config = umethods.load_config(skill_config_dir)
+    skill_config = umethods.load_config(skill_config_dir)
 
     # # 2) implement task detail
-    # rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-    # iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
-    # iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+    rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+    rv_charging_off = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+    iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+    iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
     localize1 = rmapi.new_task_localize(map_rm_guid, 'LiftWaitingPoint', layout_heading=0)
-    # goto1 = rmapi.new_task_goto(map_rm_guid, "P1")
+    goto1 = rmapi.new_task_goto(map_rm_guid, "P0", layout_heading= 90)
+    goto2 = rmapi.new_task_goto(map_rm_guid, "P1", layout_heading= 90)
+    goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
 
     # 3) new task
     tasks = []
-    # tasks.append(iaq_on)
-    tasks.append(localize1)
-    # tasks.append(goto1)
-    # tasks.append(iaq_off)
+    tasks.append(rv_charging_off)
+    tasks.append(iaq_on)
+    # tasks.append(localize1)
+    tasks.append(goto1)
+    tasks.append(goto2)
+    tasks.append(goto_dock)
+    tasks.append(iaq_off)
+    tasks.append(rv_charging_on)
 
     # 4) new mission
-    mission_name = 'New Mission Demo3'
-    rmapi.new_mission(robot_rm_guid, layout_guid, mission_name, tasks)
+    mission_name = 'New Mission Demo'
+    rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
     
 
 

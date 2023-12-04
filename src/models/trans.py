@@ -133,8 +133,8 @@ class RMLayoutMapTransform:
         rotated_point = scaled_point / self.map_scale
         cur_map_point = np.matmul(inv(self.rotation_matrix),rotated_point)
 
-        heading = cur_layout_theta
-        # heading = cur_layout_theta - self.map_rotate_angle
+        # heading = cur_layout_theta
+        heading = cur_layout_theta - self.map_rotate_angle
         # if heading < 360: heading += 360
         
         print(f'heading: {heading}')

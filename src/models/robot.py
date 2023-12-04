@@ -555,13 +555,14 @@ class Robot:
                 # time.sleep(1)
                 continue
             else:
-                continue_flag = False
-                self.is_moving = False
-
+                
                 time.sleep(1)
                 # check if arrive, callback
                 if (self.check_goto_has_arrived()):
                     print('[goto.check_mission_status] robot has arrived!')
+                    continue_flag = False
+                    self.is_moving = False
+
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
                     ## info [robot.wait_for_robot_arrived]
@@ -577,6 +578,9 @@ class Robot:
                 # if cancelled
                 if (self.check_goto_is_cancelled()):
                     print('[goto.check_mission_status] robot has cancelled moving task')
+                    continue_flag = False
+                    self.is_moving = False
+
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Failed)
 
                 self.door_agent_start = False
@@ -1216,8 +1220,8 @@ class Robot:
             while (self.rvapi.get_charging_feedback() != 'NOT_CHARGING'):
                 time.sleep(1)
 
-            # goto charging position.
-            self.goto(task_json, status_callback)
+            # # goto charging position.
+            # self.goto(task_json, status_callback)
 
             return True
         except:

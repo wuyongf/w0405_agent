@@ -83,7 +83,7 @@ class TaskParams:
             self.positionName = dct['positionName']
             self.x = float(dct['x'])
             self.y = float(dct['y'])
-            self.heading = int(dct['heading'])
+            self.heading = float(dct['heading'])
             # if(type(self.heading == str)):
             #     self.heading = int(self.heading)
 
