@@ -207,6 +207,38 @@ class RMAPI(api.AuthenticatedAPI):
         }     
 
         return task
+
+    def new_task_delivery_post_localize(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'DELIVERY-POST-LOCALIZE')
+
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def position_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, layout_heading)
+        }     
+
+        return task
     
     def new_task_lift_to(self, map_rm_guid, order = 1, 
                          target_floor = 0, hold_min =10):

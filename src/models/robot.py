@@ -18,6 +18,7 @@ from src.models.mqtt_nw_publisher import NWMQTTPub
 from src.models.mqtt_emsd_lift import EMSDLift
 from src.models.db_robot import robotDBHandler
 import src.models.trans as Trans
+from src.publishers.pub_mission import MissionPublisher
 # Schema
 import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
@@ -54,6 +55,7 @@ class Robot:
         self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
         self.T_RM = Trans.RMLayoutMapTransform()
+        self.missionpub = MissionPublisher(skill_config_dir, self.rmapi)
         ## AI-INIT
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
@@ -377,6 +379,54 @@ class Robot:
         except:
             return False
 
+    def delivery_post_localize(self, task_json):
+        try:
+            print(f'localize: {task_json}')
+            # step 0. init. clear current task
+            self.cancel_moving_task()
+            # step 1. parse task json
+            # print('step 1')
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
+            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            # step 2. transformation. rm2rv
+            # print('step 2')
+            map_rm_guid = self.nwdb.get_map_rm_guid(rv_map_name)
+            self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
+            params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
+            self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                              params.scale, params.angle, params.translate)
+            
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
+                                      rv_map_metadata.y, rv_map_metadata.angle)            
+            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+
+            print(f'<heading_debug> rv_map_metadata.angle: {rv_map_metadata.angle}')
+            print(f'<heading_debug> self.T_RM.map_rotate_angle: {self.T_RM.map_rotate_angle}')
+            # step 3. rv. create point base on rm. localization.
+            # print('step 3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            self.rvapi.post_new_waypoint(rv_waypoint.mapName, rv_waypoint.name, rv_waypoint.x, rv_waypoint.y,
+                                         rv_waypoint.angle)
+            self.rvapi.change_mode_navigation()
+            self.rvapi.change_map2(rv_map_name, rv_waypoint.name)
+            self.rvapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            print(f'[aaa] init_heading: {rv_waypoint.angle}' )
+            # step 4. double check
+            # print('step 4')
+            pose_is_valid = True
+            # pose_is_valid = self.rvapi.check_current_pose_valid()
+            map_is_active = self.rvapi.get_active_map().name == rv_map_name
+            if (pose_is_valid & map_is_active): 
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.Auto)
+
+                self.nw_goto_done = True
+                return True
+            else: return False
+        except:
+            return False
+
     def is_another_floor(self, task_json):
         # target_map_metadata = RMSchema.TaskParams(task_json['parameters'])
         target_map_id = task_json['parameters']['mapId']
@@ -384,7 +434,7 @@ class Robot:
         return False
 
     # status_callback: check task_handler3.py
-    def nw_goto(self, task_json, status_callback):
+    def delivery_goto(self, task_json, status_callback):
         '''
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
         '''
@@ -399,15 +449,18 @@ class Robot:
                 # init goto_across_floor
                 print(f'[robot.goto] init goto_across_floor...')
 
-                # cur_layout_id = self.layout_nw_id
-                # target_map_rm_guid = task_json['parameters']['mapId']
-                # target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+                cur_layout_id = self.layout_nw_id
+                target_map_rm_guid = task_json['parameters']['mapId']
+                target_layout_id = self.nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', target_map_rm_guid)
+                cur_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', cur_layout_id)
+                target_floor_int = self.nwdb.get_single_value('robot.map.layout', 'floor_id', 'ID', target_layout_id)
                 # self.get_lift_mission_detail(cur_layout_id, target_layout_id)
                 rm_task_data = RMSchema.Task(task_json)
                 status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                 time.sleep(1)
 
-                threading.Thread(target=self.lift_mission_publisher).start()
+                self.missionpub.construct_lift_taking_job(cur_floor_int, target_floor_int)
+                # threading.Thread(target=self.lift_mission_publisher).start()
                 return True
 
             self.door_agent_start = True  # door-agent logic
@@ -568,8 +621,8 @@ class Robot:
                     ## info [robot.wait_for_robot_arrived]
                     self.has_arrived = True
 
-                    ## info delivery publisher
-                    self.nw_goto_done = True
+                    # ## info delivery publisher
+                    # self.nw_goto_done = True
 
                 # # if error
                 # if(self.check_goto_has_error):
@@ -1727,7 +1780,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_origin.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'DELIVERY-GOTO'),
                                         pos_origin.layout_guid,
                                         latest_marker_id,
                                         order=1,
@@ -1772,7 +1825,7 @@ class Robot:
             latest_marker_id = self.rmapi.get_latest_delivery_marker_guid(pos_destination.layout_guid)
             print(f'latest_marker_id: {latest_marker_id}')
             # configure task-01: create a new task
-            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'RM-GOTO'),
+            goto = self.rmapi.task_goto(self.skill_config.get('RM-Skill', 'DELIVERY-GOTO'),
                                         pos_destination.layout_guid,
                                         latest_marker_id,
                                         order=1,

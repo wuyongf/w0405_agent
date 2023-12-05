@@ -127,7 +127,14 @@ class TaskHandler:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
+
+            case 'DELIVERY-POST-LOCALIZE':
+                res = self.robot.delivery_post_localize(task_json)
+                if (res):
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+
             case 'RM-GOTO':
                 res = self.robot.goto(task_json, self.task_status_callback)
                 if (res):
@@ -135,8 +142,8 @@ class TaskHandler:
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
-            case 'NW-GOTO':
-                res = self.robot.nw_goto(task_json, self.task_status_callback)
+            case 'DELIVERY-GOTO':
+                res = self.robot.delivery_goto(task_json, self.task_status_callback)
                 if (res):
                     return 
                 else:
