@@ -134,9 +134,16 @@ class TaskHandler:
                     return 
                 else:
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
+
             case 'NW-GOTO':
                 res = self.robot.nw_goto(task_json, self.task_status_callback)
+                if (res):
+                    return 
+                else:
+                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                
+            case 'NW-GOTO-DEFAULT':
+                res = self.robot.goto(task_json, self.task_status_callback)
                 if (res):
                     return 
                 else:
