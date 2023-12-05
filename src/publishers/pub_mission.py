@@ -40,7 +40,7 @@ class MissionPublisher:
             lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
         else:
             lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
-        post_localization = self.rmapi.new_task_delivery_post_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
+        post_localization = self.rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
         
         tasks = []
         tasks.append(g1)
@@ -49,6 +49,37 @@ class MissionPublisher:
         tasks.append(lift_out)
         tasks.append(post_localization)
         return tasks
+
+    def tasks_delivery_take_lift(self, current_floor_id, target_floor_id, delivery_pos_name):
+                
+            current_map_rm_guid = self.dict_map_guid[current_floor_id]
+            target_map_rm_guid = self.dict_map_guid[target_floor_id]
+            lift_map_rm_guid = self.dict_map_guid[999]
+            
+            g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
+            localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+            
+            if(current_floor_id == 0):
+                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+            else:
+                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+            
+            if(target_floor_id == 0):
+                lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
+            else:
+                lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
+            post_localization = self.rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
+
+            d1 = self.rmapi.new_task_goto(target_map_rm_guid, delivery_pos_name, layout_heading= 0)
+            
+            tasks = []
+            tasks.append(g1)
+            tasks.append(localization)
+            tasks.append(lift_in)
+            tasks.append(lift_out)
+            tasks.append(post_localization)
+            tasks.append(d1)
+            return tasks
 
     def patrol_charging_off(self, current_floor_id, dock_heading):
         map_rm_guid = self.dict_map_guid[current_floor_id]
@@ -293,8 +324,8 @@ class MissionPublisher:
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
         self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
 
-    def construct_lift_taking_job(self, current_floor_id, target_floor_id):
-        tasks = self.tasks_take_lift(current_floor_id, target_floor_id)
+    def construct_lift_taking_job(self, current_floor_id, target_floor_id, delivery_pos_name):
+        tasks = self.tasks_delivery_take_lift(current_floor_id, target_floor_id, delivery_pos_name)
 
         job_name = 'Lift Access'
         map_rm_guid = self.dict_map_guid[current_floor_id]

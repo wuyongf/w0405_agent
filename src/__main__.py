@@ -25,8 +25,6 @@ def run_robot_agent():
     script_path = "./run-agent.sh"
     subprocess.run(["bash", script_path])
 
-
-
 if __name__ == '__main__':
 
     # # Store the current directory
