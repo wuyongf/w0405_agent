@@ -3,7 +3,7 @@ from src.models.api_rm import RMAPI
 
 ### [config]
 skill_config_dir = '../../conf/rm_skill.properties'
-config = umethods.load_config('../../conf/config.properties')
+config = umethods.load_config('../../conf/rm_config.properties')
 skill_config = umethods.load_config(skill_config_dir)
 rmapi = RMAPI(config, skill_config_dir)
 
@@ -148,8 +148,8 @@ def patrol_4finnozone_iaq(current_floor_id):
     iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
     iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
-    goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
-    localize = rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
+    goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 182.5)
+    localize = rmapi.new_task_localize(map_rm_guid, 'InitPos', layout_heading=182.5)
 
     g1 = rmapi.new_task_goto(map_rm_guid, "P0", layout_heading= 90)
     g2 = rmapi.new_task_goto(map_rm_guid, "P1", layout_heading= 90)
@@ -275,8 +275,7 @@ def lift_inspection_levelling():
 
     return tasks
 
-if __name__ == '__main__':
-
+def constrcut_patrol_4n6():
     tasks = []
     x1 = patrol_charging_off(6,180)
     x2 = patrol_6f_iaq(6)
@@ -289,6 +288,18 @@ if __name__ == '__main__':
 
     mission_name = 'Patrol-4n6-temp'
     map_rm_guid = dict_map_guid[0]
+    layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)
+    robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+    rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
+
+if __name__ == '__main__':
+
+    tasks = []
+    x1 = patrol_4finnozone_iaq(4)
+    tasks = x1
+
+    mission_name = '4FInnoZone-IAQ-Rev01'
+    map_rm_guid = dict_map_guid[4]
     layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)
     robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
     rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)

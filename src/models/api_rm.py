@@ -136,7 +136,7 @@ class RMAPI(api.AuthenticatedAPI):
     def new_task_goto(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
         
         layout_guid =  self.get_layout_guid(map_rm_guid)
-        skill_id = self.skill_config.get('RM-Skill', 'RM-GOTO')
+        skill_id = self.skill_config.get('RM-Skill', 'NW-GOTO-DEFAULT')
         
         params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
