@@ -70,7 +70,7 @@ class MissionPublisher:
                 lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
             post_localization = self.rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
 
-            d1 = self.rmapi.new_task_goto(target_map_rm_guid, delivery_pos_name, layout_heading= 0)
+            d1 = self.rmapi.new_task_delivery_goto(target_map_rm_guid, delivery_pos_name, layout_heading= 0)
             
             tasks = []
             tasks.append(g1)
@@ -85,15 +85,16 @@ class MissionPublisher:
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
-        rv_charging_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-        rv_charging_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
 
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading = dock_heading) # 4/F: layout_heading = 180
-        localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading = dock_heading)
+        localize = self.rmapi.new_task_localize(map_rm_guid, 'Init', layout_heading = dock_heading)
         
         tasks = []
-        tasks.append(rv_charging_off)
         tasks.append(localize)
+        tasks.append(rv_charging_off)
+        
 
         return tasks
 
@@ -101,8 +102,8 @@ class MissionPublisher:
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
-        rv_charging_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-        rv_charging_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
 
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading = dock_heading) # 4/F: layout_heading = 180
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading = dock_heading)
@@ -121,10 +122,10 @@ class MissionPublisher:
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
-        rv_charging_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-        rv_charging_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
-        iaq_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
-        iaq_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+        iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
@@ -148,10 +149,10 @@ class MissionPublisher:
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
-        rv_charging_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-        rv_charging_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
-        iaq_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
-        iaq_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+        iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
@@ -175,10 +176,10 @@ class MissionPublisher:
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
-        rv_charging_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-        rv_charging_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
-        iaq_on = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
-        iaq_off = self.rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+        iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 182)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'InitPos', layout_heading=182)
@@ -249,20 +250,20 @@ class MissionPublisher:
                 goto_measure_x = self.rmapi.new_task_goto(lift_map_rm_guid, "Levelling-G", layout_heading= 90)
                 measure_x = self.rmapi.new_task_lift_levelling(lift_map_rm_guid, current_floor=target_floor_id)
                 goto_transit = self.rmapi.new_task_goto(lift_map_rm_guid, "Transit", layout_heading= 270)
-                release_lift = self.rmapi.new_task(skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
+                release_lift = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
             elif(target_floor_id == 7):
                 call_lift_to_x = self.rmapi.new_task_lift_to(lift_map_rm_guid, target_floor=target_floor_id, hold_min=10)
                 goto_measure_x = self.rmapi.new_task_goto(lift_map_rm_guid, "Levelling", layout_heading= 270)
                 measure_x = self.rmapi.new_task_lift_levelling(lift_map_rm_guid, current_floor=target_floor_id)
                 ### go out
                 goto_transit = self.rmapi.new_task_goto(lift_map_rm_guid, "LiftWaitingPoint", layout_heading= 270)
-                release_lift = self.rmapi.new_task(skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
+                release_lift = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
             else:
                 call_lift_to_x = self.rmapi.new_task_lift_to(lift_map_rm_guid, target_floor=target_floor_id, hold_min=10)
                 goto_measure_x = self.rmapi.new_task_goto(lift_map_rm_guid, "Levelling", layout_heading= 270)
                 measure_x = self.rmapi.new_task_lift_levelling(lift_map_rm_guid, current_floor=target_floor_id)
                 goto_transit = self.rmapi.new_task_goto(lift_map_rm_guid, "Transit", layout_heading= 270)
-                release_lift = self.rmapi.new_task(skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
+                release_lift = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'NW-LIFT-RELEASE'), lift_layout_rm_guid)
             
             tasks = []
             tasks.append(call_lift_to_x)
@@ -306,7 +307,31 @@ class MissionPublisher:
         # tasks.append(t_localize_7)
 
         return tasks
+    
+    def constrcut_charging_off(self, charging_floor, heading):
+        tasks = []
+        x1 = self.patrol_charging_off(charging_floor,heading)
 
+        tasks = x1 #+ x2 + x3 + x4 + x5 + x6
+
+        mission_name = 'Charging OFF'
+        map_rm_guid = self.dict_map_guid[charging_floor]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, mission_name)
+    
+    def constrcut_charging_on(self, charging_floor, heading):
+        tasks = []
+        x1 = self.patrol_charging_on(charging_floor,heading)
+
+        tasks = x1 #+ x2 + x3 + x4 + x5 + x6
+
+        mission_name = 'Charging ON'
+        map_rm_guid = self.dict_map_guid[charging_floor]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, mission_name)
+ 
     def constrcut_patrol_4n6(self):
         tasks = []
         x1 = self.patrol_charging_off(6,180)
@@ -352,7 +377,7 @@ if __name__ == '__main__':
     ### [config]
     skill_config_dir = '../../conf/rm_skill.properties'
     config = umethods.load_config('../../conf/rm_config.properties')
-    skill_config = umethods.load_config(skill_config_dir)
+    self.skill_config = umethods.load_config(skill_config_dir)
     rmapi = RMAPI(config, skill_config_dir)
 
     pub = MissionPublisher(skill_config_dir, rmapi)

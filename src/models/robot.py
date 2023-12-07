@@ -445,7 +445,7 @@ class Robot:
             time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
-            thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
+            thread = threading.Thread(target=self.thread_check_delivery_goto_status, args=(task_json, status_callback))
             thread.setDaemon(True)
             thread.start()
 
@@ -476,6 +476,11 @@ class Robot:
                 
             #     threading.Thread(target=self.lift_mission_publisher).start()
             #     return True
+            self.rvapi.put_safety_zone_minimum()
+            self.rvapi.put_maximum_speed(0.3)
+
+            self.rvapi.put_safety_zone_minimum()
+            self.rvapi.put_maximum_speed(0.3)
 
             self.door_agent_start = True  # door-agent logic
             self.door_agent_finish = False
@@ -546,6 +551,53 @@ class Robot:
             print('[wait_for_arrived] robot is moving...')
         pass
     
+    def thread_check_delivery_goto_status(self, task_json, status_callback):
+
+        print('[goto.check_delivery_goto_status] Starting...')
+        rm_task_data = RMSchema.Task(task_json)
+        self.is_moving = True
+        self.has_arrived = False
+
+        continue_flag = True
+        while (continue_flag):
+            time.sleep(1)
+            if (self.rvapi.get_robot_is_moving()):
+                print('[goto.check_delivery_goto_status] robot is moving...')
+                # time.sleep(1)
+                continue
+            else:
+                time.sleep(1)
+                # check if arrive, callback
+                if (self.check_goto_has_arrived()):
+                    print('[goto.check_delivery_goto_status] robot has arrived!')
+                    continue_flag = False
+                    self.is_moving = False
+
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+                    
+                    ## info [robot.wait_for_robot_arrived]
+                    self.has_arrived = True
+
+                    # ## info delivery publisher
+                    self.nw_goto_done = True
+
+                # # if error
+                # if(self.check_goto_has_error):
+                #     print('flag error') # throw error log
+                #     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
+                # if cancelled
+                if (self.check_goto_is_cancelled()):
+                    print('[goto.check_delivery_goto_status] robot has cancelled moving task')
+                    continue_flag = False
+                    self.is_moving = False
+
+                    status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Failed)
+
+                self.door_agent_start = False
+                self.door_agent_finish = True  # door-agent logic
+        print('[goto.check_mission_status] Exiting...')
+
+    
     def thread_check_mission_status(self, task_json, status_callback):
 
         print('[goto.check_mission_status] Starting...')
@@ -572,9 +624,6 @@ class Robot:
                     
                     ## info [robot.wait_for_robot_arrived]
                     self.has_arrived = True
-
-                    # ## info delivery publisher
-                    self.nw_goto_done = True
 
                 # # if error
                 # if(self.check_goto_has_error):
@@ -1443,6 +1492,11 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
+        # charging off
+        self.missionpub.constrcut_charging_off(6,3)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
+
         # to sender
         done = self.pub_delivery_goto_sender(a_delivery_mission)
         if not done: return False
@@ -1473,11 +1527,16 @@ class Robot:
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
+        # charging on
+        self.missionpub.constrcut_charging_on(6,0)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
         # # back to charging stataion:  
         # # 1. goto
         # done = self.charging_goto()
         # if not done: return False
-        # self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
         # done = self.wait_for_nw_goto_done(duration_min=25)
         # # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         # if not done: return False  # stop assigning delivery mission

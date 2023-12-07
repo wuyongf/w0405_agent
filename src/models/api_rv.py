@@ -53,6 +53,7 @@ class RVAPI(api.AuthenticatedAPI):
 
     def get_map_metadata(self, map_name):
         json_data = self.get(f'/map/v1/{map_name}/mapMetadata')
+        # print(f'<debug> json_data: /map/v1/{map_name}/mapMetadata')
         if json_data is None: return json_data
         try:
             return RVSchema.MapMetadata(json_data)
