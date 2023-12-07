@@ -32,7 +32,8 @@ class AuthenticatedAPI:
                     return None
             return response.json()
         except requests.exceptions.RequestException as error:
-            print(f"Error: {error}")
+            print(f"[AuthenticatedAPI.post] Error: {error}")
+            print(f"[AuthenticatedAPI.post] Error json: {json}")
         except requests.exceptions.HTTPError as http_error:
             status_code = http_error.response.status_code
             if status_code == 400:
