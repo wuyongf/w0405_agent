@@ -98,14 +98,14 @@ class MissionPublisher:
 
         return tasks
 
-    def patrol_charging_on(self, current_floor_id, dock_heading):
+    def patrol_go_back_charging(self, current_floor_id, dock_heading):
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
         rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
         rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
 
-        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading = dock_heading) # 4/F: layout_heading = 180
+        goto_dock = self.rmapi.new_task_delivery_goto(map_rm_guid, "ChargingStation", layout_heading = dock_heading) # 4/F: layout_heading = 180
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading = dock_heading)
         
         tasks = []
@@ -113,6 +113,24 @@ class MissionPublisher:
         # tasks.append(localize)
 
         tasks.append(goto_dock)
+        # tasks.append(rv_charging_on)
+        return tasks
+
+    def patrol_charging_on(self, current_floor_id):
+        map_rm_guid = self.dict_map_guid[current_floor_id]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+
+        # goto_dock = self.rmapi.new_task_delivery_goto(map_rm_guid, "ChargingStation", layout_heading = dock_heading) # 4/F: layout_heading = 180
+        # localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading = dock_heading)
+        
+        tasks = []
+        # tasks.append(rv_charging_off)
+        # tasks.append(localize)
+
+        # tasks.append(goto_dock)
         tasks.append(rv_charging_on)
         return tasks
 
@@ -320,9 +338,21 @@ class MissionPublisher:
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
         self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, mission_name)
     
-    def constrcut_charging_on(self, charging_floor, heading):
+    def constrcut_go_back_charging(self, charging_floor, heading):
         tasks = []
-        x1 = self.patrol_charging_on(charging_floor,heading)
+        x1 = self.patrol_go_back_charging(charging_floor,heading)
+
+        tasks = x1 #+ x2 + x3 + x4 + x5 + x6
+
+        mission_name = 'GO Back Charging'
+        map_rm_guid = self.dict_map_guid[charging_floor]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, mission_name)
+
+    def constrcut_charging_on(self, charging_floor):
+        tasks = []
+        x1 = self.patrol_charging_on(charging_floor)
 
         tasks = x1 #+ x2 + x3 + x4 + x5 + x6
 
@@ -339,7 +369,7 @@ class MissionPublisher:
         x3 = self.tasks_take_lift(6,4)
         x4 = self.patrol_4f_iaq(4)
         x5 = self.tasks_take_lift(4,6)
-        x6 = self.patrol_charging_on(6,180)
+        x6 = self.patrol_go_back_charging(6,180)
 
         tasks = x1 + x2 + x3 + x4 + x5 + x6
 
