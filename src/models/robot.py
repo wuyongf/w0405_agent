@@ -391,6 +391,9 @@ class Robot:
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
         '''
         try:
+            self.rvapi.put_safety_zone_minimum()
+            self.rvapi.put_maximum_speed(0.3)
+
             ## info delivery publisher
             self.nw_goto_done = False
 
@@ -476,8 +479,8 @@ class Robot:
                 
             #     threading.Thread(target=self.lift_mission_publisher).start()
             #     return True
-            self.rvapi.put_safety_zone_minimum()
-            self.rvapi.put_maximum_speed(0.3)
+            # self.rvapi.put_safety_zone_minimum()
+            # self.rvapi.put_maximum_speed(0.3)
 
             self.rvapi.put_safety_zone_minimum()
             self.rvapi.put_maximum_speed(0.3)
@@ -1492,10 +1495,10 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
-        # charging off
-        self.missionpub.constrcut_charging_off(6,3)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
+        # # charging off
+        # self.missionpub.constrcut_charging_off(6,3)
+        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        # if not done: return False  # stop assigning delivery mission
 
         # to sender
         done = self.pub_delivery_goto_sender(a_delivery_mission)

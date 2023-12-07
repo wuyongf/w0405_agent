@@ -92,7 +92,7 @@ class MissionPublisher:
         localize = self.rmapi.new_task_localize(map_rm_guid, 'Init', layout_heading = dock_heading)
         
         tasks = []
-        tasks.append(localize)
+        # tasks.append(localize)
         tasks.append(rv_charging_off)
         
 
