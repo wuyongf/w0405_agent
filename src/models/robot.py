@@ -1492,10 +1492,10 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
-        # # charging off
-        # self.missionpub.constrcut_charging_off(6,3)
-        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        # if not done: return False  # stop assigning delivery mission
+        # charging off
+        self.missionpub.constrcut_charging_off(6,3)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
 
         # to sender
         done = self.pub_delivery_goto_sender(a_delivery_mission)
