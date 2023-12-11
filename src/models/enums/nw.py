@@ -63,12 +63,13 @@ class DeliveryStatus(Enum):
     Active_BackToChargingStation = 10
 
 class RobotStatusMode(Enum):
-    Init = 1
-    Auto = 2
-    Executing = 3
-    Charging = 4
-    Error = 5
-    Manual = 6
-    FollowME_Unpair = 7
-    FollowME_Paired = 8
+    IDLE = 1
+    EXECUTING = 2
+    CHARGING = 3
+    ESTOP = 4
+    ERROR = 5
+    MANUAL = 6
+    FOLLOWME = 7
+    DELIVERY = 8
+    INSPECTION = 9
     pass

@@ -160,7 +160,7 @@ class RMAPI(api.AuthenticatedAPI):
             "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
-            "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, layout_heading)
+            "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
         }     
 
         return task

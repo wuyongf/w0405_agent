@@ -119,10 +119,10 @@ class Robot:
         self.wld_image_folder_dir = None
 
         ## shared memory
-        tmep_arr = np.zeros(3, dtype=np.float32)
-        self.shm = shared_memory.SharedMemory(create=True, size=tmep_arr.nbytes)
-        self.robot_position = np.ndarray(tmep_arr.shape, dtype=tmep_arr.dtype, buffer=self.shm.buf) # [layout_id, robot_x, robot_y]
-        self.robot_position[:] = tmep_arr[:]
+        temp_arr = np.zeros(3, dtype=np.float32)
+        self.shm = shared_memory.SharedMemory(create=True, size=temp_arr.nbytes)
+        self.robot_position = np.ndarray(temp_arr.shape, dtype=temp_arr.dtype, buffer=self.shm.buf) # [layout_id, robot_x, robot_y]
+        self.robot_position[:] = temp_arr[:]
 
     def sensor_start(self):
         self.mo_iaq.start()
@@ -148,10 +148,10 @@ class Robot:
         pass
 
     def status_start(self, protocol: NWEnum.Protocol):
-        threading.Thread(target=self.update_status, args=(protocol, )).start()  # from RV API
+        threading.Thread(target=self.thread_update_status, args=(protocol, )).start()  # from RV API
         print(f'[robot.status_start]: Start...')
 
-    def update_status(self, protocol):  # update thread
+    def thread_update_status(self, protocol):  # update thread
         while True:
             try:
                 # # rm status <--- rv status
@@ -175,18 +175,18 @@ class Robot:
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
 
-                ## TO NWDB
+                ## To NWDB
                 self.map_nw_id = self.get_current_map_nw_id()
 
                 ## Summary
-                print(f'robot_nw_id: {self.robot_nw_id}')
-                print(f'robot_rm_guid: {self.robot_rm_guid}')
-                print(f'robot_status.battery: {self.status.batteryPct}')
-                print(f'robot_status.map_rm_guid: {self.status.mapPose.mapId}')
-                print(f'robot_status.map_rm_pose: ({pixel_x, pixel_y, heading})')
-                print(f'robot_status.layout_nw_id: {self.layout_nw_id}')
+                print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
+                print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
+                print(f'robot_status.battery:        {self.status.batteryPct}')
+                print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
+                print(f'robot_status.map_rm_pose:    {pixel_x, pixel_y, heading}')
+                print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                print(f'robot_status.layout_rm_pose: ({layout_x, layout_y, layout_heading})')
+                print(f'robot_status.layout_rm_pose: {layout_x, layout_y, layout_heading}')
             except:
                 print('[robot.update_status] error!')
 
@@ -600,7 +600,6 @@ class Robot:
                 self.door_agent_finish = True  # door-agent logic
         print('[goto.check_mission_status] Exiting...')
 
-    
     def thread_check_mission_status(self, task_json, status_callback):
 
         print('[goto.check_mission_status] Starting...')
@@ -689,6 +688,65 @@ class Robot:
         try:
             self.mo_iaq.set_task_mode(False)
             return True
+        except:
+            return False
+
+    # [FollowMe]
+    def follow_me_mode(self, task_json):
+        try:
+            self.rvapi.change_mode_followme()
+            # update nwdb robot.status.mode
+            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
+            return True
+        except:
+            return False
+
+    def follow_me_pair(self, task_json):
+        # call pairing api
+        self.rvapi.post_followme_pair()
+        print('start pairing')
+        # wait for a sec
+        time.sleep(1)
+        count = 0
+        # count down when pairing 10s
+        while count < 10:
+            pairing_state = self.is_paired()
+            print(f'pairing state:{pairing_state}')
+            time.sleep(1)
+            if pairing_state == True:
+                print('paired')
+                # update nwdb robot.status.mode
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
+                return True
+            elif pairing_state == 'PAIRING':
+                count = count + 1
+                print(f'pairing, {10-count}s left')
+        print("pairing time out")
+        return False
+
+    def is_paired(self):
+        result = self.rvapi.get_followme_pairing_state()
+        # while True:
+        #     print(state)
+        # state = RVSchema.FollowMe
+        if result == "PAIRED":
+            print("paired")
+            return True
+        elif result == "PAIRING":
+            print("pairing")
+            return result
+        elif result == "UNPAIRED":
+            print("unpaired")
+            return False
+
+    def follow_me_unpair(self, task_json):
+        try:
+            self.rvapi.post_followme_unpair()
+            time.sleep(2)
+            if self.is_paired() != True:
+                return True
+            else:
+                return False
         except:
             return False
 
@@ -879,70 +937,9 @@ class Robot:
             return True
         except:
             return False
-        
-    
-    # Follow Me
-    def follow_me_mode(self, task_json):
-        try:
-            self.rvapi.change_mode_followme()
-            # update nwdb robot.status.mode
-            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
-            return True
-        except:
-            return False
-
-    def follow_me_pair(self, task_json):
-        # call pairing api
-        self.rvapi.post_followme_pair()
-        print('start pairing')
-        # wait for a sec
-        time.sleep(1)
-        count = 0
-        # count down when pairing 10s
-        while count < 10:
-            pairing_state = self.is_paired()
-            print(f'pairing state:{pairing_state}')
-            time.sleep(1)
-            if pairing_state == True:
-                print('paired')
-                # update nwdb robot.status.mode
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
-                return True
-            elif pairing_state == 'PAIRING':
-                count = count + 1
-                print(f'pairing, {10-count}s left')
-        print("pairing time out")
-        return False
-
-    def is_paired(self):
-        result = self.rvapi.get_followme_pairing_state()
-        # while True:
-        #     print(state)
-        # state = RVSchema.FollowMe
-        if result == "PAIRED":
-            print("paired")
-            return True
-        elif result == "PAIRING":
-            print("pairing")
-            return result
-        elif result == "UNPAIRED":
-            print("unpaired")
-            return False
-
-    def follow_me_unpair(self, task_json):
-        try:
-            self.rvapi.post_followme_unpair()
-            time.sleep(2)
-            if self.is_paired() != True:
-                return True
-            else:
-                return False
-        except:
-            return False
 
     # Module - Lift Inspection
     # todo: lift noise/ lift video/ lift height/ lift vibration/ lift levelling
-
     def lift_vibration_on(self, task_json):
         try:
             self.mo_gyro = MoGyro(self.modb, self.config, self.port_config, self.status_summary)
@@ -1340,7 +1337,6 @@ class Robot:
             return True
         except:
             return False
-
 
     def nw_lift_out(self, task_json, status_callback):
 
@@ -1785,7 +1781,7 @@ class Robot:
             self.rmapi.delete_all_delivery_markers(pos_origin.layout_guid)
             marker_name = self.rmapi.create_delivery_marker(pos_origin.layout_guid, pos_origin.x, pos_origin.y, pos_origin.heading)
             
-            goto = self.rmapi.new_task_delivery_goto(pos_origin.map_guid,marker_name)
+            goto = self.rmapi.new_task_delivery_goto(pos_origin.map_guid,marker_name, pos_origin.heading)
             tasks.append(goto)          
             self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-SENDER')
             print(f'[new_delivery_mission]: configure job end...')
@@ -1804,7 +1800,7 @@ class Robot:
             self.rmapi.delete_all_delivery_markers(pos_destination.layout_guid)
             marker_name = self.rmapi.create_delivery_marker(pos_destination.layout_guid, pos_destination.x, pos_destination.y,pos_destination.heading)
             
-            goto = self.rmapi.new_task_delivery_goto(pos_destination.map_guid,marker_name)
+            goto = self.rmapi.new_task_delivery_goto(pos_destination.map_guid,marker_name, pos_destination.heading)
             tasks.append(goto)
 
             self.rmapi.new_job(self.robot_rm_guid, pos_destination.layout_guid, tasks=tasks, job_name='DELIVERY-GOTO-RECEIVER')
