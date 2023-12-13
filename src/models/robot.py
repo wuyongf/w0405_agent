@@ -84,6 +84,7 @@ class Robot:
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
+        self.mode =  NWEnum.RobotStatusMode.IDLE
 
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -171,7 +172,7 @@ class Robot:
                 self.status.layoutPose.y = layout_y
                 self.status.layoutPose.heading = layout_heading
                 self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
-                
+
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
 
@@ -319,6 +320,12 @@ class Robot:
         except:
             return None
 
+    def get_current_mode(self):
+
+        # check e-stop
+        if(self.rvapi.get_status_estop()): self.mode = NWEnum.RobotStatusMode.ESTOP
+
+        pass
     # basic robot control
     def cancel_moving_task(self):
         self.rvapi.delete_current_task()  # rv
@@ -576,6 +583,7 @@ class Robot:
                     continue_flag = False
                     self.is_moving = False
 
+                    self.mode = NWEnum.RobotStatusMode.IDLE
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
                     ## info [robot.wait_for_robot_arrived]
@@ -622,6 +630,7 @@ class Robot:
                     continue_flag = False
                     self.is_moving = False
 
+                    self.mode = NWEnum.RobotStatusMode.IDLE
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
                     ## info [robot.wait_for_robot_arrived]
@@ -1255,6 +1264,9 @@ class Robot:
         Interact with RV API
         """
         try:
+            # update mode
+            self.mode = NWEnum.RobotStatusMode.CHARGING
+
             # step 0. init. clear current task
             self.cancel_moving_task()
 
@@ -1271,6 +1283,9 @@ class Robot:
 
     def rv_charging_stop(self, task_json, status_callback):
         try:
+            # update mode
+            self.mode = NWEnum.RobotStatusMode.IDLE
+
             # stop charging
             self.rvapi.delete_charging()
 

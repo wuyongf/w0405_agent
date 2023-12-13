@@ -99,6 +99,9 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_position(self.robot.status.mapPose.x, self.robot.status.mapPose.y, self.robot.status.mapPose.heading)
                 self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
+
+                ## robot-status-mode
+                # self.robot.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
             

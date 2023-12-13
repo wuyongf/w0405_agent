@@ -11,6 +11,7 @@ import src.models.robot as Robot
 import src.models.db_robot as NWDB
 import src.models.schema.rm as RMSchema
 import src.models.enums.rm as RMEnum
+import src.models.enums.nw as NWEnum
 
 
 class TaskHandler:
@@ -118,28 +119,33 @@ class TaskHandler:
 
         self.task_status_callback(
             task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
-        
+
+        self.robot.mode = NWEnum.RobotStatusMode.EXECUTING
+
         match task.taskType:
 
             case 'RM-LOCALIZE':
                 res = self.robot.localize(task_json)
                 if (res):
+                    self.robot.mode = NWEnum.RobotStatusMode.IDLE
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
+                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
-            case 'DELIVERY-POST-LOCALIZE':
-                res = self.robot.delivery_post_localize(task_json)
-                if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
-                else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+            # case 'DELIVERY-POST-LOCALIZE':
+            #     res = self.robot.delivery_post_localize(task_json)
+            #     if (res):
+            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+            #     else:
+            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
             case 'RM-GOTO':
                 res = self.robot.goto(task_json, self.task_status_callback)
                 if (res):
                     return 
                 else:
+                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
 
             case 'DELIVERY-GOTO':
@@ -147,6 +153,7 @@ class TaskHandler:
                 if (res):
                     return 
                 else:
+                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 
             case 'NW-GOTO-DEFAULT':
@@ -154,6 +161,7 @@ class TaskHandler:
                 if (res):
                     return 
                 else:
+                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                             
             case 'RV-LEDON': 

@@ -243,6 +243,12 @@ class RVAPI(api.AuthenticatedAPI):
         
         print(f'robot is ready!!!')
         return True
+    
+    # status-mode
+    def get_status_estop(self):
+        json_data = self.get('/baseControl/v1/estop')
+        if json_data is None: return json_data
+        return json_data["stopped"]
 
 
 if __name__ == '__main__':
@@ -250,6 +256,9 @@ if __name__ == '__main__':
     # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
+
+    res = rvapi.get_status_estop()
+    print(res)
 
     ####################################################################################################
     # Robot
@@ -292,7 +301,7 @@ if __name__ == '__main__':
     # print(res.state)
 
     # rvapi.change_map2('5W_20230308_2', 'WP01')
-    rvapi.change_map2('5W516-20230424', 'CHARGING')
+    # rvapi.change_map2('5W516-20230424', 'CHARGING')
     # res = rvapi.get_active_map()
     # print(res.name)
 
