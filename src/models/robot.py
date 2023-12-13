@@ -373,7 +373,7 @@ class Robot:
             # pose_is_valid = self.rvapi.check_current_pose_valid()
             map_is_active = self.rvapi.get_active_map().name == rv_map_name
             if (pose_is_valid & map_is_active): 
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.Auto)
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
                 return True
             else: return False
         except:
@@ -435,7 +435,7 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
-                                                rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)
+                                                rm_map_metadata.y, rm_map_metadata.heading)
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
@@ -696,7 +696,7 @@ class Robot:
         try:
             self.rvapi.change_mode_followme()
             # update nwdb robot.status.mode
-            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Unpair)
+            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
             return True
         except:
             return False
@@ -716,7 +716,7 @@ class Robot:
             if pairing_state == True:
                 print('paired')
                 # update nwdb robot.status.mode
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FollowME_Paired)
+                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
                 return True
             elif pairing_state == 'PAIRING':
                 count = count + 1
