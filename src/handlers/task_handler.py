@@ -68,15 +68,23 @@ class TaskHandler:
         
         if task.scheduleType == 1:  # Abort
             self.cancel_task(task_str)
+            self.robot.task_status = NWEnum.TaskStatus.STOP
             return
         if task.scheduleType == 2:  # Pause
             self.pause_task(task_str)
+            self.robot.task_status = NWEnum.TaskStatus.PAUSE
             return
         if task.scheduleType == 3:  # Resume
             self.resume_task(task_str)
+            self.robot.task_status = NWEnum.TaskStatus.EXECUTING
             return
         if task.scheduleType == 4:  # Start
-            self.execute_task(task_str)
+            self.robot.task_status = NWEnum.TaskStatus.EXECUTING
+            res = self.execute_task(task_str)
+            if(res):
+                self.robot.task_status = NWEnum.TaskStatus.NULL
+            else:
+                self.robot.task_status = NWEnum.TaskStatus.ERROR
             return
 
     def cancel_task(self, task_str):
@@ -120,119 +128,119 @@ class TaskHandler:
         self.task_status_callback(
             task.taskId, task.taskType, RMEnum.TaskStatusType.Executing)
 
-        self.robot.mode = NWEnum.RobotStatusMode.EXECUTING
-
         match task.taskType:
 
             case 'RM-LOCALIZE':
                 res = self.robot.localize(task_json)
                 if (res):
-                    self.robot.mode = NWEnum.RobotStatusMode.IDLE
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-
-            # case 'DELIVERY-POST-LOCALIZE':
-            #     res = self.robot.delivery_post_localize(task_json)
-            #     if (res):
-            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
-            #     else:
-            #         return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'RM-GOTO':
                 res = self.robot.goto(task_json, self.task_status_callback)
                 if (res):
-                    return 
+                    return res
                 else:
-                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'DELIVERY-GOTO':
                 res = self.robot.delivery_goto(task_json, self.task_status_callback)
                 if (res):
-                    return 
+                    return res
                 else:
-                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'NW-GOTO-DEFAULT':
                 res = self.robot.goto(task_json, self.task_status_callback)
                 if (res):
-                    return 
+                    return res
                 else:
-                    self.robot.mode = NWEnum.RobotStatusMode.ERROR
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                             
             case 'RV-LEDON': 
                 res = self.robot.led_on(task)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'RV-FOLLOWME-MODE':
                 res = self.robot.follow_me_mode(task)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'RV-FOLLOWME-PAIR':
                 res = self.robot.follow_me_pair(task)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'RV-FOLLOWME-UNPAIR':
                 res = self.robot.follow_me_unpair(task)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             
             case 'RV-LEDOFF':
                 res = self.robot.led_off(task)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                     
             case 'IAQ-ON':
                 res = self.robot.iaq_on(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'IAQ-OFF':
                 res = self.robot.iaq_off(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'LIFT-LEVLLING':
                 res = self.robot.inspect_lift_levelling(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             
             case 'LIFT-VIBRATION-ON':  
                 res = self.robot.lift_vibration_on(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)  
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res  
 
             case 'LIFT-VIBRATION-OFF':
                 res = self.robot.lift_vibration_off()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'DELIVERY-CONFIGURATION':
                 res = self.robot.get_available_delivery_mission()
@@ -240,125 +248,141 @@ class TaskHandler:
                     threading.Thread(target=self.robot.delivery_mission_publisher).start()
                     return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)  
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res  
                    
             case 'DELIVERY-LOADING-PACKAGE':
                 res = self.robot.wait_for_loading_package()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
+            
             case 'DELIVERY-UNLOADING-PACKAGE':
                 res = self.robot.wait_for_unloading_package()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'RV-CHARGING-CONFIGURATION':
                 res = True
                 if (res):
                     threading.Thread(target=self.robot.charging_mission_publisher, args=(task_json, self.task_status_callback)).start()
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
-                
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
+            
             case 'RV-CHARGING-ON':
                 print(f'RV-CHARGING-ON JSON: {task_json}')
                 res = self.robot.rv_charging_start(task_json, self.task_status_callback)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             
             case 'RV-CHARGING-OFF':
                 print(f'RV-CHARGING-OFF JSON: {task_json}')
                 res = self.robot.rv_charging_stop(task_json, self.task_status_callback)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'NW-LIFT-IN':
                 print(f'NW-LIFT-IN JSON: {task_json}')
                 res = self.robot.nw_lift_in(task_json, self.task_status_callback)
                 if (res):
-                    return
+                    return res
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'NW-LIFT-OUT':
                 print(f'NW-LIFT-OUT JSON: {task_json}')
                 res = self.robot.nw_lift_out(task_json, self.task_status_callback)
                 if (res):
-                    return
+                    return res
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'NW-LIFT-TO':
                 print(f'NW-LIFT-TO JSON: {task_json}')
                 res = self.robot.nw_lift_to(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'NW-LIFT-RELEASE':
                 print(f'NW-LIFT-RELEASE JSON: {task_json}')
                 res = self.robot.nw_lift_release()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'LIFT-NOISE-DETECT-START':
                 print(f'LIFT-NOISE-DETECT-START JSON: {task_json}')
                 res = self.robot.lift_noise_detect_start(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'LIFT-NOISE-DETECT-END':
                 # print(f'LIFT-NOISE-DETECT-END JSON: {task_json}')
                 res = self.robot.lift_noise_detect_end()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             
             case 'LIFT-NOISE-DETECT-ANALYSIS':
                 # print(f'LIFT-NOISE-DETECT-END JSON: {task_json}')
                 res = self.robot.lift_noise_detect_analysis()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
             case 'WATER-LEAKAGE-DETECT-START':
                 print(f'WATER-LEAKAGE-DETECT-START JSON: {task_json}')
                 res = self.robot.water_leakage_detect_start(task_json)
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                 
             case 'WATER-LEAKAGE-DETECT-END':
                 # print(f'WATER-LEAKAGE-DETECT-END JSON: {task_json}')
                 res = self.robot.water_leakage_detect_end()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             
             case 'WATER-LEAKAGE-DETECT-ANALYSIS':
                 # print(f'WATER-LEAKAGE-DETECT-END JSON: {task_json}')
                 res = self.robot.water_leakage_detect_analysis()
                 if (res):
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:
-                    return self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
 
 if __name__ == "__main__":

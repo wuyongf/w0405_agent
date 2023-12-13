@@ -73,3 +73,11 @@ class RobotStatusMode(Enum):
     DELIVERY = 8
     INSPECTION = 9
     pass
+
+class TaskStatus(Enum):
+    NULL = 1
+    EXECUTING = 2
+    PAUSE = 3
+    STOP = 4
+    ERROR = 5
+    pass

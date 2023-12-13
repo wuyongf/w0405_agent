@@ -101,7 +101,7 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
 
                 ## robot-status-mode
-                # self.robot.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
+                self.robot.nwdb.update_robot_status_mode(self.robot.mode)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
             

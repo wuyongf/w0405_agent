@@ -84,7 +84,15 @@ class Robot:
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
+
+        ## robot status (mission)
         self.mode =  NWEnum.RobotStatusMode.IDLE
+        self.task_status = NWEnum.TaskStatus.NULL
+        self.is_charging = False
+        self.is_moving = False
+        self.has_arrived = False
+        self.is_manual_control = False
+        self.is_followme = False
 
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -105,9 +113,7 @@ class Robot:
 
         ## lift related
         self.last_goto_json = None
-        self.lift_task_json = None
-        self.is_moving = True
-        self.has_arrived = False
+        self.lift_task_json = None       
         
         ## nw-door-agent
         self.door_agent_start = False
@@ -188,6 +194,7 @@ class Robot:
                 print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
                 print(f'robot_status.layout_rm_pose: {layout_x, layout_y, layout_heading}')
+                print(f'robot_status.mode:           {self.mode}')
             except:
                 print('[robot.update_status] error!')
 
@@ -322,10 +329,37 @@ class Robot:
 
     def get_current_mode(self):
 
-        # check e-stop
-        if(self.rvapi.get_status_estop()): self.mode = NWEnum.RobotStatusMode.ESTOP
+        # E-Stop
+        if(self.rvapi.get_status_estop()): 
+            self.mode = NWEnum.RobotStatusMode.ESTOP
+            return
+        
+        # Charging
+        if(self.is_charging):
+            self.mode = NWEnum.RobotStatusMode.CHARGING
+            return
+        
+        # Manual Control
+        if(self.is_manual_control):
+            self.mode = NWEnum.RobotStatusMode.MANUAL
+            return
+        
+        # FollowME
+        if(self.is_followme):
+            self.mode = NWEnum.RobotStatusMode.FOLLOWME
+            return
 
-        pass
+        # Executing
+        if(self.is_moving): 
+            self.mode = NWEnum.RobotStatusMode.EXECUTING
+            return
+
+        # IDEL
+        if((self.task_status == NWEnum.TaskStatus.NULL) and (self.is_moving == False)):
+            self.mode = NWEnum.RobotStatusMode.IDLE
+            return
+
+
     # basic robot control
     def cancel_moving_task(self):
         self.rvapi.delete_current_task()  # rv
@@ -380,7 +414,7 @@ class Robot:
             # pose_is_valid = self.rvapi.check_current_pose_valid()
             map_is_active = self.rvapi.get_active_map().name == rv_map_name
             if (pose_is_valid & map_is_active): 
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
+                # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
                 return True
             else: return False
         except:
@@ -705,12 +739,13 @@ class Robot:
         try:
             self.rvapi.change_mode_followme()
             # update nwdb robot.status.mode
-            self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
+            # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
             return True
         except:
             return False
 
     def follow_me_pair(self, task_json):
+        
         # call pairing api
         self.rvapi.post_followme_pair()
         print('start pairing')
@@ -725,7 +760,8 @@ class Robot:
             if pairing_state == True:
                 print('paired')
                 # update nwdb robot.status.mode
-                self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
+                self.is_followme = True
+                # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
                 return True
             elif pairing_state == 'PAIRING':
                 count = count + 1
@@ -753,6 +789,7 @@ class Robot:
             self.rvapi.post_followme_unpair()
             time.sleep(2)
             if self.is_paired() != True:
+                self.is_followme = False
                 return True
             else:
                 return False
@@ -1264,8 +1301,8 @@ class Robot:
         Interact with RV API
         """
         try:
-            # update mode
-            self.mode = NWEnum.RobotStatusMode.CHARGING
+            # # update robot_status
+            self.is_charging = True
 
             # step 0. init. clear current task
             self.cancel_moving_task()
@@ -1283,8 +1320,8 @@ class Robot:
 
     def rv_charging_stop(self, task_json, status_callback):
         try:
-            # update mode
-            self.mode = NWEnum.RobotStatusMode.IDLE
+            # # update robot_status
+            self.is_charging = False
 
             # stop charging
             self.rvapi.delete_charging()

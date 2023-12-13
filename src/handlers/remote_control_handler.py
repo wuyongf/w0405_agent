@@ -32,6 +32,7 @@ class RemoteControlHandler:
         self.subscriber.message_callback_add("/rm/move", self.on_message_move)
 
         # RV-Joystick
+        self.robot = robot
         self.joystick = robot.rvjoystick
 
         # # yf config
@@ -53,8 +54,12 @@ class RemoteControlHandler:
     def on_message_mode(self, client, userdata, msg):
         print("[remote_control_handler]: Received Teleoperation mode change!")
         self.teleoperation = bool(json.loads(msg.payload)["teleoperation"])
-        if(self.teleoperation == True):self.joystick.enable()
-        else: self.joystick.disable()
+        if(self.teleoperation == True):
+            self.robot.is_manual_control = True
+            self.joystick.enable()
+        else: 
+            self.robot.is_manual_control = False
+            self.joystick.disable()
         print(self.teleoperation)
 
     def on_message_move(self, client, userdata, msg):
