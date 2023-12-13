@@ -43,8 +43,8 @@ class NWMQTT():
 
     def __on_message(self, client, userdata, msg):
         # print(msg.topic+" "+str(msg.payload))
-        print("message received ", str(msg.payload.decode("utf-8")))
-        print("message topic=", msg.topic)
+        # print("message received ", str(msg.payload.decode("utf-8")))
+        # print("message topic=", msg.topic)
         self.__parse_message(msg)
 
     def __parse_message(self, msg):
@@ -95,7 +95,7 @@ class NWMQTT():
 
         if topic == 'nw/get/robot_id':
             topic_publish = 'robot_id'
-            print('getting the status of robot_id, True')
+            # print('getting the status of robot_id, True')
             get_status = {'robot_guid': self.robot_guid, 'robot_id': self.robot_id}
 
         if topic == 'nw/get/lock':

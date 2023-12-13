@@ -81,6 +81,7 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
                 self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
+                self.robot.nwdb.update_robot_status_mode(self.robot.mode)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
 
@@ -101,7 +102,7 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
 
                 ## robot-status-mode
-                self.robot.nwdb.update_robot_status_mode(self.robot.mode)
+                
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
             

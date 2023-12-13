@@ -185,7 +185,12 @@ class Robot:
                 ## To NWDB
                 self.map_nw_id = self.get_current_map_nw_id()
 
+                ## Mode
+                self.get_current_mode()
+                # self.rvapi.get_robot_is_moving()
+
                 ## Summary
+                print(f'-------------------------------------------------------------------')
                 print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
                 print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
                 print(f'robot_status.battery:        {self.status.batteryPct}')
@@ -195,6 +200,7 @@ class Robot:
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
                 print(f'robot_status.layout_rm_pose: {layout_x, layout_y, layout_heading}')
                 print(f'robot_status.mode:           {self.mode}')
+                print(f'-------------------------------------------------------------------')
             except:
                 print('[robot.update_status] error!')
 
@@ -350,7 +356,7 @@ class Robot:
             return
 
         # Executing
-        if(self.is_moving): 
+        if(self.task_status == NWEnum.TaskStatus.EXECUTING or self.is_moving): 
             self.mode = NWEnum.RobotStatusMode.EXECUTING
             return
 
@@ -617,7 +623,6 @@ class Robot:
                     continue_flag = False
                     self.is_moving = False
 
-                    self.mode = NWEnum.RobotStatusMode.IDLE
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
                     ## info [robot.wait_for_robot_arrived]
@@ -664,7 +669,6 @@ class Robot:
                     continue_flag = False
                     self.is_moving = False
 
-                    self.mode = NWEnum.RobotStatusMode.IDLE
                     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
                     ## info [robot.wait_for_robot_arrived]
@@ -738,8 +742,7 @@ class Robot:
     def follow_me_mode(self, task_json):
         try:
             self.rvapi.change_mode_followme()
-            # update nwdb robot.status.mode
-            # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
+
             return True
         except:
             return False
@@ -761,7 +764,7 @@ class Robot:
                 print('paired')
                 # update nwdb robot.status.mode
                 self.is_followme = True
-                # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.FOLLOWME)
+
                 return True
             elif pairing_state == 'PAIRING':
                 count = count + 1
@@ -1578,29 +1581,14 @@ class Robot:
         done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
-        # go back charging
-        self.missionpub.constrcut_go_back_charging(6,3)
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-
-        # charging
-        self.missionpub.constrcut_charging_on(6)
+        # # go back charging
+        # self.missionpub.constrcut_go_back_charging(6,3)
         # self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
-        # # back to charging stataion:  
-        # # 1. goto
-        # done = self.charging_goto()
-        # if not done: return False
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        # done = self.wait_for_nw_goto_done(duration_min=25)
-        # # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         # if not done: return False  # stop assigning delivery mission
-
-        # # 2. charging
-        # done = self.charging_on()
-        # if not done: return False
+        
+        # # charging
+        # self.missionpub.constrcut_charging_on(6)
         # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         # if not done: return False  # stop assigning delivery mission
 
