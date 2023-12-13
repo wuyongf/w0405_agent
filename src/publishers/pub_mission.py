@@ -407,7 +407,7 @@ if __name__ == '__main__':
     ### [config]
     skill_config_dir = '../../conf/rm_skill.properties'
     config = umethods.load_config('../../conf/rm_config.properties')
-    self.skill_config = umethods.load_config(skill_config_dir)
+    skill_config = umethods.load_config(skill_config_dir)
     rmapi = RMAPI(config, skill_config_dir)
 
     pub = MissionPublisher(skill_config_dir, rmapi)

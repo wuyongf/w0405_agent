@@ -46,7 +46,7 @@ class EventHandler:
     def add_description(self, description):
         self.description = description
     def add_mapPose(self):
-        self.mapPose = RMSchema.mapPose(mapId='1f7f78ab-5a3b-467b-9179-f7508a99ad6e')
+        self.mapPose = RMSchema.mapPose(mapId='c5f360ec-f4be-4978-a281-0a569dab1174')
         # self.mapPose = self.robot.get_current_mapPose()
         # self.mapPose = self.get_mapPose()
     def add_medias(self, medias):
@@ -64,14 +64,14 @@ class EventHandler:
         # medias.clear()
         self.add_medias(medias)
     
-    def publish_test(self, title, description):
-        self.add_title(f'{title}')
-        self.add_severity(1)
-        self.add_description(f'{description}')
-        self.add_mapPose()
-        self.add_empty_medias()
+    # def publish_test(self, title, description):
+    #     self.add_title(f'{title}')
+    #     self.add_severity(1)
+    #     self.add_description(f'{description}')
+    #     self.add_mapPose()
+    #     self.add_empty_medias()
 
-        self.publish()
+    #     self.publish()
 
     def publish_test(self, title, description):
         self.add_title(f'{title}')
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     event_handler.start()
 
     # event_handler.add_empty_medias()
-    event_handler.publish_test('AI Module Alert: Abnormal Lift Noise Detected!', 'Please check Mission 211 records for the details.')
+    event_handler.publish_test('Demo Alert: Abnormal Message Detected!', 'Please check <mission xxx> records for the details.')
     # root_path = os.path.abspath('../../')
     # event_path = os.path.join(root_path, "data/event-images")
     # task_id = '20230331_145659_0001'
