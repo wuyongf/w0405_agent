@@ -41,6 +41,8 @@ from src.handlers.ai_audio_handler import AudioAgent
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
+# Notification
+from src.handlers.event_handler import EventHandler
 
 class Robot:
     def __init__(self, config, port_config, skill_config_dir, ai_config):
@@ -62,6 +64,9 @@ class Robot:
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)
+        ## Notification
+        self.event_handler = EventHandler("localhost", self.status_summary)
+        self.event_handler.start()
 
         #
         self.config = config
@@ -977,6 +982,22 @@ class Robot:
                 # upload to nwdb
                 self.nwdb.insert_new_thermal_analysis(thermal_id=thermal_id, image_name=img_path.name, is_abnormal=is_abnormal, 
                                                       layout_id=layout_id, robot_x=robot_x, robot_y=robot_y, created_date=formatted_timestamp)
+                
+                if(is_abnormal):
+                    layout_rm_guid = self.nwdb.get_single_value('robot.map.layout', 'rm_guid', 'ID', layout_id)
+                    map_rm_guid = self.nwdb.get_single_value('robot.map', 'rm_guid', 'layout_id', layout_id)
+                    params = self.rmapi.get_layout_map_list(layout_rm_guid, map_rm_guid)
+                    self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                                    params.scale, params.angle, params.translate)
+                    map_x, map_y, map_heading = self.T_RM.find_cur_map_point(robot_x, robot_y, 0)
+
+                    medias = []
+                    medias.append(RMSchema.Meida(predict_img_dir, 1, "Ceiling"))
+                    # self.event_handler.add_mapPose(is_current_pos=True)
+                    self.event_handler.add_mapPose(is_current_pos=False, pos_x=map_x, pos_y=map_y, pos_theta=0, map_rm_guid=map_rm_guid)
+                    self.event_handler.publish_medias('Water Leakage Detected!','Please check...',medias)
+
+
                 # print(f'<debug 8>')
             if True in abnormal_list:
                 self.nwdb.update_single_value('ai.water_leakage.thermal', "is_abnormal", 1, 'ID', thermal_id)
@@ -1586,7 +1607,7 @@ class Robot:
         # self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
         # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
         # if not done: return False  # stop assigning delivery mission
-        
+
         # # charging
         # self.missionpub.constrcut_charging_on(6)
         # done = self.wait_for_job_done(duration_min=15)  # wait for job is done

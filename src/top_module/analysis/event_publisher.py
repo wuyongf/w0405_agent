@@ -149,6 +149,6 @@ if __name__ == "__main__":
     event_handler.add_medias(medias)
 
     event_handler.publish()
-    event_handler.publish()
-    event_handler.publish()
+    # event_handler.publish()
+    # event_handler.publish()
     
