@@ -123,6 +123,7 @@ class Robot:
         ## nw-door-agent
         self.door_agent_start = False
         self.door_agent_finish = False
+        self.door_configured = False
 
         ## ai related
         self.lnd_mission_id     = None
@@ -161,8 +162,23 @@ class Robot:
 
     def status_start(self, protocol: NWEnum.Protocol):
         threading.Thread(target=self.thread_update_status, args=(protocol, )).start()  # from RV API
+        threading.Thread(target=self.thread_update_position).start()  # from RV API
         print(f'[robot.status_start]: Start...')
 
+    def thread_update_position(self):
+        while True:
+            # layout
+            self.layout_nw_id = self.get_current_layout_nw_id()
+            layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
+            self.status.layoutPose.x = layout_x
+            self.status.layoutPose.y = layout_y
+            self.status.layoutPose.heading = layout_heading
+            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
+
+            time.sleep(0.1)
+
+
+    
     def thread_update_status(self, protocol):  # update thread
         while True:
             try:
@@ -176,13 +192,7 @@ class Robot:
                 self.status.mapPose.y = pixel_y
                 self.status.mapPose.heading = heading
 
-                # layout
-                self.layout_nw_id = self.get_current_layout_nw_id()
-                layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
-                self.status.layoutPose.x = layout_x
-                self.status.layoutPose.y = layout_y
-                self.status.layoutPose.heading = layout_heading
-                self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
+
 
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
@@ -203,7 +213,7 @@ class Robot:
                 print(f'robot_status.map_rm_pose:    {pixel_x, pixel_y, heading}')
                 print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                print(f'robot_status.layout_rm_pose: {layout_x, layout_y, layout_heading}')
+                print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
                 print(f'robot_status.mode:           {self.mode}')
                 print(f'-------------------------------------------------------------------')
             except:
@@ -471,9 +481,11 @@ class Robot:
                 # threading.Thread(target=self.lift_mission_publisher).start()
                 return True
 
+            self.door_configured = False
             self.door_agent_start = True  # door-agent logic
             self.door_agent_finish = False
-            time.sleep(1)
+            while( not self.door_configured): time.sleep(1)
+            print(f'[goto] door configuredd!')
 
             # step 0. init. clear current task
             self.cancel_moving_task()
@@ -537,9 +549,11 @@ class Robot:
             self.rvapi.put_safety_zone_minimum()
             self.rvapi.put_maximum_speed(0.3)
 
+            self.door_configured = False
             self.door_agent_start = True  # door-agent logic
             self.door_agent_finish = False
-            time.sleep(1)
+            while( not self.door_configured): time.sleep(1)
+            print(f'[goto] door configuredd!')
 
             # step 0. init. clear current task
             self.cancel_moving_task()

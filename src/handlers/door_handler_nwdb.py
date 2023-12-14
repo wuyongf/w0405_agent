@@ -199,6 +199,7 @@ class NWDoorRegionAgent:
         self.configure_doors()
         print(f'[door_handler.start]: configure doors finish...')
         self.global_check_flag = True
+        self.robot.door_configured = True
         pass
 
     def end(self):
