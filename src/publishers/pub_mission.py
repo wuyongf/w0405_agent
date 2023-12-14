@@ -135,7 +135,7 @@ class MissionPublisher:
         return tasks
 
 
-    def patrol_6f_iaq(self, current_floor_id):
+    def patrol_6f(self, current_floor_id):
         
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
@@ -145,20 +145,31 @@ class MissionPublisher:
         iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
         iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
+        water_leak_start = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-START'), layout_rm_guid)
+        water_leak_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-END'), layout_rm_guid)
+        water_leak_analysis = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-ANALYSIS'), layout_rm_guid)
+
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
 
-        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 90)
+        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 180)
         q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
+        q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
+        q10 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
         
         tasks = []
         tasks.append(iaq_on)
+        tasks.append(water_leak_start)
 
         tasks.append(q0)
         tasks.append(q1)
+        tasks.append(q9)
+        tasks.append(q10)
 
         tasks.append(q0)
+        tasks.append(water_leak_end)
         tasks.append(iaq_off)
+        tasks.append(water_leak_analysis)
         return tasks
     
 
@@ -365,7 +376,7 @@ class MissionPublisher:
     def constrcut_patrol_4n6(self):
         tasks = []
         x1 = self.patrol_charging_off(6,180)
-        x2 = self.patrol_6f_iaq(6)
+        x2 = self.patrol_6f(6)
         x3 = self.tasks_take_lift(6,4)
         x4 = self.patrol_4f_iaq(4)
         x5 = self.tasks_take_lift(4,6)
@@ -399,6 +410,17 @@ class MissionPublisher:
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
         self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
 
+    def construct_patrol(self):
+        tasks = []
+        x1 = self.patrol_6f(6)
+        tasks = x1
+
+        mission_name = '6F-Patrol-Rev01'
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
+
 
 
 
@@ -412,6 +434,6 @@ if __name__ == '__main__':
 
     pub = MissionPublisher(skill_config_dir, rmapi)
 
-    pub.construct_4finno_iaq()
+    pub.construct_patrol()
     
     pass
