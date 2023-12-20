@@ -4,6 +4,7 @@ import rpc
 import struct
 import os
 import time
+from src.models.mqtt_nw_publisher import NWMQTTPub
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
@@ -166,4 +167,8 @@ class ThermalCam:
         return filepath
 
 if __name__ == '__main__':
+
+    
+    # nwmqttpub = NWMQTTPub(config)
+
     camera = ThermalCam(debug=True)
