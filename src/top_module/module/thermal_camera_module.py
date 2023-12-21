@@ -4,10 +4,9 @@ import rpc
 import struct
 import os
 import time
-from src.models.mqtt_nw_publisher import NWMQTTPub
 
 class ThermalCam:
-    def __init__(self, port="/dev/ttyACM0", debug=False):
+    def __init__(self, port="/dev/ttyACM0", debug=False, nwmqttpub=None):
         # Uncomment the below lines if openmv deivce port changed
         #
         # import serial.tools.list_ports
@@ -15,6 +14,10 @@ class ThermalCam:
         # for port, desc, hwid in serial.tools.list_ports.comports():
         #     print("{} : {} [{}]".format(port, desc, hwid))
         # port = input("Please enter a port name: ")
+
+        self.nwmqttpub = nwmqttpub
+        self.angle = 0
+        self.nwmqttpub.rotate_camera(0)
 
         self.interface = rpc.rpc_usb_vcp_master(port)
         self.image_path = None
@@ -124,8 +127,20 @@ class ThermalCam:
                     if event.key == pygame.K_w:
                         pygame.image.save(image, os.path.join(self.save_folder, "wet", filename))
 
-                    if event.key == pygame.K_a:
+                    if event.key == pygame.K_o:
                         pygame.image.save(image, os.path.join(self.save_folder, "other", filename))
+                    
+                    if event.key == pygame.K_UP:
+                        self.angle += 10
+                        if self.angle >= 180: self.angle = 180
+                        # print(self.angle)
+                        self.nwmqttpub.rotate_camera(self.angle)
+                        
+                    if event.key == pygame.K_DOWN:
+                        self.angle -= 10
+                        if self.angle <= 0: self.angle = 0
+                        self.nwmqttpub.rotate_camera(self.angle)
+
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -168,7 +183,18 @@ class ThermalCam:
 
 if __name__ == '__main__':
 
-    
-    # nwmqttpub = NWMQTTPub(config)
+    from src.models.mqtt_nw_publisher import NWMQTTPub
+    from src.models.mqtt_nw import NWMQTT
 
-    camera = ThermalCam(debug=True)
+    import src.utils.methods as umethods
+    config = umethods.load_config('/home/nw/Documents/GitHub/w0405_agent/conf/config.properties')
+    port_config = umethods.load_config('/home/nw/Documents/GitHub/w0405_agent/conf/port_config.properties')
+
+    nwmqtt = NWMQTT(config, port_config)
+    nwmqtt.start()
+
+    nwmqttpub = NWMQTTPub(config)
+    nwmqttpub.start()
+    # nwmqttpub.rotate_camera(90)
+
+    camera = ThermalCam(debug=True, nwmqttpub= nwmqttpub)
