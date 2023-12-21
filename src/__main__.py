@@ -28,7 +28,7 @@ def run_robot_agent():
 if __name__ == '__main__':
 
     # # Store the current directory
-    # previous_directory = os.getcwd()
+    # previous_directory = os.getc-wd()
 
     # # Create a thread and start it
     # thread = threading.Thread(target=run_robot_agent)
