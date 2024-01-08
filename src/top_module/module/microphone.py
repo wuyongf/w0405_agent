@@ -6,7 +6,7 @@ import threading
 class Recorder:
     def __init__(self):
         self.sampling_rate = 44100
-        self.n_channels = 1
+        self.n_channels = 2 #1
         self.frames_per_buffer = 1024
         
 

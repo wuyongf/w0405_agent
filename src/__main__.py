@@ -12,8 +12,9 @@ import handlers.status_handler as status_handler
 import handlers.remote_control_handler as remote_control_handler
 import handlers.task_handler as task_handler
 from src.handlers.door_handler_nwdb import NWDoorAgent, NWDoorRegionAgent
-import src.models.robot as Robot
 import src.models.enums.nw as NWEnum
+import src.models.robot as Robot
+# import src.models.mir_robot as Robot
 
 def run_robot_agent():
 
