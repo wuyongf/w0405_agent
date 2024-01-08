@@ -567,9 +567,12 @@ class Robot:
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
                                       rv_map_metadata.y, rv_map_metadata.angle)
             # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)  ## new     
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
             #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)  ## 0
             rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
                                                 rm_map_metadata.y, rm_map_metadata.heading )  ## 271
+
             # step3. rv. create point base on rm. localization.
             # print('step3')
             self.rvapi.delete_all_waypoints(rv_map_name)
