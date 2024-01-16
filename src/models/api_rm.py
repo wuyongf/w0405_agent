@@ -81,16 +81,15 @@ class RMAPI(api.AuthenticatedAPI):
     ### [mission]
     def list_missions(self):
         payload = {}
-        payload["pageNo"] = sys.maxsize
-        payload["pageSize"] = sys.maxsize
+        payload["pageNo"] =    sys.maxsize
+        payload["pageSize"] =  100
         payload["filter"] = []
         payload["order"] = [{"column":"created_at", "type":"desc"}]
         return self.post('/mission/list', json.dumps(payload))
     
     def list_rm_missions(self):
-        
+    
         data = self.list_missions()
-
         results = data['result']['list']
         # Iterate over each item
         rm_missions = []
@@ -130,16 +129,17 @@ class RMAPI(api.AuthenticatedAPI):
             return current_time
 
         # start time
-        start_time = convertDate(2024,1,12,17,1,40,8)
-        end_time = convertDate(2024,1,12,17,50,0,20)
+        start_time = convertDate(2024,1,16,16,00,00,offset_hours = 8)
+        end_time =   convertDate(2024,1,16,23,00,00,offset_hours = 8)
 
         payload = {}
-        payload["mode"] = 3
         # payload["layoutId"] = '00000000-0000-0000-0000-000000000000'#'0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d'#
         # payload["layoutName"] = "6F-Layout"
-        payload['id'] = '45675968-fa97-4776-8e20-ed24e1b02014'
         # payload["name"] = 'ChargingOffOn'
+        payload["mode"] = 3
+        payload['id'] = '45675968-fa97-4776-8e20-ed24e1b02014'
         payload["startTime"]   = start_time #'2024-01-12T12:37:00Z'
+        payload["endTime"] = end_time
         payload["scheduledAt"] = start_time #'2024-01-12T12:37:00Z'
         payload["status"] = 4
         payload["repeatType"] = 1
@@ -910,7 +910,7 @@ if __name__ == '__main__':
     rmapi = RMAPI(config, skill_config_dir)
 
 
-    rmapi.update_rm_mission()
+    # rmapi.update_rm_mission()
 
     res = rmapi.list_rm_missions()
     print(res)
