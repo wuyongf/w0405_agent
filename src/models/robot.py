@@ -13,6 +13,7 @@ import src.models.api_rv as RVAPI
 import src.models.mqtt_rv as RVMQTT
 from src.models.mqtt_rv_joystick import RVJoyStick
 import src.models.api_rm as RMAPI
+from src.models.api_nw import NWAPI
 from src.models.mqtt_nw import NWMQTT
 from src.models.mqtt_nw_publisher import NWMQTTPub
 from src.models.mqtt_emsd_lift import EMSDLift
@@ -50,6 +51,7 @@ class Robot:
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
         self.rmapi = RMAPI.RMAPI(config, skill_config_dir)
+        self.nwapi = NWAPI(config)
         self.nwmqtt = NWMQTT(config, port_config)
         self.nwmqttpub = NWMQTTPub(config)
         self.emsdlift = EMSDLift(config)
@@ -1593,7 +1595,7 @@ class Robot:
         done = self.pub_delivery_goto_sender(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToSender.value, self.a_delivery_mission.ID)
-        done = self.wait_for_nw_goto_done(duration_min=25)
+        done = self.wait_for_nw_goto_done(duration_min=30)
         # done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
@@ -1601,14 +1603,14 @@ class Robot:
         done = self.pub_delivery_wait_for_loading(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForLoading.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        done = self.wait_for_job_done(duration_min=30)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # to receiver
         done = self.pub_delivery_goto_receiver(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_ToReceiver.value, self.a_delivery_mission.ID)
-        done = self.wait_for_nw_goto_done(duration_min=25)
+        done = self.wait_for_nw_goto_done(duration_min=30)
         # done = self.wait_for_job_done(duration_min=25)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
@@ -1616,7 +1618,7 @@ class Robot:
         done = self.pub_delivery_wait_for_unloading(a_delivery_mission)
         if not done: return False
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_WaitForUnloading.value,self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        done = self.wait_for_job_done(duration_min=30)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
         # # go back charging
@@ -1892,6 +1894,7 @@ class Robot:
         try:
             # pos_origin details
             pos_origin = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_origin_id)
+            person_info = self.nwdb.get_delivery_person_info(a_delivery_mission.sender_id)
             print(f'[delivery_wait_for_loading]: get_pos_origin_detail...')
 
             # Job-Delivery START
@@ -1911,6 +1914,11 @@ class Robot:
             self.rmapi.new_job(self.robot_rm_guid, pos_origin.layout_guid, tasks=tasks, job_name='DELIVERY-LOADING-PACKAGE')
             print(f'[delivery_wait_for_loading]: configure job end...')
 
+            # Notify User
+            number = person_info.number
+            message = f"The robot has reached {pos_origin.pos_name}. Please load your packages."
+            self.nwapi.post_delivery_sms(number, message)
+
             return True
         except:
             return False
@@ -1919,6 +1927,7 @@ class Robot:
         try:
             # pos_origin details
             pos_destination = self.nwdb.get_delivery_position_detail(a_delivery_mission.pos_destination_id)
+            person_info = self.nwdb.get_delivery_person_info(a_delivery_mission.receiver_id)
             print(f'[delivery_wait_for_unloading]: get_pos_origin_detail...')
 
             # Job-Delivery START
@@ -1940,6 +1949,11 @@ class Robot:
                                tasks=tasks,
                                job_name='DELIVERY-WAITUNLOADING')
             print(f'[delivery_wait_for_unloading]: configure job end...')
+
+            # Notify User
+            number = person_info.number
+            message = f"The robot has reached {pos_destination.pos_name}. Please pick up your packages."
+            self.nwapi.post_delivery_sms(number, message)
 
             return True
         except:

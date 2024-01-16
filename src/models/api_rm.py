@@ -87,6 +87,64 @@ class RMAPI(api.AuthenticatedAPI):
         payload["order"] = [{"column":"created_at", "type":"desc"}]
         return self.post('/mission/list', json.dumps(payload))
     
+    def list_rm_missions(self):
+        
+        data = self.list_missions()
+
+        results = data['result']['list']
+        # Iterate over each item
+        rm_missions = []
+        for item in results:
+            if(item['type'] == 2):
+                rm_missions.append(item)
+        return rm_missions
+
+    def update_rm_mission(self):
+        
+        def convertDate(year, month, day, hour, minute, second, offset_hours):
+            from datetime import datetime, timezone, timedelta
+
+            # Create a datetime object
+            
+            dt = datetime(year, month, day, hour, minute, second, tzinfo=timezone(timedelta(hours=offset_hours)))
+
+            # Format the datetime object as ISO 8601
+            formatted_time = dt.isoformat()
+
+            formatted_time_with_z = formatted_time.replace('+00:00', 'Z')
+            # print(formatted_time_with_z)
+            return formatted_time_with_z
+
+        def getCurrentDate():
+            # Get the current time
+            current_time = datetime.utcnow()  # Use utcnow to get UTC time
+
+            # # Extract components
+            # year = current_time.year
+            # month = current_time.month
+            # day = current_time.day
+            # hour = current_time.hour
+            # minute = current_time.minute
+            # second = current_time.second
+
+            return current_time
+
+        # start time
+        start_time = convertDate(2024,1,12,17,1,40,8)
+        end_time = convertDate(2024,1,12,17,50,0,20)
+
+        payload = {}
+        payload["mode"] = 3
+        # payload["layoutId"] = '00000000-0000-0000-0000-000000000000'#'0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d'#
+        # payload["layoutName"] = "6F-Layout"
+        payload['id'] = '45675968-fa97-4776-8e20-ed24e1b02014'
+        # payload["name"] = 'ChargingOffOn'
+        payload["startTime"]   = start_time #'2024-01-12T12:37:00Z'
+        payload["scheduledAt"] = start_time #'2024-01-12T12:37:00Z'
+        payload["status"] = 4
+        payload["repeatType"] = 1
+        return self.put('/mission/update', json.dumps(payload))
+
     def new_mission(self, robot_id, layout_id = '', mission_name = 'New Mission Demo', tasks = []):
         '''ref: https://docs.robotmanager.com/reference/create-a-mission'''
         payload = {}
@@ -840,6 +898,9 @@ if __name__ == '__main__':
 
     # pub_localization()
     # goto_charging_staion()
+    from datetime import datetime
+
+
 
     ### [Mission]
     # 1) init
@@ -848,78 +909,82 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config, skill_config_dir)
 
-    robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
-    map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
-    layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
-    print(layout_rm_guid)
 
-    # res = rmapi.get_layout_marker(layout_guid, 'P0')
-    # print(res)
-    
-    # rmapi.write_rm_map_to_properties("../../conf/rm_map.properties")
+    rmapi.update_rm_mission()
 
-    # res= rmapi.get_layout_marker(layout_rm_guid, 'LiftWaitingPoint')
-    # print(res)
+    res = rmapi.list_rm_missions()
+    print(res)
 
-    # rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
-    skill_config = umethods.load_config(skill_config_dir)
+    # robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+    # map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'
+    # layout_rm_guid =  rmapi.get_layout_guid(map_rm_guid)  # 3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece
+    # print(layout_rm_guid)
 
-    # # 2) implement task detail
-    rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
-    rv_charging_off = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
-    iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
-    iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
-    localize1 = rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
-    goto1 = rmapi.new_task_goto(map_rm_guid, "P0", layout_heading= 90)
-    goto2 = rmapi.new_task_goto(map_rm_guid, "P1", layout_heading= 90)
-    goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+    # # res = rmapi.get_layout_marker(layout_guid, 'P0')
+    # # print(res)
+    # # rmapi.write_rm_map_to_properties("../../conf/rm_map.properties")
+    # # res= rmapi.get_layout_marker(layout_rm_guid, 'LiftWaitingPoint')
+    # # print(res)
 
-    def new_task_take_lift(current_floor_id, target_floor_id):
+    # # rmapi.write_robot_skill_to_properties(robot_rm_guid, skill_config_dir)
+    # skill_config = umethods.load_config(skill_config_dir)
+
+    # # # 2) implement task detail
+    # rv_charging_on = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+    # rv_charging_off = rmapi.new_task(skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+    # iaq_on = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+    # iaq_off = rmapi.new_task(skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+    # localize1 = rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
+    # goto1 = rmapi.new_task_goto(map_rm_guid, "P0", layout_heading= 90)
+    # goto2 = rmapi.new_task_goto(map_rm_guid, "P1", layout_heading= 90)
+    # goto_dock = rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+
+    # def new_task_take_lift(current_floor_id, target_floor_id):
         
-        current_map_rm_guid = dict_map_guid[current_floor_id]
-        target_map_rm_guid = dict_map_guid[target_floor_id]
-        lift_map_rm_guid = dict_map_guid[999]
+    #     current_map_rm_guid = dict_map_guid[current_floor_id]
+    #     target_map_rm_guid = dict_map_guid[target_floor_id]
+    #     lift_map_rm_guid = dict_map_guid[999]
 
-        tasks = []
+    #     tasks = []
         
-        task1 = rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
-        task2 = rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+    #     task1 = rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
+    #     task2 = rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
         
-        if(current_floor_id == 0):
-            task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
-        else:
-            task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+    #     if(current_floor_id == 0):
+    #         task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+    #     else:
+    #         task_in = rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
         
-        if(target_floor_id == 0):
-            task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
-        else:
-            task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
+    #     if(target_floor_id == 0):
+    #         task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
+    #     else:
+    #         task_out = rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint', layout_heading=270)
 
-        task3 = rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
+    #     task3 = rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
 
-        tasks.append(task1)
-        tasks.append(task2)
-        tasks.append(task_in)
-        tasks.append(task_out)
-        tasks.append(task3)
+    #     tasks.append(task1)
+    #     tasks.append(task2)
+    #     tasks.append(task_in)
+    #     tasks.append(task_out)
+    #     tasks.append(task3)
 
-        return tasks
+    #     return tasks
 
-    # 3) new task
-    tasks = new_task_take_lift(4,6)
+    # # 3) new task
+    # tasks = new_task_take_lift(4,6)
 
-    # tasks.append(rv_charging_off)
-    # tasks.append(localize1)
-    # tasks.append(iaq_on)
-    # tasks.append(goto1)
-    # tasks.append(goto2)
-    # tasks.append(goto_dock)
-    # tasks.append(iaq_off)
-    # tasks.append(rv_charging_on)
+    # # tasks.append(rv_charging_off)
+    # # tasks.append(localize1)
+    # # tasks.append(iaq_on)
+    # # tasks.append(goto1)
+    # # tasks.append(goto2)
+    # # tasks.append(goto_dock)
+    # # tasks.append(iaq_off)
+    # # tasks.append(rv_charging_on)
 
-    # 4) new mission
-    mission_name = 'LiftAccess-4to6'
-    rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
+    # # 4) new mission
+    # mission_name = 'LiftAccess-4to6'
+    # rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
     
 
 

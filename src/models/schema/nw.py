@@ -92,6 +92,15 @@ class DeliveryPose:
         self.heading = heading
     def to_json(self):
         return json.dumps(self.__dict__)
+
+class DeliveryPerson:
+    def __init__(self, name_en = '', name_cn = '', number = '', email = ''):
+        self.name_en = name_en
+        self.name_cn = name_cn
+        self.number = number
+        self.email = email
+    def to_json(self):
+        return json.dumps(self.__dict__)
     
 
 # Door

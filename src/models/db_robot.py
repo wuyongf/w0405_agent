@@ -191,6 +191,15 @@ class robotDBHandler(db.AzureDB):
         # return RMSchema.mapPose(pos_layout_rm_guid, pos_x, pos_y, pos_theta)
         # pass
 
+    def get_delivery_person_info(self, person_id):
+        name_en = self.get_single_value('data.sys.mission.delivery.contact', 'name_en', 'ID', person_id)
+        name_cn = self.get_single_value('data.sys.mission.delivery.contact', 'name_cn', 'ID', person_id)
+        number = self.get_single_value('data.sys.mission.delivery.contact', 'number', 'ID', person_id)
+        email = self.get_single_value('data.sys.mission.delivery.contact', 'email', 'ID', person_id)
+        
+        return NWSchema.DeliveryPerson(name_en, name_cn, number, email)
+
+
     def get_locker_command(self, id):
         statement = f'SELECT locker_command FROM {self.database}.`sys.mission.delivery` WHERE ID = {id};'
         return self.Select(statement)
