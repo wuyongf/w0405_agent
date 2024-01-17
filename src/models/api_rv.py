@@ -12,6 +12,7 @@ class RVAPI(api.AuthenticatedAPI):
     def __init__(self, config):
         self.base_url = config.get('RV', 'base_url')
         self.headers = {"X-API-Key": config.get('RV', 'X-API-Key'), "accept": "*/*", "Content-Type": "application/json"}
+        # print(self.headers)
         super().__init__(base_url=self.base_url, headers=self.headers)
 
     def get_robot_id(self):
@@ -257,7 +258,7 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
-    res = rvapi.get_status_estop()
+    res = rvapi.get_battery_state()
     print(res)
 
     ####################################################################################################
