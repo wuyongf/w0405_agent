@@ -179,8 +179,6 @@ class Robot:
 
             time.sleep(0.1)
 
-
-    
     def thread_update_status(self, protocol):  # update thread
         while True:
             try:
@@ -193,8 +191,6 @@ class Robot:
                 self.status.mapPose.x = pixel_x
                 self.status.mapPose.y = pixel_y
                 self.status.mapPose.heading = heading
-
-
 
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
@@ -2256,6 +2252,5 @@ if __name__ == '__main__':
     # robot.follow_me_unpair()
 
     # layout_id = robot.get_current_layout_id()
-
     # print(f'current layout_id: {layout_id}')
     
