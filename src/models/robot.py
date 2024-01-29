@@ -1914,7 +1914,7 @@ class Robot:
             number = person_info.number
             message = f"The robot has reached {pos_origin.pos_name}. Please load your packages."
             res = self.nwapi.post_delivery_sms("+"+number, message)
-            print(f'res: {res}')
+            # print(f'res: {res}')
 
             return True
         except:
@@ -1950,7 +1950,7 @@ class Robot:
             # Notify User
             number = person_info.number
             message = f"The robot has reached {pos_destination.pos_name}. Please pick up your packages."
-            self.nwapi.post_delivery_sms(number, message)
+            self.nwapi.post_delivery_sms("+"+number, message)
 
             return True
         except:
