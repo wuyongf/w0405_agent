@@ -68,6 +68,7 @@ class AuthenticatedAPI:
 
     def put(self, endpoint, json = None):
         url = self.base_url + endpoint
+        response_json = None
         try:
             response = requests.put(url, headers=self.headers, data=json)
             response.raise_for_status()

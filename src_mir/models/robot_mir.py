@@ -9,9 +9,10 @@ import uuid
 import json
 # nwsys
 import src.utils.methods as umethods
-import src.models.api_rv as RVAPI
-import src.models.mqtt_rv as RVMQTT
-from src.models.mqtt_rv_joystick import RVJoyStick
+# import src.models.api_rv as RVAPI
+import src_mir.models.api_mir as MiRAPI
+# import src.models.mqtt_rv as RVMQTT
+# from src.models.mqtt_rv_joystick import RVJoyStick
 import src.models.api_rm as RMAPI
 from src.models.mqtt_nw import NWMQTT
 from src.models.mqtt_nw_publisher import NWMQTTPub
@@ -22,7 +23,7 @@ from src.publishers.pub_mission import MissionPublisher
 # Schema
 import src.models.schema.rm as RMSchema
 import src.models.schema.nw as NWSchema
-import src.models.schema.rv as RVSchema
+# import src.models.schema.rv as RVSchema
 # Enum
 import src.models.enums.rm as RMEnum
 import src.models.enums.nw as NWEnum
@@ -35,23 +36,23 @@ import src.models.enums.azure as AzureEnum
 # from src.top_module.module.locker import Locker
 # from src.top_module.module.access_control_module import AccessControl
 # from src.top_module.sensor.gyro import Gyro as MoGyro
-# AI
+# # AI
 import numpy as np
-from src.handlers.ai_audio_handler import AudioAgent
-from src.handlers.azure_blob_handler import AzureBlobHandler
-from src.handlers.ai_rgbcam_handler import RGBCamAgent
-from src.handlers.ai_thermalcam_handler import ThermalCamAgent
+# from src.handlers.ai_audio_handler import AudioAgent
+# from src.handlers.azure_blob_handler import AzureBlobHandler
+# from src.handlers.ai_rgbcam_handler import RGBCamAgent
+# from src.handlers.ai_thermalcam_handler import ThermalCamAgent
 # Notification
 from src.handlers.event_handler import EventHandler
 
 class Robot:
     def __init__(self, config, port_config, skill_config_dir, ai_config):
-        self.rvapi = RVAPI.RVAPI(config)
-        self.rvmqtt = RVMQTT.RVMQTT(config)
-        self.rvjoystick = RVJoyStick(config)
+        self.mirapi = MiRAPI.MiRAPI(config)
+        # self.rvmqtt = RVMQTT.RVMQTT(config)
+        # self.rvjoystick = RVJoyStick(config)
         self.rmapi = RMAPI.RMAPI(config, skill_config_dir)
-        self.nwmqtt = NWMQTT(config, port_config)
-        self.nwmqttpub = NWMQTTPub(config)
+        # self.nwmqtt = NWMQTT(config, port_config)
+        # self.nwmqttpub = NWMQTTPub(config)
         self.nwdb = robotDBHandler(config)
         # self.modb = TopModuleDB.TopModuleDBHandler(config, self.status_summary)
         self.T = Trans.RVRMTransform()
@@ -65,16 +66,16 @@ class Robot:
         #
         self.config = config
         self.port_config = port_config
-        # self.rvmqtt.start() # for RVMQTT.RVMQTT
-        self.nwmqtt.start()   
-        self.nwmqttpub.start()
+        # # self.rvmqtt.start() # for RVMQTT.RVMQTT
+        # self.nwmqtt.start()   
+        # self.nwmqttpub.start()
 
         ## robot baisc info
         self.ipc_ip_addr = config.get('IPC', 'localhost')
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
         self.robot_nw_id = self.nwdb.robot_id
         self.robot_rm_guid = self.nwdb.robot_rm_guid
-        self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
+        self.status = RMSchema.Status(0.0, 2, RMSchema.mapPose(), RMSchema.layoutPose())
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
@@ -119,64 +120,69 @@ class Robot:
 
     def init(self):
         print(f'[robot.init]: Start...')
-        self.rvapi.wait_for_ready()
-        self.rvapi.put_safety_zone_minimum()
-        self.rvapi.change_mode_navigation()
-        self.rvapi.put_maximum_speed(0.3)
+        # self.rvapi.wait_for_ready()
+        # self.rvapi.put_safety_zone_minimum()
+        # self.rvapi.change_mode_navigation()
+        # self.rvapi.put_maximum_speed(0.3)
         print(f'[robot.init]: Finish...')
         pass
 
-    def status_start(self, protocol: NWEnum.Protocol):
-        threading.Thread(target=self.thread_update_status, args=(protocol, )).start()  # from RV API
-        threading.Thread(target=self.thread_update_position).start()  # from RV API
+    def status_start(self):
+        threading.Thread(target=self.thread_update_status, args=()).start()  # from RV API
+        # threading.Thread(target=self.thread_update_position).start()  # from RV API
         print(f'[robot.status_start]: Start...')
 
-    def thread_update_position(self):
-        while True:
-            # layout
-            self.layout_nw_id = self.get_current_layout_nw_id()
-            layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
-            self.status.layoutPose.x = layout_x
-            self.status.layoutPose.y = layout_y
-            self.status.layoutPose.heading = layout_heading
-            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
+    # def thread_update_position(self):
+    #     while True:
+    #         # layout
+    #         # self.layout_nw_id = self.get_current_layout_nw_id()
+    #         layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
+    #         self.status.layoutPose.x = layout_x
+    #         self.status.layoutPose.y = layout_y
+    #         self.status.layoutPose.heading = layout_heading
+    #         self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
 
-            time.sleep(0.1)
+    #         time.sleep(0.1)
     
-    def thread_update_status(self, protocol):  # update thread
+    def thread_update_status(self):  # update thread
         while True:
             try:
-                # # rm status <--- rv status
-                self.status.state = 1  # todo: robot status
-                self.status.mapPose.mapId = self.get_current_map_rm_guid()  # map
-                self.status.batteryPct = self.get_battery_state(protocol)  # battery
-                pixel_x, pixel_y, heading = self.get_current_pose(protocol)  # current map pose
+                # # # rm status <--- rv status
+                # self.status.state = 1  # todo: robot status
+                self.status.mapPose.mapId = 'a71042e0-0d2a-4535-bfd8-a18b449e8676'#self.get_current_map_rm_guid()  # map
+
+                status = self.mirapi.get_status()
+                self.status.batteryPct = status.percentage
+                pixel_x, pixel_y, heading = status.position.x, status.position.y, status.position.orientation
+
                 # print(pixel_x, pixel_y, heading)
                 self.status.mapPose.x = pixel_x
                 self.status.mapPose.y = pixel_y
-                self.status.mapPose.heading = heading
+                self.status.mapPose.heading = 0#heading
 
-                # Modules
-                self.robot_locker_is_closed = self.locker_is_closed()
+                self.status.layoutPose.x = self.status.mapPose.x
+                self.status.layoutPose.y = self.status.mapPose.y
+                self.status.layoutPose.heading = self.status.mapPose.heading
+                self.robot_position[:] = np.array([self.layout_nw_id, pixel_x, pixel_y], dtype=np.float32)[:]
 
-                ## To NWDB
-                self.map_nw_id = self.get_current_map_nw_id()
+                # ## To NWDB
+                # self.map_nw_id = self.get_current_map_nw_id()
 
-                ## Mode
-                self.get_current_mode()
-                # self.rvapi.get_robot_is_moving()
+                # ## Mode
+                # self.get_current_mode()
+                # # self.rvapi.get_robot_is_moving()
 
                 ## Summary
                 print(f'-------------------------------------------------------------------')
-                print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
-                print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
+                # print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
+                # print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
                 print(f'robot_status.battery:        {self.status.batteryPct}')
                 print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
-                print(f'robot_status.map_rm_pose:    {pixel_x, pixel_y, heading}')
-                print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
-                print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
-                print(f'robot_status.mode:           {self.mode}')
+                print(f'robot_status.map_rm_pose:    {pixel_x, pixel_y, self.status.mapPose.heading }')
+                # print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
+                # print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
+                # print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
+                # print(f'robot_status.mode:           {self.mode}')
                 print(f'-------------------------------------------------------------------')
             except:
                 print('[robot.update_status] error!')
@@ -212,18 +218,14 @@ class Robot:
         return status.to_json()
 
     # robot status
-    def get_battery_state(self, protocol=NWEnum.Protocol):
-        if (protocol == NWEnum.Protocol.RVMQTT):
-            battery = self.rvmqtt.get_battery_percentage()
-        if (protocol == NWEnum.Protocol.RVAPI):
-            battery = self.rvapi.get_battery_state().percentage
-        return round(battery * 100, 3)
+    def get_battery_state(self):
+        pass
 
     def get_current_pose(self, protocol=NWEnum.Protocol):
         try:
             ## 1. get rv current map/ get rv activated map
-            map_json = self.rvapi.get_active_map_json()
-            rv_map_metadata = self.rvapi.get_map_metadata(map_json['name'])
+            map_json = self.mirapi.get_active_map_json()
+            rv_map_metadata = self.mirapi.get_map_metadata(map_json['name'])
             # map_json = None # FOR DEBUG/TESTING
             ## 2. update T params
             if (rv_map_metadata is not None):
@@ -239,7 +241,7 @@ class Robot:
                 pos = self.rvmqtt.get_current_pose()
                 return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
             if (protocol == NWEnum.Protocol.RVAPI):
-                pos = self.rvapi.get_current_pose()
+                pos = self.mirapi.get_current_pose()
                 return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
         except:
             return 0, 0, 0
@@ -265,7 +267,7 @@ class Robot:
     def get_current_map_rm_guid(self):
         try:
             # 1. get rv_current map
-            rv_map_name = self.rvapi.get_active_map().name
+            rv_map_name = self.mirapi.get_active_map().name
             # 2. check nwdb. check if there is any map related to rv_current map
             map_is_exist = self.nwdb.check_map_exist(rv_map_name)
             # 3. if yes, get rm_guid. if no, return default idle_guid
@@ -289,7 +291,7 @@ class Robot:
     def get_current_map_nw_id(self):
         try:
             # 1. get rv_current map
-            rv_map_name = self.rvapi.get_active_map().name
+            rv_map_name = self.mirapi.get_active_map().name
             # 2. check nwdb. check if there is any map related to rv_current map
             map_is_exist = self.nwdb.check_map_exist(rv_map_name)
             # 3. if yes, get rm_guid. if no, return default idle_guid
@@ -313,7 +315,7 @@ class Robot:
     def get_current_mode(self):
 
         # E-Stop
-        if(self.rvapi.get_status_estop()): 
+        if(self.mirapi.get_status_estop()): 
             self.mode = NWEnum.RobotStatusMode.ESTOP
             return
         
@@ -344,15 +346,15 @@ class Robot:
 
     # basic robot control
     def cancel_moving_task(self):
-        self.rvapi.delete_current_task()  # rv
+        self.mirapi.delete_current_task()  # rv
         return
 
     def pause_robot_task(self):
-        self.rvapi.pause_robot_task()  # rv
+        self.mirapi.pause_robot_task()  # rv
         return
 
     def resume_robot_task(self):
-        self.rvapi.resume_robot_task()  #rv
+        self.mirapi.resume_robot_task()  #rv
         pass
 
     # robot skills
@@ -365,7 +367,7 @@ class Robot:
             # print('step 1')
             rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
             rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
-            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            rv_map_metadata = self.mirapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             # print('step 2')
             map_rm_guid = self.nwdb.get_map_rm_guid(rv_map_name)
@@ -383,18 +385,18 @@ class Robot:
             print(f'<heading_debug> self.T_RM.map_rotate_angle: {self.T_RM.map_rotate_angle}')
             # step 3. rv. create point base on rm. localization.
             # print('step 3')
-            self.rvapi.delete_all_waypoints(rv_map_name)
-            self.rvapi.post_new_waypoint(rv_waypoint.mapName, rv_waypoint.name, rv_waypoint.x, rv_waypoint.y,
+            self.mirapi.delete_all_waypoints(rv_map_name)
+            self.mirapi.post_new_waypoint(rv_waypoint.mapName, rv_waypoint.name, rv_waypoint.x, rv_waypoint.y,
                                          rv_waypoint.angle)
-            self.rvapi.change_mode_navigation()
-            self.rvapi.change_map2(rv_map_name, rv_waypoint.name)
-            self.rvapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            self.mirapi.change_mode_navigation()
+            self.mirapi.change_map2(rv_map_name, rv_waypoint.name)
+            self.mirapi.update_initial_pose(rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             print(f'[aaa] init_heading: {rv_waypoint.angle}' )
             # step 4. double check
             # print('step 4')
             pose_is_valid = True
             # pose_is_valid = self.rvapi.check_current_pose_valid()
-            map_is_active = self.rvapi.get_active_map().name == rv_map_name
+            map_is_active = self.mirapi.get_active_map().name == rv_map_name
             if (pose_is_valid & map_is_active): 
                 # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
                 return True
@@ -428,8 +430,8 @@ class Robot:
             # self.rvapi.put_safety_zone_minimum()
             # self.rvapi.put_maximum_speed(0.3)
 
-            self.rvapi.put_safety_zone_minimum()
-            self.rvapi.put_maximum_speed(0.3)
+            self.mirapi.put_safety_zone_minimum()
+            self.mirapi.put_maximum_speed(0.3)
 
             self.door_configured = False
             self.door_agent_start = True  # door-agent logic
@@ -443,7 +445,7 @@ class Robot:
             # print('step1')
             rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
             rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
-            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            rv_map_metadata = self.mirapi.get_map_metadata(rv_map_name)
             # step 2. transformation. rm2rv
             # print('step2')
             self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
@@ -454,15 +456,15 @@ class Robot:
                                                 rm_map_metadata.y, rm_map_metadata.heading )  ## 271
             # step3. rv. create point base on rm. localization.
             # print('step3')
-            self.rvapi.delete_all_waypoints(rv_map_name)
+            self.mirapi.delete_all_waypoints(rv_map_name)
             pose_name = 'TEMP'
             time.sleep(1)
             print(f'goto--rm_map_x: {rm_map_metadata.x}')
             print(f'goto--rm_map_y: {rm_map_metadata.y}')
             print(f'goto--rm_map_heading: {rm_map_metadata.heading}')
-            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            self.mirapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
             time.sleep(1)
-            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
+            self.mirapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
             thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
             thread.setDaemon(True)
@@ -472,42 +474,26 @@ class Robot:
         except:
             return False
       
+    def rmove(self, task_json):
+        try:
+            param = task_json['parameters']
+
+            print(param)
+
+            self.mirapi.rmove_demo()
+
+            return True
+        except:
+            return False
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
-    skill_config_path = './conf/rm_skill.properties'
+    skill_config_path = '../../conf/rm_skill.properties'
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
-    robot.sensor_start()
+    robot.status_start()
 
-    # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 
-    # robot.pub_call_lift(a_lift_mission)
-    # robot.process_lift_in(4,6)
-
-    robot.call_lift_and_check_arrive(4, 5)
-    # robot.charging_on()
-    # robot.charging_off()
-    # robot.charging_goto()
-
-    # robot.get_current_layout_pose()
-
-    # # get status
-    # robot.status_start(NWEnum.Protocol.RVAPI)
-    # while(True):
-    #     time.sleep(1)
-    #     print(robot.status_summary())
-    #     # print(robot.get_current_pose(NWEnum.Protocol.RVAPI))
-    #     # print(robot.get_battery_state(NWEnum.Protocol.RVAPI))
-    
-    # # followme testing
-    # robot.follow_me_mode()
-    # robot.is_paired()
-    # robot.follow_me_pair()
-    # robot.follow_me_unpair()
-
-    # layout_id = robot.get_current_layout_id()
-
-    # print(f'current layout_id: {layout_id}')
     

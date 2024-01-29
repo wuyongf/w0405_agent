@@ -900,8 +900,6 @@ if __name__ == '__main__':
     # goto_charging_staion()
     from datetime import datetime
 
-
-
     ### [Mission]
     # 1) init
 

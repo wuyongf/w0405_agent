@@ -11,7 +11,7 @@ import logging
 import json
 # yf
 import src.utils.methods as umethods
-import src.models.robot as Robot
+import src_mir.models.robot_mir as MiRRobot
 import src.models.api_rv as RVAPI
 import src.models.db_robot as NWDB
 import src.models.schema.rm as RMSchema
@@ -19,7 +19,7 @@ import src.models.schema.rv as RVSchema
 import src.models.enums.nw as NWEnum
 
 class StatusHandler:
-    def __init__(self, robot: Robot.Robot):
+    def __init__(self, robot: MiRRobot.Robot):
         # rm - mqtt
         self.publisher = mqtt.Client("status_publisher")
         self.topic = "/robot/status"        
@@ -80,8 +80,8 @@ class StatusHandler:
                 self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
                 self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
-                self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
-                self.robot.nwdb.update_robot_status_mode(self.robot.mode)
+                # self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
+                # self.robot.nwdb.update_robot_status_mode(self.robot.mode)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
 
@@ -107,10 +107,10 @@ class StatusHandler:
                 print('[status_handler.__publish_status] Error. Plese Check')
             
 if __name__ == '__main__':
-    config = umethods.load_config('../../conf/config.properties')
+    config = umethods.load_config('../../conf/config_mir.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
-    robot = Robot.Robot(config,port_config)
-    robot.status_start(NWEnum.Protocol.RVAPI)
+    robot = MiRRobot.Robot(config,port_config)
+    robot.status_start()  
     status_handler = StatusHandler(robot)
     # status_handler.start()             
     
