@@ -217,6 +217,11 @@ class TopModuleDBHandler(db.AzureDB):
     #     task_id_list = self.GetTaskIdListByMissionId(mission_guid, comparison_range)
     #     return task_id_list
 
+    # Third Party Sensor (Mi Air Quality Sensor 2)
+    def insert_mi_sensor_data(self, table, keys, values):
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, keys))}, created_date) VALUES ({", ".join(map(str, values))}, "{self.now()}");'
+        self.Insert(statement)
+
 
 if __name__ == '__main__':
 
