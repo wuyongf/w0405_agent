@@ -1,5 +1,6 @@
 import serial
 import time
+import datetime
 import threading
 import json
 import src.top_module.db_top_module as NWDB
@@ -19,8 +20,10 @@ class IaqSensor():
         self.command = [0x01, 0x03, 0x00, 0x00, 0x00, 0x0B, 0x04, 0x0D]
         self.task_mode = 0
         self.task_id = 0
+        # self.header_list_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10",
+        #                            "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta", "map_id"]
         self.header_list_insert = ["co2", "tvoc", "hcho", "pm25", "rh", "temperature", "pm10",
-                                   "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta", "map_id"]
+                                   "pm1", "lux", "mcu_temperature", "db", "pos_x", "pos_y", "pos_theta", "map_id", "created_date"]
         self.header_list = ["co2", "tvoc", "hcho", "pm25", "rh",
                             "temperature", "pm10", "pm1", "lux", "mcu_temperature", "db"]
         # self.modb = NWDB.TopModuleDBHandler(config)
@@ -178,6 +181,7 @@ class IaqSensor():
         result_insert = result.copy()
         result_check = result.copy()
         result_insert = self.append_robot_position(result_insert)
+        result_insert = self.append_robot_datetime(result_insert)
         result_check = self.append_robot_position(result_check, xyonly=True)
 
         # Avoid any upload to db during inspection
@@ -241,6 +245,15 @@ class IaqSensor():
             array.append(obj["map_id"])
         return array
 
+    # 0215 Bugfix - IAQ date issue
+    def append_robot_datetime(self, array):
+        array.append(self.now())
+        return array
+
+    def now(self):
+        current_date = datetime.datetime.now()
+        formatted_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
+        return formatted_date
 
 if __name__ == '__main__':
     def status_summary():

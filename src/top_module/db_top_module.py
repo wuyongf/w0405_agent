@@ -58,7 +58,7 @@ class TopModuleDBHandler(db.AzureDB):
         # map_name
         # task_id
         # posX,Y
-        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, task_id, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {task_id}, {self.robot_id});'
+        statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, task_id, robot_id) VALUES ({", ".join(map(str, value))}, {task_id}, {self.robot_id});'
         print(f'[db_top_module.InsertIaqData]: {statement}')
         self.Insert(statement)
 
