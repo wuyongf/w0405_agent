@@ -71,7 +71,7 @@ class IaqSensor():
         ch2o = (datahex[4] << 8 | datahex[5])
         pm25 = (datahex[6] << 8 | datahex[7])
         humi = (datahex[8] << 8 | datahex[9]) / 100
-        temp = (datahex[10] << 8 | datahex[11]) / 100 - 5
+        temp = (datahex[10] << 8 | datahex[11]) / 100 - 5.5
         pm10 = (datahex[12] << 8 | datahex[13])
         pm01 = (datahex[14] << 8 | datahex[15])
         lux = (datahex[16] << 8 | datahex[17])

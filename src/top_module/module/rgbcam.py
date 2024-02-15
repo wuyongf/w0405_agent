@@ -76,6 +76,35 @@ class RGBCamRecorder:
             self.stop_and_save_record()
         self.cap.release()
 
+    def cap_rgb_img(self, output_folder):
+        if not self.record_flag:
+            print("Recording flag is not set. Cannot capture images.")
+            return
+
+        # Create the output folder if it doesn't exist
+        os.makedirs(output_folder, exist_ok=True)
+
+        # Capture and save an image every 1 second
+        while self.record_flag:
+            ret, frame = self.cap.read()
+            if not ret:
+                print("Error reading frame from camera.")
+                break
+
+            # Save the image
+            image_filename = os.path.join(output_folder, f"image_{time.time()}.jpg")
+            cv2.imwrite(image_filename, frame)
+
+            # Wait for 1 second
+            time.sleep(1)
+
+    def start_cap_img(self, output_folder):
+        self.record_flag = True
+        self.cap_rgb_img(output_folder)
+
+    def stop_cap_img(self):
+        self.record_flag = False
+
 if __name__ == "__main__":
     rgb_camera = RGBCamRecorder(device_index=0)
     rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
