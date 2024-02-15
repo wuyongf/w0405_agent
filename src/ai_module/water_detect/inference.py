@@ -28,11 +28,11 @@ class WaterDetector:
         cv2.imwrite(save_dir, image)
 
 if __name__ == "__main__":
-    repo = '/home/nw/Documents/GitHub/w0405_agent/src/ai_module/water_detect/yolov5'
-    model_path = "/home/nw/Documents/GitHub/w0405_agent/src/ai_module/water_detect/weights/best.pt"
+    repo = '/home/yf/dev/w0405_agent/src/ai_module/water_detect/yolov5'
+    model_path = "/home/yf/dev/w0405_agent/src/ai_module/water_detect/weights/best.pt"
     model_confidence = 0.7
     detector = WaterDetector(repo, model_path, model_confidence)
-    img = "/home/nw/Documents/GitHub/w0405_agent/src/../data/water-leakage/thermal-image/20231204/282/2023_12_04_11_12_06_4.0_1305.2509765625_275.9060974121094.jpg"
+    img = "/home/yf/dev/w0405_agent/src/ai_module/water_detect/test_data/2024_01_31_16_04_38_6.0_1363.7398681640625_297.32073974609375.jpg"
     img_path = Path(img)
     data = detector.predict(img)
 

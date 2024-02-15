@@ -40,6 +40,10 @@ class RGBCamAgent:
                     self.container_name = self.config.get('Azure', 'container_li_video_front')
                 if camera_position == NWEnums.CameraPosition.Rear:
                     self.container_name = self.config.get('Azure', 'container_li_video_rear')
+            case InspectionType.WaterLeakage:
+                if camera_position == NWEnums.CameraPosition.Rear:
+                    self.container_name = self.config.get('Azure', 'container_wl_rgb_image')
+
 
         self.relative_data_dir = self.config.get('Data', 'data_dir')
         self.relative_result_dir = self.config.get('Data', 'result_dir')
@@ -73,6 +77,9 @@ class RGBCamAgent:
         ## notify recorder the save path
         self.recorder.update_save_path(output_dir=self.video_record_path)
         # self.audio_recorder.update_save_path(self.video_record_path)
+
+        ## notify capturer the save path
+        self.recorder.update_cap_save_path(self.video_record_path)
 
         return str(self.video_record_path)
 

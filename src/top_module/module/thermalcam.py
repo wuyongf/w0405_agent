@@ -210,7 +210,7 @@ class ThermalCam:
         else:
             return None
     
-    def capture_image(self):
+    def capture_image(self, rgbcam):
         image = self.__get_frame_buffer_call_back()
         # print(self.robot_position)
         if image is not None:
@@ -226,7 +226,11 @@ class ThermalCam:
             if temp_image is None: 
                 print(f'thermal image is NONE!!!')
                 return None
+            # [theraml_image]
             cv2.imwrite(filepath, temp_image)
+            # [rgb_image]
+            rgbcam.cap_rgb_img(filename)
+
             return filepath
         else:
             return None
@@ -244,13 +248,13 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
 
-    def process_start_capturing(self, interval, shm_name):
+    def process_start_capturing(self, interval, shm_name, rgbcam):
         print(f'[thermalcam] start capturing...')
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
         while(self.capture_flag):
-            self.capture_image()
+            self.capture_image(rgbcam)
             time.sleep(interval)
 
     def stop_capturing(self):

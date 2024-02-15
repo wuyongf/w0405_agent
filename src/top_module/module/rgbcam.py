@@ -76,48 +76,50 @@ class RGBCamRecorder:
             self.stop_and_save_record()
         self.cap.release()
 
-    def cap_rgb_img(self, output_folder):
-        if not self.record_flag:
-            print("Recording flag is not set. Cannot capture images.")
+
+    ### Image
+    def update_cap_save_path(self, cap_save_dir):
+        self.cap_save_dir = cap_save_dir
+        os.makedirs(self.cap_save_dir, exist_ok=True)
+    
+    def cap_rgb_img(self, image_name):
+        # Capture and save an image
+        ret, frame = self.cap.read()
+        if not ret:
+            print("Error reading frame from camera.")
             return
 
-        # Create the output folder if it doesn't exist
-        os.makedirs(output_folder, exist_ok=True)
+        # Save the image
+        image_filename = os.path.join(self.cap_save_dir, image_name)
+        cv2.imwrite(image_filename, frame)
 
-        # Capture and save an image every 1 second
-        while self.record_flag:
-            ret, frame = self.cap.read()
-            if not ret:
-                print("Error reading frame from camera.")
-                break
+    # def start_cap_img(self, output_folder):
+    #     self.record_flag = True
+    #     self.cap_rgb_img(output_folder)
 
-            # Save the image
-            image_filename = os.path.join(output_folder, f"image_{time.time()}.jpg")
-            cv2.imwrite(image_filename, frame)
-
-            # Wait for 1 second
-            time.sleep(1)
-
-    def start_cap_img(self, output_folder):
-        self.record_flag = True
-        self.cap_rgb_img(output_folder)
-
-    def stop_cap_img(self):
-        self.record_flag = False
+    # def stop_cap_img(self):
+    #     self.record_flag = False
 
 if __name__ == "__main__":
-    rgb_camera = RGBCamRecorder(device_index=0)
-    rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
-    rgb_camera.capture_and_save_video()
-    time.sleep(60)
-    rgb_camera.stop_and_save_record()
-    print('First video recording stopped and saved.')
 
-    # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
+    #### Video Recording
+    # rgb_camera = RGBCamRecorder(device_index=0)
+    # rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
     # rgb_camera.capture_and_save_video()
-    # time.sleep(5)
+    # time.sleep(60)
     # rgb_camera.stop_and_save_record()
-    # print('Second video recording stopped and saved.')
+    # print('First video recording stopped and saved.')
 
-    rgb_camera.close()
+    # # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
+    # # rgb_camera.capture_and_save_video()
+    # # time.sleep(5)
+    # # rgb_camera.stop_and_save_record()
+    # # print('Second video recording stopped and saved.')
+
+    # rgb_camera.close()
+
+    #### Image Capture
+    rgb_camera = RGBCamRecorder(device_index=0)
+
+    rgb_camera.cap_rgb_img('test', '001.jpg')
 

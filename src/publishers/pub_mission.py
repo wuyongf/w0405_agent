@@ -421,7 +421,7 @@ class MissionPublisher:
         self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
 
     ### 2024.02.27 DEMO ###
-    def demo_iaq(self, current_floor_id):
+    def tasks_demo_iaq(self, current_floor_id):
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
@@ -429,12 +429,14 @@ class MissionPublisher:
         iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
         goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 178.99)
+        goto_00 = self.rmapi.new_task_goto(map_rm_guid, "DEMO0", layout_heading = 274.695)
         goto_02 = self.rmapi.new_task_goto(map_rm_guid, "DEMO2", layout_heading = 274.695)
         goto_03 = self.rmapi.new_task_goto(map_rm_guid, "DEMO3", layout_heading = 2.7458)
         
         tasks = []
         tasks.append(iaq_on)
         tasks.append(goto_01)
+        tasks.append(goto_00)
         tasks.append(goto_02)
         tasks.append(goto_03)
         tasks.append(iaq_off)        
@@ -449,9 +451,10 @@ class MissionPublisher:
         led_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-LEDON'), layout_rm_guid)
         # iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
 
-        goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 178.99) # 4/F: layout_heading = 180
-        goto_02 = self.rmapi.new_task_goto(map_rm_guid, "DEMO2", layout_heading = 274.695) # 4/F: layout_heading = 180
-        goto_03 = self.rmapi.new_task_goto(map_rm_guid, "DEMO3", layout_heading = 2.7458) # 4/F: layout_heading = 180
+        goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 178.99)
+        goto_02 = self.rmapi.new_task_goto(map_rm_guid, "DEMO2", layout_heading = 274.695)
+        goto_03 = self.rmapi.new_task_goto(map_rm_guid, "DEMO3", layout_heading = 274.695)
+        goto_04 = self.rmapi.new_task_goto(map_rm_guid, "DEMO4", layout_heading = 2.7458)
         
         # localize = self.rmapi.new_task_localize(map_rm_guid, 'Init', layout_heading = dock_heading)
         
@@ -460,9 +463,21 @@ class MissionPublisher:
         tasks.append(goto_01)
         tasks.append(goto_02)
         tasks.append(goto_03)
+        tasks.append(goto_04)
         tasks.append(led_on)        
 
         return layout_rm_guid, tasks
+
+    def construct_demo_iaq(self):
+        tasks = []
+        _, x1 = self.tasks_demo_iaq(6)
+        tasks = x1
+
+        mission_name = 'Demo IAQ'
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
     
 
 if __name__ == '__main__':
@@ -475,8 +490,10 @@ if __name__ == '__main__':
 
     pub = MissionPublisher(skill_config_dir, rmapi)
 
+    pub.construct_demo_iaq()
+
     ### How to create new tasks
-    layout_rm_guid, tasks = pub.demo_iaq(4)
+    layout_rm_guid, tasks = pub.tasks_demo_iaq(6)
     print(f'<layout_rm_guid>: {layout_rm_guid}')
     print(f'<tasks>: {tasks}')
 

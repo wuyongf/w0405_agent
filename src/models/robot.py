@@ -927,9 +927,12 @@ class Robot:
             self.wld_mission_id = self.nwdb.get_latest_mission_id()
             print(f'wld_mission_id: {self.wld_mission_id}')
 
+            ### [rear_rbgcam]
+            self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
+
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
-            self.thermalcam_handler.start_capturing(self.shm.name)
+            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder) # add rgb_cam
 
             return True
         except:
