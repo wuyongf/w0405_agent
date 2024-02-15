@@ -73,8 +73,6 @@ if __name__ == '__main__':
 
     # Robot Init
     time.sleep(2)
-    localize_str = '{"id": 0, "name": "ChargingStation", "mapName": "EMSD_4F_2806_1", "x": -0.16755342017872188, "y": 54.501362814789175, "angle": 0.0}'
-    # robot.localize(json.loads(localize_str))
 
     # Successfully started the app
     print('main finished')

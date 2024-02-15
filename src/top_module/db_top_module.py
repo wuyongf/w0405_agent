@@ -222,6 +222,10 @@ class TopModuleDBHandler(db.AzureDB):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, keys))}, created_date) VALUES ({", ".join(map(str, values))}, "{self.now()}");'
         self.Insert(statement)
 
+    def get_mi_sensor_data(self):
+        statement = f'SELECT * FROM {self.database}.`data.thirdparty.mi`'
+        return self.SelectAll(statement)
+    
 
 if __name__ == '__main__':
 
@@ -233,6 +237,7 @@ if __name__ == '__main__':
     port_config = umethods.load_config('../../../conf/port_config.properties')
 
     nwdb = TopModuleDBHandler(config, status_summary)
+
 
     # nwdb.CreateGyroDataPack(1,1)
     # nwdb.InsertGyroChunk(pack_id=2, accel_z=9)
