@@ -934,13 +934,9 @@ class Robot:
             ### [rear_rbgcam]
             self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
 
-            # # Create a queue for communication between processes
-            # queue = multiprocessing.Queue()
-            # # Create the RGBCamRecorder instance in the main process
-            # rgbcam = self.rgbcam_rear_handler.recorder
-            # rgbcam.cap_open_cam()
-            # # Pass the RGBCamRecorder instance to the new process through the queue
-            # queue.put(rgbcam)
+            # <debug!!>
+            # self.rgbcam_rear_handler.recorder.cap_open_cam()
+            # self.rgbcam_rear_handler.recorder.cap_rgb_img('test.jpg')
 
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)

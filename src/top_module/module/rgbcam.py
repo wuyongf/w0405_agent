@@ -10,8 +10,8 @@ class RGBCamRecorder:
         self.out = None
         self.record_flag = False  # Recording is off by default
         
-        # Create a lock for synchronizing access to the camera
-        self.lock = threading.Lock()
+        # # Create a lock for synchronizing access to the camera
+        # self.lock = threading.Lock()
 
     def update_save_path(self, output_dir):
         if self.record_flag:
@@ -109,6 +109,14 @@ class RGBCamRecorder:
     # def stop_cap_img(self):
     #     self.record_flag = False
 
+def process_record():
+    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera.update_cap_save_path('test')
+    rgb_camera.cap_open_cam()
+    while(True):
+        rgb_camera.cap_rgb_img('002.jpg')
+        time.sleep(1)
+
 if __name__ == "__main__":
 
     #### Video Recording
@@ -127,9 +135,13 @@ if __name__ == "__main__":
 
     # rgb_camera.close()
 
-    #### Image Capture5
-    rgb_camera = RGBCamRecorder(device_index=2)
-    rgb_camera.update_cap_save_path('test')
-    rgb_camera.cap_open_cam()
-    rgb_camera.cap_rgb_img('001.jpg')
+    from multiprocessing import Process
+    process = Process(target=process_record, args=())
+    process.start()
+
+    # #### Image Capture
+    # rgb_camera = RGBCamRecorder(device_index=2)
+    # rgb_camera.update_cap_save_path('test')
+    # rgb_camera.cap_open_cam()
+    # rgb_camera.cap_rgb_img('001.jpg')
 

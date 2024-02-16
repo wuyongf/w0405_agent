@@ -85,6 +85,7 @@ class ThermalCamAgent:
             print(f'[ai_thermalcam_handler.start_capturing] start capturing...')
             interval = 1
             # self.recorder.init_shared_memory(shm_name)
+
             self.process = Process(target=self.recorder.process_start_capturing, args=(interval, shm_name, rgbcam_save_dir))
             self.process.start()
             return True

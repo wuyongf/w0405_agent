@@ -37,6 +37,8 @@ class ThermalCam:
         self.img_data = None
         self.img = None
 
+        self.rgbcam = RGBCamRecorder(device_index=2)
+
         # Uncomment the below line to setup your OpenMV Cam for controlling over WiFi.
         #
         # * slave_ip - IP address to connect to.
@@ -259,9 +261,9 @@ class ThermalCam:
         self.capture_flag = True
 
         ### rgbcam
-        self.rgbcam = RGBCamRecorder(device_index=2)
         self.rgbcam.update_cap_save_path(rgbcam_save_dir)
         self.rgbcam.cap_open_cam()
+        # self.rgbcam.cap_rgb_img('test.jpg')
 
         ### capturing image
         while(self.capture_flag):

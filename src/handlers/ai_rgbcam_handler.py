@@ -104,6 +104,8 @@ class RGBCamAgent:
         except:
             return False
 
+    
+    
     def start_slicing(self):
         pass
 
