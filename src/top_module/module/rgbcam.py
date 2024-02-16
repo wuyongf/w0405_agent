@@ -92,7 +92,6 @@ class RGBCamRecorder:
             raise Exception(f"Could not open video device {self.device_index}")
  
     def cap_rgb_img(self, image_name):
-
         # Capture and save an image
         with self.lock:
             ret, frame = self.cap.read()
