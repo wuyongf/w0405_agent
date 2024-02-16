@@ -7,7 +7,8 @@ class ContainerName(Enum):
     WaterLeakage_Thermal        = 3
     WaterLeakage_Thermal_Result = 4
     WaterLeakage_VideoRear      = 5
-    Surveillance_Audio          = 6
-    Surveillance_VideoFront     = 7
-    Surveillance_VideoRear      = 8
-    Surveillance_Thermal        = 9
+    WaterLeakage_RGBImage       = 6
+    Surveillance_Audio          = 7
+    Surveillance_VideoFront     = 8
+    Surveillance_VideoRear      = 9
+    Surveillance_Thermal        = 10

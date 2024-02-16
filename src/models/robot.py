@@ -979,21 +979,26 @@ class Robot:
                 print(str(img_path))
                 data = self.thermalcam_handler.water_detector.predict(str(img_path))
                 predict_image = self.thermalcam_handler.water_detector.get_image(img_path)
-                # print(f'<debug 4>')
+
                 # analysis
                 if(len(data) == 0): is_abnormal = False
                 else: is_abnormal = True
                 abnormal_list.append(is_abnormal)
-                # print(f'<debug 5>')
+
                 # save result image
                 predict_img_dir = os.path.join(str(self.thermalcam_handler.image_predict_result_path), img_path.name)
                 self.thermalcam_handler.water_detector.save_image(predict_img_dir, predict_image)
-                # print(f'<debug 6>')
-                # upload to azure - raw image
+                
+                # upload to azure - rgb image
+                self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_RGBImage, str(folder_name))
+                rgb_img_path = Path(self.rgbcam_rear_handler.recorder.cap_save_dir) / file_name
+                self.blob_handler.upload_blobs(str(rgb_img_path))
+
+                # upload to azure - thermal image - raw
                 self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal, str(folder_name))
                 self.blob_handler.upload_blobs(str(img_path))
-                # print(f'<debug 7>')
-                 # upload to azure - predict image
+
+                # upload to azure - thermal image - predict result
                 self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_Thermal_Result, str(folder_name))
                 self.blob_handler.upload_blobs(predict_img_dir)
 

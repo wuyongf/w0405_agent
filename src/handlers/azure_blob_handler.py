@@ -37,6 +37,8 @@ class AzureBlobHandler():
                 self.container_name = self.config.get('Azure', 'container_wl_thermal_image_result') + '/' + folder_name
             case ContainerName.WaterLeakage_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_wl_video_rear')
+            case ContainerName.WaterLeakage_RGBImage:
+                self.container_name = self.config.get('Azure', 'container_wl_rgb_image')
             case ContainerName.Surveillance_Audio:
                 self.container_name = self.config.get('Azure', 'container_s_audio')
             case ContainerName.Surveillance_VideoFront:
