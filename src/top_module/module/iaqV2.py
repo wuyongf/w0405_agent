@@ -85,9 +85,10 @@ class IaqSensor():
         self.modb.InsertIaqData("sensor.iaq.history", self.header_list_insert, value, self.task_id)
 
     def data_stream(self, value):
-        print("[iaq.py] dataStream")
+        # print("[iaq.py] dataStream")
+        # print(f'[iaq.py] dataStream: value: {value}')
         self.modb.StreamIaqData("sensor.iaq.stream", self.header_list, value)
-        self.modb.DeleteLastStreamIaqData()
+        # self.modb.DeleteLastStreamIaqData()
 
     def set_task_mode(self, e, task_id=0):
         # Set task mode
@@ -217,8 +218,10 @@ class IaqSensor():
         self.set_capture_position(x=current_x, y=current_y)
 
     def stream_thread(self):
-        self.data_stream(self.result)
-        time.sleep(self.time_interval)
+        while(True):
+            self.data_stream(self.result)
+            # print(f'[iaqv2.stream_thread]: self.result: {self.result}')
+            time.sleep(self.time_interval)
 
     def parse_json(self):
         obj = json.loads(self.status_summary())
