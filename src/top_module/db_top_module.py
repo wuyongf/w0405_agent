@@ -52,11 +52,11 @@ class TopModuleDBHandler(db.AzureDB):
 
         if current_count < 150:
             statement = f'INSERT INTO {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
-            print(f'[db_top_module.StreamIaqData]: {statement}')
+            # print(f'[db_top_module.StreamIaqData]: {statement}')
             self.Insert(statement)
         else:
             delete_statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
-            print(f'Deleting oldest row: {delete_statement}')
+            # print(f'Deleting oldest row: {delete_statement}')
             self.Delete(delete_statement)
 
     def DeleteLastStreamIaqData(self):

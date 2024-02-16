@@ -86,13 +86,13 @@ class RGBCamRecorder:
         os.makedirs(self.cap_save_dir, exist_ok=True)
     
     def cap_open_cam(self):
-        pass
- 
-    def cap_rgb_img(self, image_name):
         # Open the camera
         self.cap = cv2.VideoCapture(self.device_index)
         if not self.cap.isOpened():
             raise Exception(f"Could not open video device {self.device_index}")
+ 
+    def cap_rgb_img(self, image_name):
+
 
         # Capture and save an image
         with self.lock:
