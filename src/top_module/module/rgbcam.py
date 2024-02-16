@@ -93,7 +93,6 @@ class RGBCamRecorder:
  
     def cap_rgb_img(self, image_name):
 
-
         # Capture and save an image
         with self.lock:
             ret, frame = self.cap.read()
@@ -133,5 +132,6 @@ if __name__ == "__main__":
     #### Image Capture5
     rgb_camera = RGBCamRecorder(device_index=2)
     rgb_camera.update_cap_save_path('test')
+    rgb_camera.cap_open_cam()
     rgb_camera.cap_rgb_img('001.jpg')
 
