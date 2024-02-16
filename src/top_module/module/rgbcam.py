@@ -14,6 +14,9 @@ class RGBCamRecorder:
         self.cap = cv2.VideoCapture(self.device_index)
         if not self.cap.isOpened():
             raise Exception(f"Could not open video device {self.device_index}")
+        
+        # Create a lock for synchronizing access to the camera
+        self.lock = threading.Lock()
 
     def update_save_path(self, output_dir):
         if self.record_flag:
@@ -84,7 +87,8 @@ class RGBCamRecorder:
     
     def cap_rgb_img(self, image_name):
         # Capture and save an image
-        ret, frame = self.cap.read()
+        with self.lock:
+            ret, frame = self.cap.read()
         if not ret:
             print("Error reading frame from camera.")
             return
