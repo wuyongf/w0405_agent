@@ -46,7 +46,7 @@ class TopModuleDBHandler(db.AzureDB):
 
     def StreamIaqData(self, table, key, value):
         statement = f'insert into {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
-        # print(f'[db_top_module.StreamIaqData]: {statement}')
+        print(f'[db_top_module.StreamIaqData]: {statement}')
         self.Insert(statement)
 
     def DeleteLastStreamIaqData(self):

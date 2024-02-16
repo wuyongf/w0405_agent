@@ -421,7 +421,7 @@ class MissionPublisher:
         self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
 
     ### 2024.02.27 DEMO ###
-    def tasks_demo_iaq(self, current_floor_id):
+    def tasks_demoiaq_webdisplay(self, current_floor_id):
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
 
@@ -439,6 +439,28 @@ class MissionPublisher:
         tasks.append(goto_00)
         tasks.append(goto_02)
         tasks.append(goto_03)
+        tasks.append(iaq_off)        
+
+        return layout_rm_guid, tasks
+
+    def tasks_demoiaq_4thtrail(self, current_floor_id):
+        map_rm_guid = self.dict_map_guid[current_floor_id]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+
+        iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+        iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+
+        goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 270)
+        goto_02 = self.rmapi.new_task_goto(map_rm_guid, "DEMO2", layout_heading = 0)
+        goto_03 = self.rmapi.new_task_goto(map_rm_guid, "DEMO3", layout_heading = 90)
+        goto_04 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 270)
+        
+        tasks = []
+        tasks.append(iaq_on)
+        tasks.append(goto_01)
+        tasks.append(goto_02)
+        tasks.append(goto_03)
+        tasks.append(goto_04)
         tasks.append(iaq_off)        
 
         return layout_rm_guid, tasks
@@ -470,7 +492,7 @@ class MissionPublisher:
 
     def construct_demo_iaq(self):
         tasks = []
-        _, x1 = self.tasks_demo_iaq(6)
+        _, x1 = self.tasks_demoiaq_webdisplay(6)
         tasks = x1
 
         mission_name = 'Demo IAQ'
@@ -490,17 +512,17 @@ if __name__ == '__main__':
 
     pub = MissionPublisher(skill_config_dir, rmapi)
 
-    pub.construct_demo_iaq()
+    # pub.construct_demo_iaq()
 
     ### How to create new tasks
-    layout_rm_guid, tasks = pub.tasks_demo_iaq(6)
+    layout_rm_guid, tasks = pub.tasks_demoiaq_4thtrail(4)
     print(f'<layout_rm_guid>: {layout_rm_guid}')
     print(f'<tasks>: {tasks}')
 
     rmapi.new_job(robot_id  = '2658a873-a0a6-4c3f-967f-d179c4073272',
                   layout_id = layout_rm_guid,
                   tasks=tasks,
-                  job_name='demo_iaq')
+                  job_name='demoiaq_4thtrail')
 
     ### or just hardcode
     # tasks = "[{'skillId': '466c253f-9ce4-4424-97ba-34d7a5a7bb12', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '1da71ed3-ec98-4f2b-8a97-607e1291b881', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO1'}, {'paramKey': 'x', 'paramValue': 2672.8703872296323}, {'paramKey': 'y', 'paramValue': 871.0368588791246}, {'paramKey': 'heading', 'paramValue': 172.4699472771878}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '283cd7d4-fb7d-4c56-adce-e26d871bc0d2', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO2'}, {'paramKey': 'x', 'paramValue': 2540.7534308662707}, {'paramKey': 'y', 'paramValue': 941.0603236271343}, {'paramKey': 'heading', 'paramValue': 268.17494727718775}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '0ed5a4b4-3b1c-4c62-b2bc-624a57dc2c44', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO3'}, {'paramKey': 'x', 'paramValue': 2415.2318594304948}, {'paramKey': 'y', 'paramValue': 952.8312167354525}, {'paramKey': 'heading', 'paramValue': -3.774252722812215}]}, {'skillId': 'a6294871-8566-4ba9-b4c6-9bac761b4e77', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}]"
