@@ -935,7 +935,7 @@ class Robot:
 
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
-            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder) # add rgb_cam
+            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder.cap_save_dir) # add rgb_cam
 
             return True
         except:
