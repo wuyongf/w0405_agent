@@ -253,7 +253,10 @@ class Robot:
             battery = self.rvmqtt.get_battery_percentage()
         if (protocol == NWEnum.Protocol.RVAPI):
             battery = self.rvapi.get_battery_state().percentage
-        return round(battery * 100, 3)
+        
+        filter_battery = round(battery * 100, 3)
+        if filter_battery > 100: filter_battery = 100
+        return filter_battery
 
     def get_current_pose(self, protocol=NWEnum.Protocol):
         try:
