@@ -93,8 +93,7 @@ class RGBCamRecorder:
  
     def cap_rgb_img(self, image_name):
         # Capture and save an image
-        with self.lock:
-            ret, frame = self.cap.read()
+        ret, frame = self.cap.read()
         if not ret:
             print("Error reading frame from camera.")
             return
