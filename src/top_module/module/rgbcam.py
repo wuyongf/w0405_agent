@@ -118,8 +118,8 @@ if __name__ == "__main__":
 
     # rgb_camera.close()
 
-    #### Image Capture
-    rgb_camera = RGBCamRecorder(device_index=0)
-
-    rgb_camera.cap_rgb_img('test', '001.jpg')
+    #### Image Capture5
+    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera.update_cap_save_path('test')
+    rgb_camera.cap_rgb_img('001.jpg')
 
