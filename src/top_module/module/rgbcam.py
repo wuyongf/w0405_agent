@@ -9,11 +9,6 @@ class RGBCamRecorder:
         self.output_file = None
         self.out = None
         self.record_flag = False  # Recording is off by default
-
-        # Open the camera
-        self.cap = cv2.VideoCapture(self.device_index)
-        if not self.cap.isOpened():
-            raise Exception(f"Could not open video device {self.device_index}")
         
         # Create a lock for synchronizing access to the camera
         self.lock = threading.Lock()
@@ -27,6 +22,11 @@ class RGBCamRecorder:
         self.output_dir = output_dir
 
     def capture_and_save_video(self):
+
+        # Open the camera
+        self.cap = cv2.VideoCapture(self.device_index)
+        if not self.cap.isOpened():
+            raise Exception(f"Could not open video device {self.device_index}")
 
         # Get the camera's frame width and height
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -85,7 +85,15 @@ class RGBCamRecorder:
         self.cap_save_dir = cap_save_dir
         os.makedirs(self.cap_save_dir, exist_ok=True)
     
+    def cap_open_cam(self):
+        pass
+ 
     def cap_rgb_img(self, image_name):
+        # Open the camera
+        self.cap = cv2.VideoCapture(self.device_index)
+        if not self.cap.isOpened():
+            raise Exception(f"Could not open video device {self.device_index}")
+
         # Capture and save an image
         with self.lock:
             ret, frame = self.cap.read()

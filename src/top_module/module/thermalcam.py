@@ -12,6 +12,7 @@ import io
 import numpy as np
 import threading
 from multiprocessing import Process
+from top_module.module.rgbcam import RGBCamRecorder
 # import pygame
 
 
@@ -214,20 +215,22 @@ class ThermalCam:
         image = self.__get_frame_buffer_call_back()
         # print(self.robot_position)
         if image is not None:
-            temp_image = copy.deepcopy(image)
+            temp_image_gray = copy.deepcopy(image)
             timestamp = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
             filename = f'{timestamp}_{self.robot_position[0]}_{self.robot_position[1]}_{self.robot_position[2]}.jpg'
             # filename = f'{timestamp}.jpg'
             print(filename)
             # filename = time.strftime("%Y%m%d %H.%M.%S", time.localtime()) + " gray.jpg"
             filepath = os.path.join(self.save_folder, filename)
-            temp_image = np.asarray(temp_image, dtype="uint8")
-            temp_image = cv2.imdecode(temp_image, cv2.IMREAD_GRAYSCALE)
-            if temp_image is None: 
+            temp_image_gray = np.asarray(temp_image_gray, dtype="uint8")
+            temp_image_gray = cv2.imdecode(temp_image_gray, cv2.IMREAD_GRAYSCALE)
+            cv2.normalize(temp_image_gray, temp_image_gray, 0, 255, cv2.NORM_MINMAX)
+            heatmap = cv2.applyColorMap(temp_image_gray, cv2.COLORMAP_INFERNO)
+            if heatmap is None: 
                 print(f'thermal image is NONE!!!')
                 return None
             # [theraml_image]
-            cv2.imwrite(filepath, temp_image)
+            cv2.imwrite(filepath, heatmap)
             # [rgb_image]
             rgbcam.cap_rgb_img(filename)
 
@@ -253,6 +256,11 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
+
+        ### rgbcam
+        rgbcam.cap_open_cam()
+
+        ### capturing image
         while(self.capture_flag):
             self.capture_image(rgbcam)
             time.sleep(interval)
