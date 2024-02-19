@@ -12,7 +12,7 @@ import io
 import numpy as np
 import threading
 from multiprocessing import Process
-from top_module.module.rgbcam import RGBCamRecorder
+from src.top_module.module.rgbcam import RGBCamRecorder
 import multiprocessing
 # import pygame
 
@@ -37,7 +37,7 @@ class ThermalCam:
         self.img_data = None
         self.img = None
 
-        self.rgbcam = RGBCamRecorder(device_index=2)
+        # self.rgbcam = RGBCamRecorder(device_index=2)
 
         # Uncomment the below line to setup your OpenMV Cam for controlling over WiFi.
         #
@@ -214,7 +214,7 @@ class ThermalCam:
         else:
             return None
     
-    def capture_image(self):
+    def capture_image(self, rgbcam):
         image = self.__get_frame_buffer_call_back()
         # print(self.robot_position)
         if image is not None:
@@ -235,7 +235,7 @@ class ThermalCam:
             # [theraml_image]
             cv2.imwrite(filepath, heatmap)
             # [rgb_image]
-            self.rgbcam.cap_rgb_img(filename)
+            rgbcam.cap_rgb_img(filename)
 
             return filepath
         else:
@@ -254,20 +254,20 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
 
-    def process_start_capturing(self, interval, shm_name, rgbcam_save_dir):
+    def process_start_capturing(self, interval, shm_name, rgbcam):
         print(f'[thermalcam] start capturing...')
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
 
         ### rgbcam
-        self.rgbcam.update_cap_save_path(rgbcam_save_dir)
-        self.rgbcam.cap_open_cam()
+        # self.rgbcam.update_cap_save_path(rgbcam_save_dir)
+        rgbcam.cap_open_cam()
         # self.rgbcam.cap_rgb_img('test.jpg')
 
         ### capturing image
         while(self.capture_flag):
-            self.capture_image()
+            self.capture_image(rgbcam)
             time.sleep(interval)
 
     def stop_capturing(self):

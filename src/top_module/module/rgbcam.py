@@ -135,13 +135,13 @@ if __name__ == "__main__":
 
     # rgb_camera.close()
 
-    from multiprocessing import Process
-    process = Process(target=process_record, args=())
-    process.start()
+    # from multiprocessing import Process
+    # process = Process(target=process_record, args=())
+    # process.start()
 
-    # #### Image Capture
-    # rgb_camera = RGBCamRecorder(device_index=2)
-    # rgb_camera.update_cap_save_path('test')
-    # rgb_camera.cap_open_cam()
-    # rgb_camera.cap_rgb_img('001.jpg')
+    #### Image Capture
+    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera.update_cap_save_path('test')
+    rgb_camera.cap_open_cam()
+    rgb_camera.cap_rgb_img('003.jpg')
 

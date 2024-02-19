@@ -23,6 +23,7 @@ class RGBCamAgent:
         self.video_record_path = ''
 
         # for recording
+        self.device_index = device_index
         self.recorder = RGBCamRecorder(device_index)
         # self.rgbcam_recorder_rear = RGBCamRecorder(device_index=2)
     
@@ -116,29 +117,33 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     video_handler = RGBCamAgent(config, device_index=2)
 
-    video_handler.construct_paths(mission_id=990, inspection_type=InspectionType.LiftInspection, camera_position=NWEnums.CameraPosition.Front)
+    video_handler.recorder.update_cap_save_path('test')
+    video_handler.recorder.cap_open_cam()
+    video_handler.recorder.cap_rgb_img('test2.jpg')
 
-    video_handler.start_recording()
+    # video_handler.construct_paths(mission_id=990, inspection_type=InspectionType.LiftInspection, camera_position=NWEnums.CameraPosition.Front)
 
-    time.sleep(10)
+    # video_handler.start_recording()
 
-    video_file_path = video_handler.stop_and_save_recording()
+    # time.sleep(10)
+
+    # video_file_path = video_handler.stop_and_save_recording()
     
-    ###  Video - Notify User
+    # ###  Video - Notify User
 
-    ###  Video - upload to cloud (1. Azure Container) 
-    blob_handler = AzureBlobHandler(config)
-    blob_handler.update_container_name(ContainerName.LiftInspection_VideoFront)
-    blob_handler.upload_blobs(video_file_path)
+    # ###  Video - upload to cloud (1. Azure Container) 
+    # blob_handler = AzureBlobHandler(config)
+    # blob_handler.update_container_name(ContainerName.LiftInspection_VideoFront)
+    # blob_handler.upload_blobs(video_file_path)
 
-    mp4_file_name = Path(video_file_path).name
-    print(str(mp4_file_name))
+    # mp4_file_name = Path(video_file_path).name
+    # print(str(mp4_file_name))
 
-    # Video - upload to cloud (2. NWDB)
-    nwdb = robotDBHandler(config)
-    nwdb.insert_new_video_id(NWEnums.CameraPosition.Front, robot_id=1, mission_id=2, video_file_name=mp4_file_name)
-    video_id = nwdb.get_latest_video_id(NWEnums.CameraPosition.Front)
-    # nwdb.insert_new_audio_analysis(audio_id=video_id, formatted_output_list=formatted_output, audio_type=NWEnums.AudioType.Door)
+    # # Video - upload to cloud (2. NWDB)
+    # nwdb = robotDBHandler(config)
+    # nwdb.insert_new_video_id(NWEnums.CameraPosition.Front, robot_id=1, mission_id=2, video_file_name=mp4_file_name)
+    # video_id = nwdb.get_latest_video_id(NWEnums.CameraPosition.Front)
+    # # nwdb.insert_new_audio_analysis(audio_id=video_id, formatted_output_list=formatted_output, audio_type=NWEnums.AudioType.Door)
 
-    # - notify user
+    # # - notify user
     

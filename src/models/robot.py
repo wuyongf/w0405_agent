@@ -952,7 +952,8 @@ class Robot:
             print(f'wld_mission_id: {self.wld_mission_id}')
 
             ### [rear_rbgcam]
-            self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
+            # self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
+            self.rgbcam_front_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
 
             # <debug!!>
             # self.rgbcam_rear_handler.recorder.cap_open_cam()
@@ -960,7 +961,7 @@ class Robot:
 
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
-            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder.cap_save_dir) # add rgb_cam
+            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_front_handler.recorder) # add rgb_cam
 
             return True
         except:
@@ -2255,14 +2256,19 @@ class Robot:
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
-    skill_config_path = './conf/rm_skill.properties'
+    skill_config_path = '../../conf/rm_skill.properties'
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
     robot.sensor_start()
 
+    # robot.rgbcam_front_handler.recorder.update_cap_save_path('test')
+    # robot.rgbcam_front_handler.recorder.cap_open_cam()
+    # robot.rgbcam_front_handler.recorder.cap_rgb_img('test2.jpg')
+
+    robot.rgbcam_rear_handler.recorder.update_cap_save_path('test')
     robot.rgbcam_rear_handler.recorder.cap_open_cam()
-    robot.rgbcam_rear_handler.recorder.cap_rgb_img('test.jpg')
+    robot.rgbcam_rear_handler.recorder.cap_rgb_img('test3.jpg')
 
     # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 
