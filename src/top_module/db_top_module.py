@@ -58,6 +58,8 @@ class TopModuleDBHandler(db.AzureDB):
             delete_statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
             # print(f'Deleting oldest row: {delete_statement}')
             self.Delete(delete_statement)
+            
+        time.sleep(1)
 
     def DeleteLastStreamIaqData(self):
         statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
