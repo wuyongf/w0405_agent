@@ -129,15 +129,15 @@ class RMAPI(api.AuthenticatedAPI):
             return current_time
 
         # start time
-        start_time = convertDate(2024,2,15,15,38,00,offset_hours = 8)
-        end_time =   convertDate(2024,2,15,16,6,00,offset_hours = 8)
+        start_time = convertDate(2024,2,19,12,42,00,offset_hours = 8)
+        end_time =   convertDate(2024,2,19,12,44,00,offset_hours = 8)
 
         payload = {}
         # payload["layoutId"] = '00000000-0000-0000-0000-000000000000'#'0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d'#
         # payload["layoutName"] = "6F-Layout"
         # payload["name"] = 'ChargingOffOn'
         payload["mode"] = 3
-        payload['id'] = '2bb26b62-e10b-4d7f-ba32-880a96043602'
+        payload['id'] = '0114e711-1472-45f8-b75f-dda243541298' # this is rm_mission_guid
         payload["startTime"]   = start_time #'2024-01-12T12:37:00Z'
         payload["endTime"] = end_time
         payload["scheduledAt"] = start_time #'2024-01-12T12:37:00Z'
@@ -910,10 +910,10 @@ if __name__ == '__main__':
     res = rmapi.get_layout_marker_detail('0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'DEMO1')
     print(res)
     
-    # rmapi.update_rm_mission()
+    rmapi.update_rm_mission()
 
-    res = rmapi.list_rm_missions()
-    print(res)
+    # res = rmapi.list_rm_missions()
+    # print(res)
 
     # robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
     # map_rm_guid = 'c5f360ec-f4be-4978-a281-0a569dab1174'

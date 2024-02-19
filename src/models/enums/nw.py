@@ -75,9 +75,19 @@ class RobotStatusMode(Enum):
     pass
 
 class TaskStatus(Enum):
+    '''
+    For each task status
+    '''
     NULL = 1
     EXECUTING = 2
     PAUSE = 3
     STOP = 4
     ERROR = 5
     pass
+
+class UIMissionStatus(Enum):
+    IDEL = 1
+    EXECUTING = 2
+    FINISH = 3
+    pass
+

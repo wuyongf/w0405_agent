@@ -266,6 +266,20 @@ class robotDBHandler(db.AzureDB):
         except:
             print('[db_robot.update_ui_display_status] error')
 
+    def update_ui_mission_status(self, status, robot_nw_id, mission_id = None):
+        # robot.status
+        self.update_single_value('robot.status','mission_status',status,'ID',robot_nw_id)
+        # # sys.mission
+        # self.update_single_value('sys.mission','status',status,'ID',mission_id)
+        pass
+
+    def update_ui_mission_detailed_info(self, detailed_info, robot_nw_id, mission_id = None):
+        # robot.status
+        self.update_single_value('robot.status','mission_detailed_info',detailed_info,'ID',robot_nw_id)
+        # # sys.mission
+        # self.update_single_value('sys.mission','detailed_info',detailed_info,'ID',mission_id)
+        pass
+
     # AI
 
     ### rgbcam
@@ -347,10 +361,13 @@ if __name__ == '__main__':
     ### Lift
     # base64 = nwdb.get_single_value('robot.map.layout', 'base64', 'name', "'GF-Layout'")
 
-    ### Update base64
-    text_file = open("sample.txt", "r")
-    data = text_file.read()
-    nwdb.update_single_value('robot.map', 'base64', f"'{data}'", 'ID', 7)
+    ### ui_mission_status
+    nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=1)
+
+    # ### Update base64
+    # text_file = open("sample.txt", "r")
+    # data = text_file.read()
+    # nwdb.update_single_value('robot.map', 'base64', f"'{data}'", 'ID', 7)
 
     # ### Lift
     # target_layout_id = nwdb.get_single_value('robot.map', 'layout_id', 'rm_guid', "'d6734e98-f53a-4b69-8ed8-cbc42ef58e3a'")

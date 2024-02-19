@@ -61,7 +61,7 @@ class Robot:
         self.T = Trans.RVRMTransform()
         self.T_RM = Trans.RMLayoutMapTransform()
         self.missionpub = MissionPublisher(skill_config_dir, self.rmapi)
-        ## AI-INIT
+        ## AI-Init
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
@@ -101,6 +101,7 @@ class Robot:
         self.has_arrived = False
         self.is_manual_control = False
         self.is_followme = False
+        self.mission_id = 0
 
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -114,7 +115,6 @@ class Robot:
         
         ## ROBOT CONFIGURATION
         self.skill_config = self.rmapi.skill_config
-
         
         ## delivery related
         self.nw_goto_done = False
@@ -548,6 +548,9 @@ class Robot:
             # self.rvapi.put_safety_zone_minimum()
             # self.rvapi.put_maximum_speed(0.3)
 
+            # [1] info UI(real-time)
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=5,robot_nw_id=self.robot_nw_id)
+
             self.rvapi.put_safety_zone_minimum()
             self.rvapi.put_maximum_speed(0.3)
 
@@ -698,6 +701,9 @@ class Robot:
                     ## info [robot.wait_for_robot_arrived]
                     self.has_arrived = True
 
+                    # [1] info UI(real-time)
+                    self.nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=self.robot_nw_id)
+
                 # # if error
                 # if(self.check_goto_has_error):
                 #     print('flag error') # throw error log
@@ -743,21 +749,35 @@ class Robot:
     # Module - IAQ
     def iaq_on(self, task_json):
         try:
+            # [1] info UI(real-time)
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
+
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
 
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.IAQ)
-            mission_id = self.nwdb.get_latest_mission_id()
+            self.mission_id = self.nwdb.get_latest_mission_id()
 
             # mission_id = self.rmapi.get_mission_id(task_json['taskId'])
-            print(f'mission_id: {mission_id}')
-            self.mo_iaq.set_task_mode(e=True, task_id=mission_id)
+            print(f'mission_id: {self.mission_id}')
+            self.mo_iaq.set_task_mode(e=True, task_id=self.mission_id)
+
+            # [2] info UI(real-time)
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=2,robot_nw_id=self.robot_nw_id)
+
             return True
         except:
             return False
 
     def iaq_off(self, task_json):
         try:
+            # [1] info UI(real-time)
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=3,robot_nw_id=self.robot_nw_id)
+
+            # [2] stop IAQ sensor
             self.mo_iaq.set_task_mode(False)
+
+            # [3] info UI(real-time)
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
             return True
         except:
             return False
@@ -2241,12 +2261,15 @@ if __name__ == '__main__':
     robot = Robot(config, port_config, skill_config_path, ai_config)
     robot.sensor_start()
 
+    robot.rgbcam_rear_handler.recorder.cap_open_cam()
+    robot.rgbcam_rear_handler.recorder.cap_rgb_img('test.jpg')
+
     # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 
     # robot.pub_call_lift(a_lift_mission)
     # robot.process_lift_in(4,6)
 
-    robot.call_lift_and_check_arrive(4, 5)
+    # robot.call_lift_and_check_arrive(4, 5)
     # robot.charging_on()
     # robot.charging_off()
     # robot.charging_goto()
