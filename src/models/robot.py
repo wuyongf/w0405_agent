@@ -43,6 +43,7 @@ from src.handlers.ai_audio_handler import AudioAgent
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
+from src.top_module.module.rgbcam import RGBCamRecorder
 # Notification
 from src.handlers.event_handler import EventHandler
 
@@ -67,6 +68,8 @@ class Robot:
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)
+        self.rgbcam = RGBCamRecorder(2)
+        
         ## Notification
         self.event_handler = EventHandler("localhost", self.status_summary)
         self.event_handler.start()
@@ -952,16 +955,18 @@ class Robot:
             print(f'wld_mission_id: {self.wld_mission_id}')
 
             ### [rear_rbgcam]
-            # self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
-            self.rgbcam_front_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
+            save_dir = self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
+            self.rgbcam.update_cap_save_path(save_dir)
+            # self.rgbcam_front_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
 
             # <debug!!>
             # self.rgbcam_rear_handler.recorder.cap_open_cam()
             # self.rgbcam_rear_handler.recorder.cap_rgb_img('test.jpg')
-
+            
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
-            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_front_handler.recorder) # add rgb_cam
+            # self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder) # add rgb_cam
+            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam) # add rgb_cam
 
             return True
         except:
