@@ -4,7 +4,7 @@ import time
 import threading
 
 class RGBCamRecorder:
-    def __init__(self, device_index=0):
+    def __init__(self, device_index):
         self.device_index = device_index
         self.output_file = None
         self.out = None
@@ -40,7 +40,7 @@ class RGBCamRecorder:
             cv2.destroyAllWindows()
             
             # Define the codec and create a VideoWriter object
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')  # You can choose other codecs
+            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # You can choose other codecs
             self.out = cv2.VideoWriter(self.output_file, fourcc, 20.0, (self.width, self.height))
             self.record_flag = True
             threading.Thread(target=self.record).start()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     # process.start()
 
     #### Image Capture
-    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera = RGBCamRecorder(device_index=0)
     rgb_camera.update_cap_save_path('test')
     rgb_camera.cap_open_cam()
     rgb_camera.cap_rgb_img('003.jpg')

@@ -62,18 +62,26 @@ class Robot:
         self.T = Trans.RVRMTransform()
         self.T_RM = Trans.RMLayoutMapTransform()
         self.missionpub = MissionPublisher(skill_config_dir, self.rmapi)
+
+
+
         ## AI-Init
-        self.audio_handler = AudioAgent(config, ai_config)
+        # rgbcam =  RGBCamRecorder(device_index=0)
+        # rgbcam.update_cap_save_path('test')
+        # rgbcam.cap_open_cam()
+        # rgbcam.cap_rgb_img('test13.jpg')
+        # BUG: 2024.02.20: need to check. audio interruot with rgbcam
+        # self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)
-        self.rgbcam = RGBCamRecorder(2)
+        self.rgbcam = RGBCamRecorder(0)
         
         ## Notification
         self.event_handler = EventHandler("localhost", self.status_summary)
         self.event_handler.start()
-
+###
         #
         self.config = config
         self.port_config = port_config
@@ -2264,16 +2272,30 @@ if __name__ == '__main__':
     skill_config_path = '../../conf/rm_skill.properties'
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
+
+
     robot = Robot(config, port_config, skill_config_path, ai_config)
-    robot.sensor_start()
+
+    time.sleep(5)
+
+    # robot.sensor_start()
 
     # robot.rgbcam_front_handler.recorder.update_cap_save_path('test')
     # robot.rgbcam_front_handler.recorder.cap_open_cam()
-    # robot.rgbcam_front_handler.recorder.cap_rgb_img('test2.jpg')
+    # robot.rgbcam_front_handler.recorder.cap_rgb_img('test2.0jpg')
 
-    robot.rgbcam_rear_handler.recorder.update_cap_save_path('test')
-    robot.rgbcam_rear_handler.recorder.cap_open_cam()
-    robot.rgbcam_rear_handler.recorder.cap_rgb_img('test3.jpg')
+    # robot.rgbcam_rear_handler.recorder.update_cap_save_path('test')
+    # robot.rgbcam_rear_handler.recorder.cap_open_cam()
+    # robot.rgbcam_rear_handler.recorder.cap_rgb_img('test9.jpg')
+
+    # robot.rgbcam.update_save_path('test')
+    # robot.rgbcam.capture_and_save_video()
+    # time.sleep(10)
+    # robot.rgbcam.stop_and_save_record()
+
+    # robot.rgbcam.update_cap_save_path('test')
+    # robot.rgbcam.cap_open_cam()
+    # robot.rgbcam.cap_rgb_img('test9.jpg')
 
     # a_lift_mission = robot.get_lift_mission_detail(5, 6)
 

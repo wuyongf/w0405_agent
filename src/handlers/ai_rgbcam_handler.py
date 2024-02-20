@@ -25,7 +25,6 @@ class RGBCamAgent:
         # for recording
         self.device_index = device_index
         self.recorder = RGBCamRecorder(device_index)
-        # self.rgbcam_recorder_rear = RGBCamRecorder(device_index=2)
     
     # Logic - Level 2
     def construct_paths(self, mission_id, inspection_type: InspectionType, camera_position: NWEnums.CameraPosition):
@@ -115,11 +114,11 @@ class RGBCamAgent:
 
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
-    video_handler = RGBCamAgent(config, device_index=2)
+    video_handler = RGBCamAgent(config, device_index=0)
 
     video_handler.recorder.update_cap_save_path('test')
     video_handler.recorder.cap_open_cam()
-    video_handler.recorder.cap_rgb_img('test2.jpg')
+    video_handler.recorder.cap_rgb_img('test5.jpg')
 
     # video_handler.construct_paths(mission_id=990, inspection_type=InspectionType.LiftInspection, camera_position=NWEnums.CameraPosition.Front)
 
