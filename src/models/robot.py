@@ -70,15 +70,12 @@ class Robot:
         # rgbcam.update_cap_save_path('test')
         # rgbcam.cap_open_cam()
         # rgbcam.cap_rgb_img('test13.jpg')
-        # BUG: 2024.02.20: need to check. audio interruot with rgbcam
+        # BUG: 2024.02.21: bug fixed. audio interruot with rgbcam. need to set default audio input in ubuntu.
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
-        self.thermalcam_handler = ThermalCamAgent(config)
-        # self.rgbcam = RGBCamRecorder(0)
-
-        
+        self.thermalcam_handler = ThermalCamAgent(config)      
         
         ## Notification
         self.event_handler = EventHandler("localhost", self.status_summary)
@@ -762,6 +759,7 @@ class Robot:
     def iaq_on(self, task_json):
         try:
             # [1] info UI(real-time)
+            self.nwdb.update_ui_mission_status(status=2, robot_nw_id=self.robot_nw_id)
             self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
@@ -790,6 +788,23 @@ class Robot:
 
             # [3] info UI(real-time)
             self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
+            return True
+        except:
+            return False
+
+
+    def mission_end(self):
+        try:
+
+            self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
+            # # [1] info UI(real-time)
+            # self.nwdb.update_ui_mission_detailed_info(detailed_info=3,robot_nw_id=self.robot_nw_id)
+
+            # # [2] stop IAQ sensor
+            # self.mo_iaq.set_task_mode(False)
+
+            # # [3] info UI(real-time)
+            # self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
             return True
         except:
             return False

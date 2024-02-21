@@ -427,19 +427,22 @@ class MissionPublisher:
 
         iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
         iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'END'), layout_rm_guid)
 
-        goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 178.99)
-        goto_00 = self.rmapi.new_task_goto(map_rm_guid, "DEMO0", layout_heading = 274.695)
+        
+        # goto_00 = self.rmapi.new_task_goto(map_rm_guid, "DEMO0", layout_heading = 274.695)
         goto_02 = self.rmapi.new_task_goto(map_rm_guid, "DEMO2", layout_heading = 274.695)
         goto_03 = self.rmapi.new_task_goto(map_rm_guid, "DEMO3", layout_heading = 2.7458)
+        goto_01 = self.rmapi.new_task_goto(map_rm_guid, "DEMO1", layout_heading = 178.99)
         
         tasks = []
         tasks.append(iaq_on)
-        tasks.append(goto_01)
-        tasks.append(goto_00)
+        # tasks.append(goto_00)
         tasks.append(goto_02)
         tasks.append(goto_03)
-        tasks.append(iaq_off)        
+        tasks.append(iaq_off)  
+        tasks.append(goto_01)
+        tasks.append(end)
 
         return layout_rm_guid, tasks
 

@@ -383,6 +383,15 @@ class TaskHandler:
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
+            
+            case 'END':
+                # print(f'WATER-LEAKAGE-DETECT-END JSON: {task_json}')
+                res = self.robot.mission_end()
+                if (res):
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
 
 if __name__ == "__main__":
