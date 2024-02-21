@@ -71,18 +71,19 @@ class Robot:
         # rgbcam.cap_open_cam()
         # rgbcam.cap_rgb_img('test13.jpg')
         # BUG: 2024.02.20: need to check. audio interruot with rgbcam
-        # self.audio_handler = AudioAgent(config, ai_config)
+        self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)
-        self.rgbcam = RGBCamRecorder(0)
+        # self.rgbcam = RGBCamRecorder(0)
+
+        
         
         ## Notification
         self.event_handler = EventHandler("localhost", self.status_summary)
         self.event_handler.start()
-###
-        #
+
         self.config = config
         self.port_config = port_config
         # self.rvmqtt.start() # for RVMQTT.RVMQTT
@@ -964,7 +965,7 @@ class Robot:
 
             ### [rear_rbgcam]
             save_dir = self.rgbcam_rear_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
-            self.rgbcam.update_cap_save_path(save_dir)
+            rgbcam = self.rgbcam_rear_handler.recorder
             # self.rgbcam_front_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
 
             # <debug!!>
@@ -974,7 +975,7 @@ class Robot:
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
             # self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam_rear_handler.recorder) # add rgb_cam
-            self.thermalcam_handler.start_capturing(self.shm.name, self.rgbcam) # add rgb_cam
+            self.thermalcam_handler.start_capturing(self.shm.name, rgbcam) # add rgb_cam
 
             return True
         except:
@@ -1033,7 +1034,7 @@ class Robot:
                 
                 # upload to azure - rgb image
                 self.blob_handler.update_container_name(AzureEnum.ContainerName.WaterLeakage_RGBImage, str(folder_name))
-                rgb_img_path = Path(self.rgbcam_rear_handler.recorder.cap_save_dir) / file_name
+                rgb_img_path = Path(self.rgbcam_rear_handler.recorder.cap_save_dir) / img_path.name
                 self.blob_handler.upload_blobs(str(rgb_img_path))
 
                 # upload to azure - thermal image - raw
