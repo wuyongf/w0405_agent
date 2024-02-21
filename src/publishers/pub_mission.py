@@ -438,11 +438,12 @@ class MissionPublisher:
         tasks = []
         tasks.append(iaq_on)
         # tasks.append(goto_00)
-        tasks.append(goto_02)
+        # tasks.append(goto_02)
         tasks.append(goto_03)
         tasks.append(iaq_off)  
-        tasks.append(goto_01)
         tasks.append(end)
+        tasks.append(goto_01)
+        
 
         return layout_rm_guid, tasks
 
@@ -497,8 +498,9 @@ class MissionPublisher:
         tasks = []
         _, x1 = self.tasks_demoiaq_webdisplay(6)
         tasks = x1
+        # print(f'task_json: {x1}')
 
-        mission_name = 'Demo IAQ'
+        mission_name = 'Demo IAQ3'
         map_rm_guid = self.dict_map_guid[6]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
@@ -516,6 +518,9 @@ if __name__ == '__main__':
     pub = MissionPublisher(skill_config_dir, rmapi)
 
     pub.construct_demo_iaq()
+
+    ##20240221 new task_json
+    task_json = "[{'skillId': '466c253f-9ce4-4424-97ba-34d7a5a7bb12', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '283cd7d4-fb7d-4c56-adce-e26d871bc0d2', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO2'}, {'paramKey': 'x', 'paramValue': 2540.7534308662707}, {'paramKey': 'y', 'paramValue': 941.0603236271343}, {'paramKey': 'heading', 'paramValue': 268.17494727718775}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '0ed5a4b4-3b1c-4c62-b2bc-624a57dc2c44', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO3'}, {'paramKey': 'x', 'paramValue': 2415.2318594304948}, {'paramKey': 'y', 'paramValue': 952.8312167354525}, {'paramKey': 'heading', 'paramValue': -3.774252722812215}]}, {'skillId': 'a6294871-8566-4ba9-b4c6-9bac761b4e77', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '1da71ed3-ec98-4f2b-8a97-607e1291b881', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO1'}, {'paramKey': 'x', 'paramValue': 2672.8703872296323}, {'paramKey': 'y', 'paramValue': 871.0368588791246}, {'paramKey': 'heading', 'paramValue': 172.4699472771878}]}, {'skillId': 'e3b77942-f5a1-4530-b259-ece55804c92c', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}]"
 
     # ### How to create new tasks
     # layout_rm_guid, tasks = pub.tasks_demoiaq_4thtrail(4)

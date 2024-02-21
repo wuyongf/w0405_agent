@@ -561,7 +561,7 @@ class Robot:
             self.nwdb.update_ui_mission_detailed_info(detailed_info=5,robot_nw_id=self.robot_nw_id)
 
             self.rvapi.put_safety_zone_minimum()
-            self.rvapi.put_maximum_speed(0.3)
+            self.rvapi.put_maximum_speed(0.5)
 
             self.door_configured = False
             self.door_agent_start = True  # door-agent logic
