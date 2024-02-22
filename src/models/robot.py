@@ -877,6 +877,9 @@ class Robot:
     # AI
     def lift_noise_detect_start(self, task_json):
         try:
+
+            ### [gyro]
+            self.lift_vibration_on(task_json)
            
             ### add mission_id to nwdb
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
@@ -893,8 +896,9 @@ class Robot:
             self.rgbcam_front_handler.start_recording()
 
             # ### [video_rear]
-            # self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
-            # self.rgbcam_rear_handler.start_recording()
+            self.nwmqttpub.rotate_camera(90)
+            self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
+            self.rgbcam_rear_handler.start_recording()
 
             return True
         except:
@@ -909,8 +913,12 @@ class Robot:
             ### [video_front]
             self.video_front_file_path = self.rgbcam_front_handler.stop_and_save_recording()
 
-            # ### [video_rear]
-            # self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+            ### [video_rear]
+            self.nwmqttpub.rotate_camera(0)
+            self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+
+            ### [gyro]
+            self.lift_vibration_off()
 
             return True
         except:
@@ -961,13 +969,13 @@ class Robot:
             front_mp4_file_name = Path(self.video_front_file_path).name
             self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Front, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=front_mp4_file_name)
 
-            # ### [video_rear] upload to cloud
-            # ### (1) Azure Containe
-            # self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
-            # self.blob_handler.upload_blobs(self.video_rear_file_path)
-            # ### (2) NWDB
-            # rear_mp4_file_name = Path(self.video_rear_file_path).name
-            # self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
+            ### [video_rear] upload to cloud
+            ### (1) Azure Containe
+            self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
+            self.blob_handler.upload_blobs(self.video_rear_file_path)
+            ### (2) NWDB
+            rear_mp4_file_name = Path(self.video_rear_file_path).name
+            self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
 
             return True
         except:

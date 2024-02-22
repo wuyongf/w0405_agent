@@ -297,7 +297,7 @@ if __name__ == "__main__":
     while(True):
         time.sleep(2)
         lift.get_state()
-        lift.release_all_keys()
+        # lift.release_all_keys()
         res = lift.occupied
         print(res)
         # lift.update_motion_state()

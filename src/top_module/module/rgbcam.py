@@ -53,8 +53,9 @@ class RGBCamRecorder:
             if not ret:
                 break
 
-            # Display the frame
-            cv2.imshow("RGB Camera", frame)
+            # # Display the frame
+            # cv2.imshow("RGB Camera", frame)
+            print(f'[rgbcam.py]: index {self.device_index} start recording...')
 
             # Write the frame to the video file
             self.out.write(frame)
