@@ -38,7 +38,7 @@ class StatusHandler:
         self.publisher.loop_start()
         # threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb 
-        Process(target=self.__publish_status_robotLayoutPose,args=(self.shm_name)).start()
+        Process(target=self.__publish_status_robotLayoutPose,args=(self.shm_name,)).start()
         print(f'[status_handler]: Start...')
 
     def __update_status(self): # update thread
@@ -103,13 +103,14 @@ class StatusHandler:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         while True:  
-            # time.sleep(0.2)
+            time.sleep(0.2)
             try:
-                x = self.robot_position[0]
-                y = self.robot_position[1]
-                heading = self.robot_position[2]            
+                x = self.robot_position[1]
+                y = self.robot_position[2]
+                # heading = self.robot_position[3]            
                 ## to nwdb
-                self.robot.nwdb.update_robot_position(x, y, heading)
+                print(self.robot_position)
+                # self.robot.nwdb.update_robot_position(x, y, heading)
                 # self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
