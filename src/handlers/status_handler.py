@@ -100,18 +100,18 @@ class StatusHandler:
                 print('[status_handler.__publish_status] Error. Plese Check')
     
     def __publish_status_robotLayoutPose(self, shm_name): # publish thread
-        existing_shm = shared_memory.SharedMemory(name=shm_name)
-        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
+        # existing_shm = shared_memory.SharedMemory(name=shm_name)
+        # self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         while True:  
             time.sleep(0.2)
             try:
-                x = self.robot_position[1]
-                y = self.robot_position[2]
+                # x = self.robot_position[1]
+                # y = self.robot_position[2]
                 # heading = self.robot_position[3]            
                 ## to nwdb
-                print(self.robot_position)
+                # print(self.robot_position)
                 # self.robot.nwdb.update_robot_position(x, y, heading)
-                # self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
+                self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
 
