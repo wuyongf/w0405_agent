@@ -561,9 +561,6 @@ class Robot:
             # self.rvapi.put_safety_zone_minimum()
             # self.rvapi.put_maximum_speed(0.3)
 
-            # [1] info UI(real-time)
-            self.nwdb.update_ui_mission_detailed_info(detailed_info=5,robot_nw_id=self.robot_nw_id)
-
             self.rvapi.put_safety_zone_minimum()
             self.rvapi.put_maximum_speed(0.4)
 
@@ -607,9 +604,23 @@ class Robot:
             thread.setDaemon(True)
             thread.start()
 
+            # [UI-BIM-INFO]
+            thread = threading.Thread(target=self.thread_demo_mission_info_updater)
+            thread.start()
+
             return True
         except:
             return False
+    
+    def thread_demo_mission_info_updater(self):
+        while self.is_moving:
+            # Moving
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=8,robot_nw_id=self.robot_nw_id)
+            time.sleep(4)
+            # Measuring
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=9,robot_nw_id=self.robot_nw_id)
+            time.sleep(2)
+        pass
 
     def thread_check_charging_status(self, task_json, status_callback):
         print('[charging.check_mission_status] Starting...')
@@ -762,8 +773,9 @@ class Robot:
     # Module - IAQ
     def iaq_on(self, task_json):
         try:
-            # [1] info UI(real-time)
+            # [UI-BIM-MissionBar]
             self.nwdb.update_ui_mission_status(status=2, robot_nw_id=self.robot_nw_id)
+            # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
@@ -775,7 +787,7 @@ class Robot:
             print(f'mission_id: {self.mission_id}')
             self.mo_iaq.set_task_mode(e=True, task_id=self.mission_id)
 
-            # [2] info UI(real-time)
+            # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=2,robot_nw_id=self.robot_nw_id)
 
             return True
@@ -784,13 +796,13 @@ class Robot:
 
     def iaq_off(self, task_json):
         try:
-            # [1] info UI(real-time)
+            # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=3,robot_nw_id=self.robot_nw_id)
 
             # [2] stop IAQ sensor
             self.mo_iaq.set_task_mode(False)
 
-            # [3] info UI(real-time)
+            # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
             return True
         except:
@@ -799,16 +811,16 @@ class Robot:
 
     def mission_end(self):
         try:
-
+            # [UI-BIM-MissionBar]
             self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
-            # # [1] info UI(real-time)
-            # self.nwdb.update_ui_mission_detailed_info(detailed_info=3,robot_nw_id=self.robot_nw_id)
 
-            # # [2] stop IAQ sensor
-            # self.mo_iaq.set_task_mode(False)
+            # [UI-BIM-INFO]
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
+            time.sleep(2)
 
-            # # [3] info UI(real-time)
-            # self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
+            # [UI-BIM-MissionBar]
+            self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)
+
             return True
         except:
             return False

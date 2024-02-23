@@ -193,6 +193,13 @@ class IaqSensor():
         for i in self.result_insert_array:
             self.data_insert(i)
 
+    # def insert_array_to_db(self):
+    #     total_items = len(self.result_insert_array)
+    #     for i, item in enumerate(self.result_insert_array):
+    #         self.data_insert(item)
+    #         # Calculate the current percentage
+    #         percentage = (i + 1) / total_items * 100
+
     def data_check_array(self):
         for i in self.result_check_array:
             self.data_check_stack(i)
