@@ -19,6 +19,7 @@ import src.models.schema.rv as RVSchema
 import src.models.enums.nw as NWEnum
 from multiprocessing import Process, shared_memory
 import numpy as np
+from src.models.db_robot import robotDBHandler
 
 class StatusHandler:
     def __init__(self, robot: Robot.Robot):
@@ -30,13 +31,16 @@ class StatusHandler:
         self.robot = robot
         self.shm_name = self.robot.shm.name
 
+        self.cfg = self.robot.cfg
+        self.nwdb = robotDBHandler(config)
+
     def start(self):
         # status
         self.publisher.loop_start()
         # threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb 
         # threading.Thread(target=self.__publish_status_robotLayoutPose,args=()).start()
-        Process(target=self.__publish_status_robotLayoutPose,args=(self.shm_name,)).start()
+        Process(target=self.__publish_status_robotLayoutPose2,args=(self.shm_name,)).start()
         print(f'[status_handler]: Start...')
 
     def __publish_status(self): # publish thread
@@ -75,7 +79,7 @@ class StatusHandler:
                 heading = self.robot_position[3]            
                 ## to nwdb
                 # print(self.robot_position)
-                self.robot.nwdb.update_robot_position(x, y, heading)
+                self.nwdb.update_robot_position(x, y, heading)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
 

@@ -49,6 +49,7 @@ from src.handlers.event_handler import EventHandler
 
 class Robot:
     def __init__(self, config, port_config, skill_config_dir, ai_config):
+        self.cfg = config
         self.rvapi = RVAPI.RVAPI(config)
         self.rvmqtt = RVMQTT.RVMQTT(config)
         self.rvjoystick = RVJoyStick(config)
