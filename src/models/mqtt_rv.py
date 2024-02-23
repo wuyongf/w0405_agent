@@ -76,7 +76,7 @@ class RVMQTT():
 
     def __subscribe_task(self):
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
     
     ## Get Methods
     def get_powerSupplyStatus(self):
@@ -107,8 +107,8 @@ if __name__ == '__main__':
 
 
     while(True):
-        pos = rvmqtt.get_current_map_name()
+        pos = rvmqtt.get_current_pose()
         print(pos)
         
-        time.sleep(1)
+        time.sleep(0.1)
     

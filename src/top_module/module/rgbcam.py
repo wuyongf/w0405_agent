@@ -53,8 +53,8 @@ class RGBCamRecorder:
             if not ret:
                 break
 
-            # Rotate the frame by 90 degrees clockwise
-            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            # # Rotate the frame by 90 degrees clockwise
+            # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 
             # # Display the frame
             # cv2.imshow("RGB Camera", frame)

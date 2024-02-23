@@ -252,12 +252,12 @@ class ThermalCam:
     
     def init_shared_memory(self, shm_name):
         existing_shm = shared_memory.SharedMemory(name=shm_name)
-        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
+        self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
 
     def process_start_capturing(self, interval, shm_name, rgbcam):
         print(f'[thermalcam] start capturing...')
         existing_shm = shared_memory.SharedMemory(name=shm_name)
-        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
+        self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
 
         ### rgbcam

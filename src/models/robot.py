@@ -182,7 +182,7 @@ class Robot:
     def thread_update_position(self):
         while True:
             # map_pose
-            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
+            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVAPI)  # current map pose
             self.status.mapPose.x = pixel_x
             self.status.mapPose.y = pixel_y
             self.status.mapPose.heading = heading

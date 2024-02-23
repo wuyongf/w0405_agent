@@ -32,7 +32,7 @@ class StatusHandler:
         self.shm_name = self.robot.shm.name
 
         self.cfg = self.robot.cfg
-        self.nwdb = robotDBHandler(config)
+        
 
     def start(self):
         # status
@@ -70,7 +70,8 @@ class StatusHandler:
 
     def __publish_status_robotLayoutPose2(self, shm_name): # publish thread
         existing_shm = shared_memory.SharedMemory(name=shm_name)
-        self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
+        self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
+        self.nwdb = robotDBHandler(self.cfg)
         while True:  
             time.sleep(0.1)
             try:

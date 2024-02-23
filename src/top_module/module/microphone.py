@@ -8,13 +8,13 @@ from src.top_module.module.rgbcam import RGBCamRecorder
 class Recorder:
     def __init__(self):
         self.sampling_rate = 44100
-        self.n_channels = 2 #1
+        self.n_channels = 1 #1
         self.frames_per_buffer = 1024
 
         self.audio = pyaudio.PyAudio()
 
         self.stream = self.audio.open(format=pyaudio.paInt16, 
-                            # input_device_index=6,
+                            # input_device_index=5,
                             channels=self.n_channels, 
                             rate=self.sampling_rate,
                             input=True,
