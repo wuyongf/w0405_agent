@@ -38,51 +38,8 @@ class StatusHandler:
         self.publisher.loop_start()
         # threading.Thread(target=self.__update_status).start()   # from RV API
         threading.Thread(target=self.__publish_status).start()  # to rm and nwdb 
-        Process(target=self.__publish_status_robotLayoutPose,args=(self.shm_name,)).start()
+        threading.Thread(target=self.__publish_status_robotLayoutPose,args=()).start()
         print(f'[status_handler]: Start...')
-
-    def __update_status(self): # update thread
-        while True:  
-            try:
-
-                pass
-                # # # rm status <--- rv statu
-                # self.rm_status.state = 1 # todo: robot status
-
-                # self.rm_mapPose.mapId = self.robot.get_current_map_rm_guid()    # map
-                # self.rm_status.batteryPct = self.robot.get_battery_state(NWEnum.Protocol.RVAPI)      # battery
-                # pixel_x, pixel_y, heading = self.robot.get_current_pose(NWEnum.Protocol.RVAPI)       # current pose
-                # # print(pixel_x, pixel_y, heading)
-                # self.rm_mapPose.x = pixel_x
-                # self.rm_mapPose.y = pixel_y
-                # self.rm_mapPose.heading = heading
-
-                # ## TO NWDB
-                # self.map_id = self.robot.get_current_map_id()
-
-            except HTTPError as http_err:
-                logging.getLogger('').exception(http_err)
-            except ConnectionError as ce:
-                logging.getLogger('').exception(ce)
-            except Timeout:
-                logging.getLogger('').error("Timeout session.get()")
-                
-            time.sleep(1.0)
-
-    # def __publish_status(self): # publish thread
-    #     while True:  
-    #         time.sleep(1)
-    #         try:            
-    #             ## to rm
-    #             self.publisher.publish(self.topic, self.robot.status.to_json())
-    #             ## to nwdb
-    #             self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
-    #             self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
-    #             self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
-    #             self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
-    #             self.robot.nwdb.update_robot_status_mode(self.robot.mode)
-    #         except:
-    #             print('[status_handler.__publish_status] Error. Plese Check')
 
     def __publish_status(self): # publish thread
         while True:  
@@ -99,7 +56,8 @@ class StatusHandler:
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
     
-    def __publish_status_robotLayoutPose(self, shm_name): # publish thread
+    # def __publish_status_robotLayoutPose(self, shm_name): # publish thread
+    def __publish_status_robotLayoutPose(self): # publish thread
         # existing_shm = shared_memory.SharedMemory(name=shm_name)
         # self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         while True:  
