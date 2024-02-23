@@ -34,7 +34,8 @@ class StatusHandler:
         # status
         self.publisher.loop_start()
         # threading.Thread(target=self.__update_status).start()   # from RV API
-        threading.Thread(target=self.__publish_status).start()  # to rm and nwdb
+        threading.Thread(target=self.__publish_status).start()  # to rm and nwdb 
+        threading.Thread(target=self.__publish_status_robotLayoutPose).start()
         print(f'[status_handler]: Start...')
 
     def __update_status(self): # update thread
@@ -65,29 +66,48 @@ class StatusHandler:
                 
             time.sleep(1.0)
 
+    # def __publish_status(self): # publish thread
+    #     while True:  
+    #         time.sleep(1)
+    #         try:            
+    #             ## to rm
+    #             self.publisher.publish(self.topic, self.robot.status.to_json())
+    #             ## to nwdb
+    #             self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
+    #             self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
+    #             self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
+    #             self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
+    #             self.robot.nwdb.update_robot_status_mode(self.robot.mode)
+    #         except:
+    #             print('[status_handler.__publish_status] Error. Plese Check')
+
     def __publish_status(self): # publish thread
         while True:  
             time.sleep(1)
-            
-            try:     
-                # print(f'[status_handler]: robot battery: {self.robot.robot_status.batteryPct}')
-                # print(f'[status_handler]: robot map rm_guid: {self.robot.robot_status.mapPose.mapId}')
-                # print(f'[status_handler]: robot position: ({self.robot.robot_status.mapPose.x}, {self.robot.robot_status.mapPose.y}, {self.robot.robot_status.mapPose.heading})')
-                       
+            try:            
                 ## to rm
                 self.publisher.publish(self.topic, self.robot.status.to_json())
                 ## to nwdb
-                self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
+                # self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
                 self.robot.nwdb.update_robot_map_id(self.robot.map_nw_id)
                 self.robot.nwdb.update_robot_battery(self.robot.status.batteryPct)
                 self.robot.nwdb.update_robot_locker_status(self.robot.robot_locker_is_closed)
                 self.robot.nwdb.update_robot_status_mode(self.robot.mode)
             except:
                 print('[status_handler.__publish_status] Error. Plese Check')
+    
+    def __publish_status_robotLayoutPose(self): # publish thread
+        while True:  
+            # time.sleep(0.2)
+            try:            
+                ## to nwdb
+                self.robot.nwdb.update_robot_position(self.robot.status.layoutPose.x, self.robot.status.layoutPose.y, self.robot.status.layoutPose.heading)
+            except:
+                print('[status_handler.__publish_status] Error. Plese Check')
 
     def publish_status(self): # publish thread
         while True:  
-            time.sleep(2)
+            time.sleep(1)
             
             try:     
                 print(f'[status_handler]: robot battery: {self.robot.status.batteryPct}')

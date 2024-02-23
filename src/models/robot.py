@@ -101,6 +101,7 @@ class Robot:
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
+        self.map_rm_guid = None
 
         ## robot status (mission)
         self.mode =  NWEnum.RobotStatusMode.IDLE
@@ -187,7 +188,7 @@ class Robot:
             self.status.layoutPose.heading = layout_heading
             self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
 
-            time.sleep(0.1)
+            # time.sleep(0.1)
 
     def thread_update_status(self, protocol):  # update thread
         while True:
@@ -231,7 +232,7 @@ class Robot:
             except:
                 print('[robot.update_status] error!')
 
-            time.sleep(1.0)
+            time.sleep(1)
 
     def status_summary(self):
         # 1) init
@@ -300,14 +301,12 @@ class Robot:
     def get_current_layout_pose(self):
         try:
 
-            map_rm_guid = self.status.mapPose.mapId
-            self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
-            # print('<debug>layout_pose 1')
-            params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
-            # print('<debug>layout_pose 2')
-            self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
-                                              params.scale, params.angle, params.translate)
-            # print('<debug>layout_pose 3')
+            if((self.map_rm_guid != self.status.mapPose.mapId) or (self.map_rm_guid == None)):
+                map_rm_guid = self.status.mapPose.mapId
+                self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
+                params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
+                self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
+                                                params.scale, params.angle, params.translate)
             cur_layout_point = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 
                                                                self.status.mapPose.y,
                                                                self.status.mapPose.heading)
@@ -605,7 +604,8 @@ class Robot:
             thread.start()
 
             # [UI-BIM-INFO]
-            thread = threading.Thread(target=self.thread_demo_mission_info_updater)
+            thread = threading.Thread(target=self.thread_demo_mission_info_updater, args=())
+            thread.setDaemon(True)
             thread.start()
 
             return True
@@ -613,10 +613,12 @@ class Robot:
             return False
     
     def thread_demo_mission_info_updater(self):
-        while self.is_moving:
+        while not self.has_arrived :
             # Moving
             self.nwdb.update_ui_mission_detailed_info(detailed_info=8,robot_nw_id=self.robot_nw_id)
             time.sleep(4)
+            
+            if self.has_arrived: break
             # Measuring
             self.nwdb.update_ui_mission_detailed_info(detailed_info=9,robot_nw_id=self.robot_nw_id)
             time.sleep(2)
