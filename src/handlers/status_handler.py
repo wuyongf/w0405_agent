@@ -61,7 +61,7 @@ class StatusHandler:
         # existing_shm = shared_memory.SharedMemory(name=shm_name)
         # self.robot_position = np.ndarray((3,), dtype=np.float32, buffer=existing_shm.buf)
         while True:  
-            time.sleep(0.2)
+            time.sleep(0.1)
             try:
                 # x = self.robot_position[1]
                 # y = self.robot_position[2]
