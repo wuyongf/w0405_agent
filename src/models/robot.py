@@ -221,18 +221,18 @@ class Robot:
                 self.lift_floor = self.emsdlift.rm_current_floor
 
                 ## Summary
-                print(f'-------------------------------------------------------------------')
-                print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
-                print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
-                print(f'robot_status.battery:        {self.status.batteryPct}')
-                print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
-                print(f'robot_status.map_rm_pose:    {self.status.mapPose.x, self.status.mapPose.y, self.status.mapPose.heading}')
-                print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
-                print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
-                print(f'robot_status.mode:           {self.mode}')
-                print(f'robot_status.lift_floor:     {self.lift_floor}')
-                print(f'-------------------------------------------------------------------')
+                # print(f'-------------------------------------------------------------------')
+                # print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
+                # print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
+                # print(f'robot_status.battery:        {self.status.batteryPct}')
+                # print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
+                # print(f'robot_status.map_rm_pose:    {self.status.mapPose.x, self.status.mapPose.y, self.status.mapPose.heading}')
+                # print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
+                # print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
+                # print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
+                # print(f'robot_status.mode:           {self.mode}')
+                # print(f'robot_status.lift_floor:     {self.lift_floor}')
+                # print(f'-------------------------------------------------------------------')
             except:
                 print('[robot.update_status] error!')
 
