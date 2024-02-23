@@ -63,8 +63,6 @@ class Robot:
         self.T_RM = Trans.RMLayoutMapTransform()
         self.missionpub = MissionPublisher(skill_config_dir, self.rmapi)
 
-
-
         ## AI-Init
         # rgbcam =  RGBCamRecorder(device_index=0)
         # rgbcam.update_cap_save_path('test')
@@ -147,9 +145,9 @@ class Robot:
         self.wld_image_folder_dir = None
 
         ## shared memory
-        temp_arr = np.zeros(3, dtype=np.float32)
+        temp_arr = np.zeros(4, dtype=np.float32)
         self.shm = shared_memory.SharedMemory(create=True, size=temp_arr.nbytes)
-        self.robot_position = np.ndarray(temp_arr.shape, dtype=temp_arr.dtype, buffer=self.shm.buf) # [layout_id, robot_x, robot_y]
+        self.robot_position = np.ndarray(temp_arr.shape, dtype=temp_arr.dtype, buffer=self.shm.buf) # [layout_id, robot_x, robot_y, robot_heading]
         self.robot_position[:] = temp_arr[:]
 
     def sensor_start(self):
@@ -195,7 +193,7 @@ class Robot:
             self.status.layoutPose.x = layout_x
             self.status.layoutPose.y = layout_y
             self.status.layoutPose.heading = layout_heading
-            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
+            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
 
             time.sleep(0.1)
 
