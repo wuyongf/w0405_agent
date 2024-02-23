@@ -180,7 +180,14 @@ class Robot:
 
     def thread_update_position(self):
         while True:
-            # layout
+            # map_pose
+            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
+            # print(pixel_x, pixel_y, heading)
+            self.status.mapPose.x = pixel_x
+            self.status.mapPose.y = pixel_y
+            self.status.mapPose.heading = heading
+
+            # layout_pose
             self.layout_nw_id = self.get_current_layout_nw_id()
             layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
             self.status.layoutPose.x = layout_x
@@ -188,7 +195,7 @@ class Robot:
             self.status.layoutPose.heading = layout_heading
             self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y], dtype=np.float32)[:]
 
-            # time.sleep(0.1)
+            time.sleep(0.1)
 
     def thread_update_status(self, protocol):  # update thread
         while True:
@@ -197,11 +204,6 @@ class Robot:
                 self.status.state = 1  # todo: robot status
                 self.status.mapPose.mapId = self.get_current_map_rm_guid()  # map
                 self.status.batteryPct = self.get_battery_state(protocol)  # battery
-                pixel_x, pixel_y, heading = self.get_current_pose(protocol)  # current map pose
-                # print(pixel_x, pixel_y, heading)
-                self.status.mapPose.x = pixel_x
-                self.status.mapPose.y = pixel_y
-                self.status.mapPose.heading = heading
 
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
@@ -222,7 +224,7 @@ class Robot:
                 print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
                 print(f'robot_status.battery:        {self.status.batteryPct}')
                 print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
-                print(f'robot_status.map_rm_pose:    {pixel_x, pixel_y, heading}')
+                print(f'robot_status.map_rm_pose:    {self.status.mapPose.x, self.status.mapPose.y, self.status.mapPose.heading}')
                 print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
                 print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
                 print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
