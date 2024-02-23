@@ -101,7 +101,9 @@ class Robot:
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
-        self.map_rm_guid = None
+        ## robot status: position
+        self.prev_map_rm_guid = None
+        self.prev_map_rv_name = None
 
         ## robot status (mission)
         self.mode =  NWEnum.RobotStatusMode.IDLE
@@ -182,10 +184,10 @@ class Robot:
         while True:
             # map_pose
             pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
-            # print(pixel_x, pixel_y, heading)
             self.status.mapPose.x = pixel_x
             self.status.mapPose.y = pixel_y
             self.status.mapPose.heading = heading
+            # print(pixel_x, pixel_y, heading)
 
             # layout_pose
             self.layout_nw_id = self.get_current_layout_nw_id()
@@ -278,18 +280,22 @@ class Robot:
     def get_current_pose(self, protocol=NWEnum.Protocol):
         try:
             ## 1. get rv current map/ get rv activated map
-            map_json = self.rvapi.get_active_map_json()
-            rv_map_metadata = self.rvapi.get_map_metadata(map_json['name'])
-            # map_json = None # FOR DEBUG/TESTING
-            ## 2. update T params
-            if (rv_map_metadata is not None):
-                # print(map_json['name'])
-                self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
-                                          rv_map_metadata.y, rv_map_metadata.angle)
-            else:
-                self.T.clear_rv_map_info()
-                # print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
-                return 0.0, 0.0, 0.0
+            # map_json = self.rvapi.get_active_map_json() # map_json['name']
+            cur_map_rv_name = self.rvmqtt.get_current_map_name()
+            
+            if((self.prev_map_rv_name != cur_map_rv_name) or (self.prev_map_rv_name == None)):
+                self.prev_map_rv_name = cur_map_rv_name
+                rv_map_metadata = self.rvapi.get_map_metadata(cur_map_rv_name)
+                # map_json = None # FOR DEBUG/TESTING
+                ## 2. update T params
+                if (rv_map_metadata is not None):
+                    # print(map_json['name'])
+                    self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
+                                            rv_map_metadata.y, rv_map_metadata.angle)
+                else:
+                    self.T.clear_rv_map_info()
+                    # print(f'[robot.get_curent_pos()] Warning: Please activate map first, otherwise the pose is not correct.')
+                    return 0.0, 0.0, 0.0
             ## 3. transfrom
             if (protocol == NWEnum.Protocol.RVMQTT):
                 pos = self.rvmqtt.get_current_pose()
@@ -303,10 +309,10 @@ class Robot:
     def get_current_layout_pose(self):
         try:
 
-            if((self.map_rm_guid != self.status.mapPose.mapId) or (self.map_rm_guid == None)):
-                map_rm_guid = self.status.mapPose.mapId
-                self.layout_rm_guid = self.rmapi.get_layout_guid(map_rm_guid)
-                params = self.rmapi.get_layout_map_list(self.layout_rm_guid, map_rm_guid)
+            if((self.prev_map_rm_guid != self.status.mapPose.mapId) or (self.prev_map_rm_guid == None)):
+                self.prev_map_rm_guid = self.status.mapPose.mapId
+                self.layout_rm_guid = self.rmapi.get_layout_guid(self.prev_map_rm_guid)
+                params = self.rmapi.get_layout_map_list(self.layout_rm_guid, self.prev_map_rm_guid)
                 self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                                 params.scale, params.angle, params.translate)
             cur_layout_point = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 

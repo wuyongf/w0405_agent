@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
 
     while(True):
-        pos = rvmqtt.get_current_pose()
+        pos = rvmqtt.get_current_map_name()
         print(pos)
         
         time.sleep(1)
