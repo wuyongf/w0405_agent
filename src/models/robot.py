@@ -541,6 +541,77 @@ class Robot:
         except:
             return False
 
+    def demo_goto(self, task_json, status_callback):
+        '''
+        No TMat Transformation!!! Just RM_MAP -> RV_MAP
+        '''
+        try:
+
+            self.rvapi.put_safety_zone_minimum()
+            self.rvapi.put_maximum_speed(0.4)
+
+            self.door_configured = False
+            self.door_agent_start = True  # door-agent logic
+            self.door_agent_finish = False
+            while( not self.door_configured): time.sleep(1)
+            print(f'[goto] door configuredd!')
+
+            # step 0. init. clear current task
+            self.cancel_moving_task()
+            # step 1. get rm_map_id, rv_map_name, map_metadata
+            # print('step1')
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
+            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            # step 2. transformation. rm2rv
+            # print('step2')
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
+                                      rv_map_metadata.y, rv_map_metadata.angle)
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)  ## new     
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)  ## 0
+            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+                                                rm_map_metadata.y, rm_map_metadata.heading )  ## 271
+
+            # step3. rv. create point base on rm. localization.
+            # print('step3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            pose_name = 'TEMP'
+            time.sleep(1)
+            print(f'goto--rm_map_x: {rm_map_metadata.x}')
+            print(f'goto--rm_map_y: {rm_map_metadata.y}')
+            print(f'goto--rm_map_heading: {rm_map_metadata.heading}')
+            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            time.sleep(1)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
+
+            thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
+            thread.setDaemon(True)
+            thread.start()
+
+            # [UI-BIM-INFO]
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
+            # thread = threading.Thread(target=self.thread_demo_mission_info_updater2, args=())
+            # thread.setDaemon(True)
+            # thread.start()
+
+            return True
+        except:
+            return False
+        
+    def thread_demo_mission_info_updater2(self):
+        while not self.has_arrived :
+            # Moving
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=8,robot_nw_id=self.robot_nw_id)
+            time.sleep(4)
+            
+            if self.has_arrived: break
+            # Measuring
+            self.nwdb.update_ui_mission_detailed_info(detailed_info=9,robot_nw_id=self.robot_nw_id)
+            time.sleep(2)
+        pass
+
     def goto(self, task_json, status_callback):
         '''
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
@@ -823,9 +894,9 @@ class Robot:
             # [UI-BIM-MissionBar]
             self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
 
-            # [UI-BIM-INFO]
-            self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
-            time.sleep(2)
+            # # [UI-BIM-INFO]
+            # self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
+            # time.sleep(2)
 
             # [UI-BIM-MissionBar]
             self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)

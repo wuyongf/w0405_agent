@@ -161,6 +161,14 @@ class TaskHandler:
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
+            
+            case 'NW-GOTO-DEMO':
+                res = self.robot.demo_goto(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
                             
             case 'RV-LEDON': 
                 res = self.robot.led_on(task)
