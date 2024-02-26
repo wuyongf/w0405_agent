@@ -698,7 +698,10 @@ class Robot:
             
             if self.has_arrived: break
             # Measuring
-            self.nwdb.update_ui_mission_detailed_info(detailed_info=9,robot_nw_id=self.robot_nw_id)
+            if(self.is_iaq_on):
+                self.nwdb.update_ui_mission_detailed_info(detailed_info=9,robot_nw_id=self.robot_nw_id)
+            else:
+                self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
             time.sleep(2)
         pass
 
@@ -808,6 +811,17 @@ class Robot:
                     # [1] info UI(real-time)
                     self.nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=self.robot_nw_id)
 
+                    # for demo
+                    if(not self.is_iaq_on):
+                        # [UI-BIM-MissionBar]
+                        self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
+                        time.sleep(2)
+                        # [UI-BIM-MissionBar]
+                        self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)
+                        
+                        time.sleep(1)
+                        self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
+
                 # # if error
                 # if(self.check_goto_has_error):
                 #     print('flag error') # throw error log
@@ -870,6 +884,8 @@ class Robot:
             # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=2,robot_nw_id=self.robot_nw_id)
 
+            self.is_iaq_on = True
+
             return True
         except:
             return False
@@ -884,6 +900,8 @@ class Robot:
 
             # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
+
+            self.is_iaq_on = False
             return True
         except:
             return False
@@ -891,19 +909,26 @@ class Robot:
 
     def mission_end(self):
         try:
-            # [UI-BIM-MissionBar]
-            self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
-
-            # # [UI-BIM-INFO]
-            # self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
-            # time.sleep(2)
-
-            # [UI-BIM-MissionBar]
-            self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)
+            # thread = threading.Thread(target=self.thread_demo_mission_info_updater3, args=())
+            # thread.setDaemon(True)
+            # thread.start()
 
             return True
         except:
             return False
+        
+    def thread_demo_mission_info_updater3(self):
+        while not self.has_arrived :
+            # # [UI-BIM-INFO]
+            # self.nwdb.update_ui_mission_detailed_info(detailed_info=7,robot_nw_id=self.robot_nw_id)
+            time.sleep(1)
+
+            if self.has_arrived: break
+
+            # # Moving
+            # self.nwdb.update_ui_mission_detailed_info(detailed_info=8,robot_nw_id=self.robot_nw_id)
+            # time.sleep(4)
+        pass
 
     # [FollowMe]
     def follow_me_mode(self, task_json):
