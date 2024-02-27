@@ -298,10 +298,15 @@ class Robot:
             ## 3. transfrom
             if (protocol == NWEnum.Protocol.RVMQTT):
                 pos = self.rvmqtt.get_current_pose()
-                return self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
+                pixel_x, pixel_y, heading =  self.T.waypoint_rv2rm(pos[0], pos[1], pos[2])
             if (protocol == NWEnum.Protocol.RVAPI):
                 pos = self.rvapi.get_current_pose()
-                return self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
+                pixel_x, pixel_y, heading =  self.T.waypoint_rv2rm(pos.x, pos.y, pos.angle)
+
+            if(pixel_x < 0): pixel_x = 0
+            if(pixel_y < 0): pixel_y = 0
+
+            return pixel_x, pixel_y, heading
         except:
             return 0, 0, 0
 
@@ -314,10 +319,13 @@ class Robot:
                 params = self.rmapi.get_layout_map_list(self.layout_rm_guid, self.prev_map_rm_guid)
                 self.T_RM.update_layoutmap_params(params.imageWidth, params.imageHeight, 
                                                 params.scale, params.angle, params.translate)
-            cur_layout_point = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 
+            layout_x,  layout_y,  layout_heading = self.T_RM.find_cur_layout_point(self.status.mapPose.x, 
                                                                self.status.mapPose.y,
                                                                self.status.mapPose.heading)
-            return cur_layout_point
+            if(layout_x < 0): layout_x = 0
+            if(layout_y < 0): layout_y = 0
+
+            return layout_x,  layout_y,  layout_heading
         except:
             return 0, 0, 0
 
@@ -586,6 +594,7 @@ class Robot:
             time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
+            
             thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
             thread.setDaemon(True)
             thread.start()
@@ -677,6 +686,7 @@ class Robot:
             time.sleep(1)
             self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
 
+            self.has_arrived = False
             thread = threading.Thread(target=self.thread_check_mission_status, args=(task_json, status_callback))
             thread.setDaemon(True)
             thread.start()
