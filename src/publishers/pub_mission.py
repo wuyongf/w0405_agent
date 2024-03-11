@@ -500,8 +500,6 @@ class MissionPublisher:
         tasks = x1
         print(f'task_json: {x1}')
 
-        # [{'skillId': '466c253f-9ce4-4424-97ba-34d7a5a7bb12', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}, {'skillId': 'f03c6dcf-faf0-43b9-af5e-e612deca45ad', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': '0ed5a4b4-3b1c-4c62-b2bc-624a57dc2c44', 'executionType': 1, 'params': [{'paramKey': 'mapId', 'paramValue': 'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a'}, {'paramKey': 'positionName', 'paramValue': 'DEMO3'}, {'paramKey': 'x', 'paramValue': 2415.2318594304948}, {'paramKey': 'y', 'paramValue': 952.8312167354525}, {'paramKey': 'heading', 'paramValue': -3.774252722812215}]}, {'skillId': 'a6294871-8566-4ba9-b4c6-9bac761b4e77', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}, None, {'skillId': 'e3b77942-f5a1-4530-b259-ece55804c92c', 'layoutId': '0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'order': 1, 'layoutMakerId': None, 'executionType': 1, 'params': [{'paramKey': 'temp', 'paramValue': 0}]}]
-
         # mission_name = 'Demo IAQ3'
         # map_rm_guid = self.dict_map_guid[6]
         # layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
