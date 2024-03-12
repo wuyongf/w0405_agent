@@ -1003,11 +1003,7 @@ class Robot:
 
     # AI
     def lift_noise_detect_start(self, task_json):
-        try:
-
-            ### [gyro]
-            self.lift_vibration_on(task_json)
-           
+        try:      
             ### add mission_id to nwdb
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftInspection)
@@ -1017,6 +1013,9 @@ class Robot:
             ### [audio]
             self.audio_handler.construct_folder_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection)
             self.audio_handler.start_recording()
+
+            ### [gyro]
+            self.lift_vibration_on(task_json)
 
             ### [video_front]
             self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
@@ -1033,16 +1032,16 @@ class Robot:
 
     def lift_noise_detect_end(self):
         try:
-            ### [audio]
-            self.lnd_wav_file_name = self.audio_handler.stop_and_save_recording()
-            print(f'self.lnd_wav_file_name: {self.lnd_wav_file_name}')
-
             ### [video_front]
             self.video_front_file_path = self.rgbcam_front_handler.stop_and_save_recording()
 
             ### [video_rear]
             self.nwmqttpub.rotate_camera(0)
             self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+
+            ### [audio]
+            self.lnd_wav_file_name = self.audio_handler.stop_and_save_recording()
+            print(f'self.lnd_wav_file_name: {self.lnd_wav_file_name}')
 
             ### [gyro]
             self.lift_vibration_off()

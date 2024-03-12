@@ -9,7 +9,7 @@ import json
 # TODO: function to pull from db, filtering, split into chunk and update
 
 class gyro_after_processing:
-    def __init__(self, modb, status_summary):
+    def __init__(self, modb: NWDB, status_summary):
         # self.nwdb = NWDB.TopModuleDBHandler(config)
         self.modb = modb
         self.status_summary = status_summary
