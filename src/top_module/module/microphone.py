@@ -2,6 +2,7 @@ import pyaudio
 import wave
 import os, time
 import threading
+from multiprocessing import Process
 # DEBUG
 from src.top_module.module.rgbcam import RGBCamRecorder
 
@@ -39,6 +40,7 @@ class Recorder:
     
     def start_recording(self):   
         threading.Thread(target=self.thread_recording).start()
+        # Process(target=self.thread_recording).start()
 
     def thread_recording(self):
         while self.record_flag:
