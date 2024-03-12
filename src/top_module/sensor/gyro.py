@@ -211,7 +211,7 @@ class Gyro():
                             collected_data = []
                             break
        
-                        if len(collected_data) > 200:
+                        if len(collected_data) > 11: # 100 == 9sec 
                             # insert to datachunk
                             self.insert_data(data=collected_data)
                             # clear data stack
