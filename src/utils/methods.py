@@ -1,5 +1,5 @@
 import configparser  # config file
-import datetime
+from datetime import datetime
 import time
 import requests
 
@@ -14,11 +14,11 @@ def load_config(config_addr):
         return configs
 
 def get_current_time():
-    now = datetime.datetime.utcnow()
+    now = datetime.utcnow()
     return now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def get_current_date():
-    now = datetime.datetime.utcnow()
+    now = datetime.utcnow()
     return now.strftime("%Y%m%d")
 
 def is_future_time(scheduled, current):
@@ -37,12 +37,16 @@ def check_network_connection(url = ''):
 
 def get_unix_timestamp():
     # Get the current time as a datetime object
-    current_time = datetime.datetime.now()
+    current_time = datetime.now()
 
     # Convert the datetime object to a Unix timestamp (seconds since January 1, 1970)
     unix_timestamp = int(current_time.timestamp())
 
     return unix_timestamp
+
+def convert_timestamp2date(timestamp):
+    formatted_date = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    return formatted_date
 
 if __name__ == '__main__':
 
@@ -54,11 +58,11 @@ if __name__ == '__main__':
 
     # ## method 2 - compare datetime
     # # Get the current time in UTC timezone
-    # now = datetime.datetime.utcnow()
+    # now = datetime.utcnow()
     # iso_time1 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     # print(iso_time1)
     # time.sleep(1)
-    # now = datetime.datetime.utcnow()
+    # now = datetime.utcnow()
     # iso_time2 = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     # print(is_future_time(iso_time1, iso_time2))
 

@@ -104,8 +104,40 @@ class AudioTool:
         repet.wavwrite(foreground_signal, sampling_frequency, foreground_file_dir)
 
         return foreground_file_dir, background_file_dir
+    
+    #
+    def trim_audio_for_training(self, audio_dir, statuses_info_dir):
+        '''
+        trim_audio for model training
+        '''
+
+        # Initialize an empty list to store the statuses_info
+        statuses_info = []
+        with open(statuses_info_dir, 'r') as file:
+            for line in file:
+                # Strip newline characters and other potential whitespace
+                line = line.strip()
+                # Split the status and time interval based on the comma
+                parts = line.split(', ')
+                # The first part is the status, the rest is the time interval
+                status = parts[0].strip("[]'")
+                start_time = float(parts[1].strip('[]').split(', ')[0])
+                end_time = float(parts[2].strip('[]').split(', ')[0])
+                # Append the status and time interval as a sublist
+                statuses_info.append([status, start_time, end_time])
+        
+        # trim_audio for model training
+        for idx, info in enumerate(statuses_info):
+            status_type = info[idx][0]
+            status_start_time = info[idx][1]
+            status_end_time = info[idx][2]
+
 
 if __name__ == '__main__':
+
+    audio_tool = AudioTool()
+    res = audio_tool.trim_audio_for_training(audio_dir=None,
+                                       statuses_info_dir='data/lift-inspection/temp/20240318/001/door_compact_statuses_info.txt')
 
     audio_tool = AudioTool()
     audio_tool.set_save_folder_dir('result')

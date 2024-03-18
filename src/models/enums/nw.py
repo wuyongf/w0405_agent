@@ -1,9 +1,19 @@
 from enum import Enum
 
 class CameraPosition(Enum):
+    Null = 0
     Front = 1
     Rear  = 2
 
+# AI - Lift Inspection
+class LiftDoorStatus(Enum):
+    Unknown = -1
+    FullyClose = 0
+    FullyOpen = 1
+    Operating  = 2
+    OperatingCloseDoor = 3
+    OperatingOpenDoor = 4
+    OperatingUnknown = 5
 
 # AI - NWDB
 class AudioType(Enum):
