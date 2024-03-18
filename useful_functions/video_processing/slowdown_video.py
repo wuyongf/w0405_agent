@@ -37,6 +37,6 @@ def slow_down_video(input_file, output_file, slowdown_factor=2):
     print("Video processing completed.")
 
 # Example usage
-input_video_path = 'data/514/2024-03-11 17-16-59.mkv'
-output_video_path = 'result/slowdown/514/2024-03-11 17-16-59.mkv'
+input_video_path = 'data/516/video_1709898640.608474.avi'
+output_video_path = 'result/slowdown/516/video_1709898640.608474.mkv'
 slow_down_video(input_video_path, output_video_path, slowdown_factor=2)
