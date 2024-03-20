@@ -48,6 +48,14 @@ def convert_timestamp2date(timestamp):
     formatted_date = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
     return formatted_date
 
+def convert_list2txt(list, output_file_dir):
+    # Save the results to a file
+    # output_file_dir = 'gyro_compact_info.txt'
+    with open(output_file_dir, 'w') as output_file:
+        for idx, result in enumerate(list):
+            if(idx is len(list)-1): output_file.write(str(result))
+            else:output_file.write(str(result) + '\n')
+
 if __name__ == '__main__':
 
     # ## method 1 - load config file and then retrieve data

@@ -2,3 +2,4 @@ __pycache__/
 data/
 result/
 runs/
+train_data/

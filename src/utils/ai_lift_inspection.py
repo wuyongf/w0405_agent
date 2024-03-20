@@ -64,10 +64,14 @@ class LiftInsectionAnalyser:
         audio_end_date = convert_timestamp2date(audio_end_timestamp)
         
         # Exception
+        if(audio_duration < front_video_duration):
+            print(f'[LiftInsectionTool] audio_duration is less than front_video_duration')
+            print(f'[LiftInsectionTool] please check recording files...')
+            # return False 
         if(front_video_end_timestamp >= audio_end_timestamp):
             print(f'[LiftInsectionTool] audio_end_timestamp is less than front_video_end_timestamp')
             print(f'[LiftInsectionTool] please check recording procedure...')
-            return False   
+            # return False   
         
         audio_actual_end_timestamp = front_video_end_timestamp
         audio_actual_duration = front_video_duration
@@ -97,7 +101,7 @@ class LiftInsectionAnalyser:
         sliced_statuses = self.dsa.dsq.convert_classids2sliced_statuses()
         compact_statuses, compact_statuses_info = self.dsa.dsq.group_sliced_statuses(sliced_statuses)
         compact_door_statuses_info, door_compact_statuses_info_dir = self.dsa.dsq.analyze_door_sequence(compact_statuses, compact_statuses_info)
-        # print(door_compact_statuses_info_dir)
+        # print(compact_door_statuses_info)
         return door_compact_statuses_info_dir
     
     def trim_audio_for_training(self):
@@ -106,23 +110,66 @@ class LiftInsectionAnalyser:
 if __name__ == '__main__':
 
     lfa = LiftInsectionAnalyser()
-    lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/001/recording_1709898801.1256263.wav',
-                             front_video_dir='data/lift-inspection/raw-data/20240318/001/front_video_1709898640.302843.avi',
-                             rear_video_dir='data/lift-inspection/raw-data/20240318/001/rear_video_1709898640.608474.avi')
-    lfa.set_temp_dir("data/lift-inspection/temp/20240318/001")
+
+    # # EXAMPLE 1
+    # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/001/recording_1709898801.1256263.wav',
+    #                          front_video_dir='data/lift-inspection/raw-data/20240318/001/front_video_1709898640.302843.avi',
+    #                          rear_video_dir='data/lift-inspection/raw-data/20240318/001/rear_video_1709898640.608474.avi')
+    # lfa.set_temp_dir("data/lift-inspection/temp/20240318/001")
+
+    # # [1] raw_audio -> temp_audio
+    # mono_audio_dir = lfa.preprocess_raw_audio()
+
+    # # [2] raw_rear_video -> compact_door_status
+    # lfa.dsa.set_ckpt('../ai_module/door_status/ckpt/best.pt')
+    # lfa.dsa.set_preprocess_folder_dir('data/lift-inspection/preprocess/'+ '20240318/001/'+"door-status/")
+    # lfa.dsa.set_temp_folder_dir('data/lift-inspection/temp/'+ '20240318/001/')
+    # lfa.dsa.set_source_video("data/lift-inspection/raw-data/20240318/001/rear_video_1709898640.608474.avi")
+    # lfa.dsa.set_camera_position(CameraPosition.Rear)
+    # door_compact_statuses_info_dir = lfa.preprocess_raw_rear_video()
+
+    # # [3] compact_door_status + temp_audio => sliced_audio
+    # # ...
+
+    # EXAMPLE 2
+    lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav',
+                             front_video_dir='data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi',
+                             rear_video_dir='data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi')
+    lfa.set_temp_dir("data/lift-inspection/temp/20240318/539")
 
     # [1] raw_audio -> temp_audio
     mono_audio_dir = lfa.preprocess_raw_audio()
 
     # [2] raw_rear_video -> compact_door_status
     lfa.dsa.set_ckpt('../ai_module/door_status/ckpt/best.pt')
-    lfa.dsa.set_preprocess_folder_dir('data/lift-inspection/preprocess/'+ '20240318/001/'+"door-status/")
-    lfa.dsa.set_temp_folder_dir('data/lift-inspection/temp/'+ '20240318/001/')
-    lfa.dsa.set_source_video("data/lift-inspection/raw-data/20240318/001/rear_video_1709898640.608474.avi")
+    lfa.dsa.set_preprocess_folder_dir('data/lift-inspection/preprocess/'+ '20240318/539/'+"door-status/")
+    lfa.dsa.set_temp_folder_dir('data/lift-inspection/temp/'+ '20240318/539/')
+    lfa.dsa.set_source_video("data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi")
     lfa.dsa.set_camera_position(CameraPosition.Rear)
     door_compact_statuses_info_dir = lfa.preprocess_raw_rear_video()
 
     # [3] compact_door_status + temp_audio => sliced_audio
+    # ...
+
+    # # EXAMPLE 3
+    # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/533/recording_1710760164.272739.wav',
+    #                          front_video_dir='data/lift-inspection/raw-data/20240318/533/front_video_1710759990.5951543.avi',
+    #                          rear_video_dir='data/lift-inspection/raw-data/20240318/533/rear_video_1710759990.7885687.avi')
+    # lfa.set_temp_dir("data/lift-inspection/temp/20240318/533")
+
+    # # [1] raw_audio -> temp_audio
+    # mono_audio_dir = lfa.preprocess_raw_audio()
+
+    # # [2] raw_rear_video -> compact_door_status
+    # lfa.dsa.set_ckpt('../ai_module/door_status/ckpt/best.pt')
+    # lfa.dsa.set_preprocess_folder_dir('data/lift-inspection/preprocess/'+ '20240318/533/'+"door-status/")
+    # lfa.dsa.set_temp_folder_dir('data/lift-inspection/temp/'+ '20240318/533/')
+    # lfa.dsa.set_source_video("data/lift-inspection/raw-data/20240318/533/rear_video_1710759990.7885687.avi")
+    # lfa.dsa.set_camera_position(CameraPosition.Rear)
+    # door_compact_statuses_info_dir = lfa.preprocess_raw_rear_video()
+
+    # # [3] compact_door_status + temp_audio => sliced_audio
+    # # ...
     
 
 

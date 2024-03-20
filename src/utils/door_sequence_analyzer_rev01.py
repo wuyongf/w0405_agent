@@ -57,6 +57,7 @@ class DoorSquenceAnalyzer:
                     start_time = start_frame * self.time_per_frame
                     end_time = i * self.time_per_frame
                     compact_statuses_info.append(f"{start_time*2:.1f},{end_time*2:.1f}")
+                    # compact_statuses_info.append(f"{start_time:.1f},{end_time:.1f}")
                     compact_statuses.append(current_status)
                     start_frame = i
                     current_status = status
@@ -64,6 +65,7 @@ class DoorSquenceAnalyzer:
             # Add the last segment
             end_time = len(sliced_statuses) * self.time_per_frame
             compact_statuses_info.append(f"{(start_frame * self.time_per_frame)*2:.1f},{end_time*2:.1f}")
+            # compact_statuses_info.append(f"{(start_frame * self.time_per_frame):.1f},{end_time:.1f}")
             compact_statuses.append(current_status)
             return compact_statuses, compact_statuses_info
 
@@ -94,15 +96,50 @@ class DoorSquenceAnalyzer:
                     detailed_statuses.append(LiftDoorStatus.OperatingUnknown)
             else: detailed_statuses.append(compact_statuses[i])
 
-            compact_door_statuses_info = [[x, list(map(float, y.split(',')))] if isinstance(x, str) else [x.name, list(map(float, y.split(',')))] for x, y in zip(compact_statuses, compact_statuses_info)]
+            # print(f'<debug> compact_statuses: len: {len(compact_statuses)}')
+            # print(f'<debug> compact_statuses[31]: {compact_statuses[31]}')
+            # print(f'<debug> detailed_statuses: len: {len(detailed_statuses)}')
+            # print(f'<debug> compact_statuses_info: len: {len(compact_statuses_info)}')
+
+        compact_door_statuses_info = [[x, list(map(float, y.split(',')))] if isinstance(x, str) else [x.name, list(map(float, y.split(',')))] for x, y in zip(detailed_statuses, compact_statuses_info)]
+
+        output_info = self.merge_rule_rev01(compact_door_statuses_info)
 
         # Save the results to a file
         output_file_dir = self.temp_folder_dir + 'door_compact_statuses_info.txt'
         with open(output_file_dir, 'w') as output_file:
-            for result in compact_door_statuses_info:
-                output_file.write(str(result) + '\n')
+            for idx, result in enumerate(output_info):
+                if(idx is len(output_info)-1): output_file.write(str(result))
+                else:output_file.write(str(result) + '\n')
 
-        return compact_door_statuses_info, output_file_dir
+        return output_info, output_file_dir
+    
+    def merge_rule_rev01(self, statuses_info):
+        '''
+        if prev and later are 'FullyClose', 'OperatingUnknown' in beteween, merge
+        '''
+        merged_statuses = []
+        i = 0
+        while i < len(statuses_info):
+            current_status, current_interval = statuses_info[i]
+            # Check if current status is 'OperatingUnknown' and can be merged with 'FullyClose'
+            if current_status == 'OperatingUnknown':
+                can_merge = False
+                if i > 0 and i < len(statuses_info) - 1:
+                    prev_status, _ = statuses_info[i - 1]
+                    next_status, next_interval = statuses_info[i + 1]
+                    if prev_status == 'FullyClose' and next_status == 'FullyClose':
+                        can_merge = True
+                        # Merge current status interval with the next one
+                        merged_statuses[-1][1][1] = next_interval[1]
+                        i += 1  # Skip the next status as it is merged with the current
+                if not can_merge:
+                    # If cannot merge, add the current status as is
+                    merged_statuses.append([current_status, current_interval])
+            else:
+                merged_statuses.append([current_status, current_interval])
+            i += 1
+        return merged_statuses
 
 if __name__ == '__main__':
     # Initialize variables
@@ -121,7 +158,6 @@ if __name__ == '__main__':
     #     status = item[0]
     #     start_time = item[1][0]
     #     end_time = item[1][1]
-
 
 
 
