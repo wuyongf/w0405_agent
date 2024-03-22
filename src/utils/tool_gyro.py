@@ -1,65 +1,92 @@
 import datetime
-from src.utils.methods import load_config, convert_list2txt
+import numpy as np
 from src.models.db_robot import robotDBHandler
+from src.utils.methods import load_config, convert_list2txt
+from src.utils.gyro_analyzer import GyroAnalyzer
+
 class GyroTool:
-    def __init__(self,):
-        self.save_folder = None
-        pass
+    '''
+    Workflow: 
+    1. Retrieve raw_gyro_data from nwdb
+    2. Trim raw_gyro_data according to video, return gyro_compact_info
+    3. Get time_array and gyro_array for Data Analysis
+    4. 
+    '''
+    def __init__(self, config):
+        self.temp_folder = None
+        self.nwdb = robotDBHandler(config)
+        self.ga = GyroAnalyzer()
+        #
+        self.db_gyro_raw_info = None
+        self.gyro_synced_info = None
+        self.gyro_compact_info = None
 
-def get_gyro_info_durations(video_start_date, trimmed_gyro_info):
-    gyro_info_durations = []
-    video_start_timestamp = video_start_date.timestamp()
-    gyro_start_timestamp = trimmed_gyro_info[0][1].timestamp()
-    offset_timestamp = gyro_start_timestamp - video_start_timestamp
-    for idx, created_date in enumerate(trimmed_gyro_info):
-        current_timestamp = created_date[1].timestamp() + offset_timestamp
-        current_seconds = current_timestamp - gyro_start_timestamp
-        gyro_info_durations.append([trimmed_gyro_info[idx][0], current_seconds])
-    return gyro_info_durations
+    def set_temp_dir(self, dir):
+        self.temp_folder = dir
 
-def trim_gyro_info(video_start_date, video_duration, compact_gyro_info):
-    # video_start_date = #datetime.datetime(2024, 3, 18, 19, 34, 56)
-    # video_duration = 164
-    video_end_date = video_start_date + datetime.timedelta(seconds=video_duration)
-    print(video_end_date)
+    def get_db_gyro_raw_info(self, task_id):
+        ## Retrieve raw_gyro_data from nwdb
+        pack_id = self.nwdb.get_value_with_conditions('sensor.gyro.datapack', 'ID', {'task_id': task_id + 1})[0]
+        accel_z = self.nwdb.get_value_with_conditions('sensor.gyro.datachunk', 'accel_z', {'pack_id': pack_id})
+        created_dates = self.nwdb.get_value_with_conditions('sensor.gyro.datachunk', 'created_date', {'pack_id': pack_id})
+        self.db_gyro_raw_info = [[x, y] for x, y in zip(accel_z, created_dates)]
+        # print(f'len(raw_db_gryo_info): {len(self.raw_db_gryo_info)}')
+        return self.db_gyro_raw_info
 
-    output_gyro_info = []
-    for idx, gyro_info in enumerate(compact_gyro_info):
-        if(video_start_date > gyro_info[1]): continue
-        elif(video_end_date < gyro_info[1]): continue
-        else:
-            output_gyro_info.append(gyro_info)
-    return output_gyro_info
+    def sync_gyro_info_with_video(self, video_start_date_str, video_duration, raw_gyro_info):
+        video_start_date = datetime.datetime.strptime(video_start_date_str, '%Y-%m-%d %H:%M:%S')
+        video_end_date = video_start_date + datetime.timedelta(seconds=video_duration)
+        # print(video_end_date)
+        self.gyro_synced_info = []
+        for idx, gyro_info in enumerate(raw_gyro_info):
+            if(video_start_date > gyro_info[1]): 
+                # print(f'skip1')
+                continue
+            elif(video_end_date < gyro_info[1]): 
+                # print(f'skip2')
+                continue
+            else:
+                self.gyro_synced_info.append(gyro_info)
+        return self.gyro_synced_info
+
+    def get_gyro_compact_info(self, video_start_date_str, gyro_synced_info):
+        self.gyro_compact_info = []
+        video_start_date = datetime.datetime.strptime(video_start_date_str, '%Y-%m-%d %H:%M:%S')
+        video_start_timestamp = video_start_date.timestamp()
+        gyro_start_timestamp = gyro_synced_info[0][1].timestamp()
+        offset_timestamp = gyro_start_timestamp - video_start_timestamp
+        for idx, created_date in enumerate(gyro_synced_info):
+            current_timestamp = created_date[1].timestamp() + offset_timestamp
+            current_seconds = current_timestamp - gyro_start_timestamp
+            self.gyro_compact_info.append([gyro_synced_info[idx][0], current_seconds])
+        return self.gyro_compact_info
 
 if __name__ == '__main__':
     config = load_config('../../conf/config.properties')
-    nwdb = robotDBHandler(config)
+    gt = GyroTool(config)
+    # nwdb = robotDBHandler(config)
+    db_gyro_raw_info = gt.get_db_gyro_raw_info(task_id = 539)
 
-    task_id = 539
-
-    pack_id = nwdb.get_value_with_conditions('sensor.gyro.datapack', 'ID', {'task_id': task_id + 1})[0]
-    print(pack_id)
-
-    accel_z = nwdb.get_value_with_conditions('sensor.gyro.datachunk', 'accel_z', {'pack_id': pack_id})
-    print(accel_z)
-
-    created_dates = nwdb.get_value_with_conditions('sensor.gyro.datachunk', 'created_date', {'pack_id': pack_id})
-    print(created_dates)
-
-    compact_gyro_info = [[x, y] for x, y in zip(accel_z, created_dates)]
-    print(f'len(compact_gyro_info): {len(compact_gyro_info)}')
-
+    ## Align raw_gryo_data with video duration
     video_start_date = datetime.datetime(2024, 3, 18, 19, 32, 4)
     video_duration = 164
-    trimmed_gyro_info = trim_gyro_info(video_start_date, video_duration, compact_gyro_info)
-
-    gyro_info_duration = get_gyro_info_durations(video_start_date, trimmed_gyro_info)
-    print(gyro_info_duration) 
+    # video_start_date = datetime.datetime(2024, 3, 18, 19, 3, 21)
+    # video_duration = 166
+    gyro_synced_info = gt.sync_gyro_info_with_video(video_start_date, video_duration, db_gyro_raw_info)
+    gyro_compact_info = gt.get_gyro_compact_info(video_start_date, gyro_synced_info)
+    print(gyro_compact_info)
 
     # Save the results to a file
-    convert_list2txt(list = gyro_info_duration, output_file_dir = 'gyro_compact_info.txt')
-    # output_file_dir = 'gyro_compact_info.txt'
-    # with open(output_file_dir, 'w') as output_file:
-    #     for idx, result in enumerate(gyro_info_duration):
-    #         if(idx is len(compact_gyro_info)-1): output_file.write(str(result))
-    #         else:output_file.write(str(result) + '\n')
+    gyro_compact_info_dir = gt.temp_folder + '/gyro_compact_info.txt'
+    gyro_compact_info_dir = convert_list2txt(list = gyro_compact_info, output_file_dir = 'gyro_compact_info.txt')
+
+    # Start Analysing
+    descrete_gyro_data = gt.ga.load_gyro_compact_info(gyro_compact_info_dir)
+    time_array, gyro_data = gt.ga.algin_gyro_with_timestampe(gt.ga.descrete_gyro_data)
+    smoothed_gyro_data = gt.ga.smmoth_gyro_data(gyro_data, window_length=81, polyorder=7)
+    
+    sliced_gyro_data = gt.ga.slice_gyro_data(start_sec=9.382, end_sec=27.217, gyro_data=smoothed_gyro_data)
+    res = gt.ga.get_acc_direction(sliced_gyro_data)
+    print(res)
+
+

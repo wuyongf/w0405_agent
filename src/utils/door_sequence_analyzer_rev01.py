@@ -44,7 +44,7 @@ class DoorSquenceAnalyzer:
                 sliced_statuses.append(LiftDoorStatus.Unknown)
         return sliced_statuses
 
-    def group_sliced_statuses(self, sliced_statuses):
+    def group_sliced_statuses(self, sliced_statuses, slowdown_factor = 2):
             compact_statuses_info = []
             start_frame = 0
             current_status = sliced_statuses[0]
@@ -56,16 +56,14 @@ class DoorSquenceAnalyzer:
                     # Calculate the time duration for the previous segment
                     start_time = start_frame * self.time_per_frame
                     end_time = i * self.time_per_frame
-                    compact_statuses_info.append(f"{start_time*2:.1f},{end_time*2:.1f}")
-                    # compact_statuses_info.append(f"{start_time:.1f},{end_time:.1f}")
+                    compact_statuses_info.append(f"{start_time*slowdown_factor:.1f},{end_time*slowdown_factor:.1f}")
                     compact_statuses.append(current_status)
                     start_frame = i
                     current_status = status
 
             # Add the last segment
             end_time = len(sliced_statuses) * self.time_per_frame
-            compact_statuses_info.append(f"{(start_frame * self.time_per_frame)*2:.1f},{end_time*2:.1f}")
-            # compact_statuses_info.append(f"{(start_frame * self.time_per_frame):.1f},{end_time:.1f}")
+            compact_statuses_info.append(f"{(start_frame * self.time_per_frame)*slowdown_factor:.1f},{end_time*slowdown_factor:.1f}")
             compact_statuses.append(current_status)
             return compact_statuses, compact_statuses_info
 

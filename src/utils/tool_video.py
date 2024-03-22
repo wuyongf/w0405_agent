@@ -5,15 +5,15 @@ from pathlib import Path
 
 class VideoTool:
     def __init__(self,):
-        self.save_folder = None
+        self.temp_folder = None
         pass
 
-    def set_save_folder_dir(self, dir):
-        self.save_folder = dir
+    def set_temp_dir(self, dir):
+        self.temp_folder = dir
 
     def slice_video_to_images(self, video_dir, num_images = 1000, task_id = 0):
         # Create the output folder if it doesn't exist
-        output_folder_dir = os.path.join(self.save_folder, 'scrubbing')
+        output_folder_dir = os.path.join(self.temp_folder, 'scrubbing')
         os.makedirs(output_folder_dir, exist_ok=True)
 
         # Open the video file
@@ -65,7 +65,7 @@ class VideoTool:
         new_fps = fps / slowdown_factor
         
         # Define the codec and create a VideoWriter object to save the output video
-        output_file_dir = os.path.join(self.save_folder, "slowdown.mp4")
+        output_file_dir = os.path.join(self.temp_folder, "slowdown.mp4")
 
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         out = cv2.VideoWriter(output_file_dir, fourcc, new_fps, (width, height))
@@ -107,7 +107,7 @@ class VideoTool:
 if __name__ == '__main__':
     
     video_tool = VideoTool()
-    video_tool.set_save_folder_dir('result')
+    video_tool.set_temp_dir('result')
 
     video_dir = 'data/video_1709898640.608474.avi'
 

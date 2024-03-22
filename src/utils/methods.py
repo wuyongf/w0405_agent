@@ -55,6 +55,7 @@ def convert_list2txt(list, output_file_dir):
         for idx, result in enumerate(list):
             if(idx is len(list)-1): output_file.write(str(result))
             else:output_file.write(str(result) + '\n')
+    return output_file_dir
 
 if __name__ == '__main__':
 
