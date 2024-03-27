@@ -352,12 +352,12 @@ class robotDBHandler(db.AzureDB):
         return self.Insert(statement)
     
     ### lift_inspection
-    def insert_lift_inspection_info(self, mission_id, raw_auido_dir, raw_video_front_dir, raw_video_rear_dir,
+    def insert_lift_inspection_info(self, mission_id, raw_audio_dir, raw_video_front_dir, raw_video_rear_dir,
                                      temp_dir, preprocess_dir):
             
         statement = f'INSERT INTO {self.database}.`ai.lift_inspection.task_info`\
-                    (ID, raw_auido_dir, raw_video_front_dir, raw_video_rear_dir, temp_dir, preprocess_dir) VALUES \
-                    ({mission_id}, "{raw_auido_dir}", "{raw_video_front_dir}", "{raw_video_rear_dir}", "{temp_dir}", "{preprocess_dir}")'
+                    (ID, raw_audio_dir, raw_video_front_dir, raw_video_rear_dir, temp_dir, preprocess_dir) VALUES \
+                    ({mission_id}, "{raw_audio_dir}", "{raw_video_front_dir}", "{raw_video_rear_dir}", "{temp_dir}", "{preprocess_dir}")'
         
         print(statement)
         self.Insert(statement)
