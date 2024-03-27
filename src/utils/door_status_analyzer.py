@@ -119,7 +119,7 @@ class DoorStatusAnalyzer:
         out.release()
 
         # Write detected door status list
-        door_sliced_classes_dir = self.temp_folder_dir  +'door_sliced_classes.txt'
+        door_sliced_classes_dir = self.temp_folder_dir  +'/door_sliced_classes.txt'
         with open(door_sliced_classes_dir, 'w') as f:
             for line in self.detect_list:
                 f.write(f"{line}\n")

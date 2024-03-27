@@ -104,7 +104,7 @@ class DoorSquenceAnalyzer:
         output_info = self.merge_rule_rev01(compact_door_statuses_info)
 
         # Save the results to a file
-        output_file_dir = self.temp_folder_dir + 'door_compact_statuses_info.txt'
+        output_file_dir = self.temp_folder_dir + '/door_compact_statuses_info.txt'
         with open(output_file_dir, 'w') as output_file:
             for idx, result in enumerate(output_info):
                 if(idx is len(output_info)-1): output_file.write(str(result))
