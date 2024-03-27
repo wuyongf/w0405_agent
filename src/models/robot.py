@@ -44,6 +44,7 @@ from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.folder_path_handler import FolderPathHandler
+from src.analysis.lift_inspection import LiftInsectionAnalyser
 # Notification
 from src.handlers.event_handler import EventHandler
 
@@ -146,6 +147,7 @@ class Robot:
         self.raw_audio_file_dir  = None
         self.raw_video_front_file_dir = None
         self.raw_video_rear_file_dir = None
+        self.lfa = LiftInsectionAnalyser(config)
 
         ## ai related - water leakage
         self.wld_mission_id     = None
@@ -1088,6 +1090,10 @@ class Robot:
 
             print(f'temp_dir:       {temp_dir}')
             print(f'preprocess_dir: {preprocess_dir}')
+
+            self.lfa.start_analysing(self.lnd_mission_id, self.raw_audio_file_dir, self.raw_video_front_file_dir,
+                                     self.raw_video_front_file_dir, temp_dir, preprocess_dir, self.lnd_ds_model)
+            
             ### [audio] analysis
             ### [audio] grouop abnormal sounds
             ### [audio] convert to mp3 
@@ -1102,9 +1108,10 @@ class Robot:
             ### [video_rear] upload to cloud
             ### (1) Azure Containe
             ### (2) NWDB
-
             return True
-        except:
+        
+        except Exception as e:
+            print(e)
             return False
 
     def lift_noise_detect_analysis(self):
