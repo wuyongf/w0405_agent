@@ -1039,9 +1039,7 @@ class Robot:
             ### [nwdb]
             self.lnd_temp_dir = self.folder_path_handler.construct_paths(mission_id=self.lnd_mission_id,inspection_type=NWEnum.InspectionType.LiftInspection,data_type=NWEnum.InspectionDataType.Temp)
             self.lnd_preprocess_dir = self.folder_path_handler.construct_paths(mission_id=self.lnd_mission_id,inspection_type=NWEnum.InspectionType.LiftInspection,data_type=NWEnum.InspectionDataType.Preprocess)
-            self.nwdb.insert_lift_inspection_info(self.lnd_mission_id,self.raw_audio_file_dir,self.raw_video_front_file_dir,
-                                                  self.raw_video_rear_file_dir,self.lnd_temp_dir,self.lnd_preprocess_dir)
-
+            
             return True
         except:
             return False
@@ -1061,6 +1059,10 @@ class Robot:
 
             ### [gyro]
             self.lift_vibration_off()
+
+            ### [nwdb]
+            self.nwdb.insert_lift_inspection_info(self.lnd_mission_id,self.raw_audio_file_dir,self.raw_video_front_file_dir,
+                                                  self.raw_video_rear_file_dir,self.lnd_temp_dir,self.lnd_preprocess_dir)
 
             return True
         except:
