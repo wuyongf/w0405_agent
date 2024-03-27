@@ -30,7 +30,7 @@ class DoorStatusAnalyzer:
         self.dsq.set_temp_folder_dir(temp_folder_dir)
 
     def set_preprocess_folder_dir(self, preprocess_folder_dir):
-        self.preprocess_folder_dir = preprocess_folder_dir
+        self.preprocess_folder_dir = preprocess_folder_dir + "/door-status"
         os.makedirs(self.preprocess_folder_dir, exist_ok=True)
 
     def set_camera_position(self, camera_position: CameraPosition):

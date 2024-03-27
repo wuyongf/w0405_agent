@@ -14,8 +14,8 @@ class AudioTool:
     def set_temp_dir(self, dir):
         self.temp_folder = dir
 
-    def set_preprocess_dir(self, dir):
-        self.preprocess_folder = dir    
+    def set_preprocess_dir(self, preprocess_root_dir):
+        self.preprocess_folder = preprocess_root_dir + '/audio'
 
     def cosntruct_preprocess_folders(self):
         'pals: preprocess audio lift status'

@@ -8,7 +8,6 @@ from src.utils.door_status_analyzer import DoorStatusAnalyzer
 from src.utils.methods import convert_timestamp2date
 from src.models.enums.nw import CameraPosition
 
-
 class LiftInsectionAnalyser:
     def __init__(self,config):
         self.temp_folder_dir = None
@@ -199,6 +198,35 @@ class LiftInsectionAnalyser:
             # print(status_start_time)
             # print(status_end_time)
             # print('----')
+                
+    
+    def start_analysing(self, mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
+             temp_dir, preprocess_dir, ai_model_ckpt_dir):
+        
+        self.set_raw_data_dir_path(raw_audio_dir, raw_front_video_dir, raw_rear_video_dir)
+        self.set_temp_dir(temp_dir)
+
+        self.audio_tool.set_preprocess_dir(preprocess_dir)
+        self.audio_tool.cosntruct_preprocess_folders()
+
+        self.get_raw_data_duration()
+        # [1] raw_audio -> temp_audio
+        mono_audio_dir = self.preprocess_raw_audio()
+
+        # [2] raw_rear_video -> compact_door_status
+        self.dsa.set_ckpt(ai_model_ckpt_dir)
+        self.dsa.set_preprocess_folder_dir(preprocess_dir)
+        self.dsa.set_temp_folder_dir(temp_dir)
+        self.dsa.set_source_video(raw_rear_video_dir)
+        self.dsa.set_camera_position(CameraPosition.Rear)
+        door_compact_statuses_info_dir = self.preprocess_raw_rear_video()
+
+        # [3] raw_gyro_data -> analyzed_gyro_data
+        self.set_task_id(mission_id)
+        self.preprocess_gyro()
+
+        # [4] compact_door_status + temp_audio => sliced_audio
+        self.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
 
 if __name__ == '__main__':
     config = load_config('../../conf/config.properties')
@@ -233,32 +261,16 @@ if __name__ == '__main__':
     # lfa.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
 
     # EXAMPLE 2
-    lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav',
-                             front_video_dir='data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi',
-                             rear_video_dir='data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi')
-    lfa.set_temp_dir("data/lift-inspection/temp/20240318/539")
+    mission_id = 539
+    raw_audio_dir = 'data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav'
+    raw_front_video_dir = 'data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi'
+    raw_rear_video_dir = 'data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi'
+    temp_dir = "data/lift-inspection/temp/20240318/539"
+    preprocess_dir = "data/lift-inspection/preprocess/20240318/539"
+    ai_model_ckpt_dir = '../ai_module/door_status/ckpt/best.pt'
 
-    lfa.audio_tool.set_preprocess_dir("data/lift-inspection/preprocess/20240318/539/audio")
-    lfa.audio_tool.cosntruct_preprocess_folders()
-
-    lfa.get_raw_data_duration()
-    # [1] raw_audio -> temp_audio
-    mono_audio_dir = lfa.preprocess_raw_audio()
-
-    # [2] raw_rear_video -> compact_door_status
-    lfa.dsa.set_ckpt('../ai_module/door_status/ckpt/best.pt')
-    lfa.dsa.set_preprocess_folder_dir('data/lift-inspection/preprocess/'+ '20240318/539/'+"door-status/")
-    lfa.dsa.set_temp_folder_dir('data/lift-inspection/temp/'+ '20240318/539/')
-    lfa.dsa.set_source_video("data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi")
-    lfa.dsa.set_camera_position(CameraPosition.Rear)
-    door_compact_statuses_info_dir = lfa.preprocess_raw_rear_video()
-
-    # [3] raw_gyro_data -> analyzed_gyro_data
-    lfa.set_task_id(539)
-    lfa.preprocess_gyro()
-
-    # [4] compact_door_status + temp_audio => sliced_audio
-    lfa.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
+    lfa.start_analysing(mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
+             temp_dir, preprocess_dir, ai_model_ckpt_dir)
 
     # # EXAMPLE 3
     # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/533/recording_1710760164.272739.wav',
