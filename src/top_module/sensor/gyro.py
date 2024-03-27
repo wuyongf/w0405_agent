@@ -161,7 +161,7 @@ class Gyro():
         return self.modb.CreateGyroDataPack(task_id=task_id, lift_id=lift_id)
 
     def insert_data(self, data):
-        print("[gyro.py] dataInsert")
+        # print("[gyro.py] dataInsert")
         list_to_str = ','.join([str(elem) for elem in data])
         self.modb.InsertGyroChunk(pack_id=self.pack_id, accel_z=list_to_str)
 
