@@ -358,7 +358,7 @@ class TaskHandler:
             
             case 'LIFT-NOISE-DETECT-ANALYSIS':
                 # print(f'LIFT-NOISE-DETECT-END JSON: {task_json}')
-                res = self.robot.lift_noise_detect_analysis()
+                res = self.robot.lift_noise_detect_analysis2()
                 if (res):
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
                 else:

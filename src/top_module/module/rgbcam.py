@@ -60,6 +60,7 @@ class RGBCamRecorder:
         self.record_flag.value = False
         if self.process is not None:
             self.process.join()  # Ensure the recording process has finished
+        return self.output_file
 
     def cleanup(self):
         if self.out is not None:
