@@ -351,6 +351,18 @@ class robotDBHandler(db.AzureDB):
         print(statement)
         return self.Insert(statement)
     
+    ### lift_inspection
+    def insert_lift_inspection_info(self, mission_id, raw_auido_dir, raw_video_front_dir, raw_video_rear_dir,
+                                     temp_dir, preprocess_dir):
+            
+        statement = f'INSERT INTO {self.database}.`ai.lift_inspection.task_info`\
+                    (ID, raw_auido_dir, raw_video_front_dir, raw_video_rear_dir, temp_dir, preprocess_dir) VALUES \
+                    ({mission_id}, {raw_auido_dir}, {raw_video_front_dir}, {raw_video_rear_dir}, {temp_dir}, {preprocess_dir})'
+        
+        print(statement)
+        self.Insert(statement)
+        
+        return True
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)

@@ -141,12 +141,14 @@ class Robot:
         self.door_agent_finish = False
         self.door_configured = False
 
-        ## ai related - lift inspection
+        ## ai related - lift inspection - Lift Noise Detection
         self.lnd_ds_model = config.get('LiftInspection', 'door_status_model_dir')
         self.lnd_mission_id     = None
         self.raw_audio_file_dir  = None
         self.raw_video_front_file_dir = None
         self.raw_video_rear_file_dir = None
+        self.lnd_temp_dir = None
+        self.lnd_preprocess_dir = None
         self.lfa = LiftInsectionAnalyser(config)
 
         ## ai related - water leakage
@@ -1026,25 +1028,19 @@ class Robot:
             self.lift_vibration_on(task_json)
 
             ### [video_front]
-            # output_dir = self.folder_path_handler.construct_paths(
-            #                                         mission_id=self.lnd_mission_id,
-            #                                         inspection_type=NWEnum.InspectionType.LiftInspection,
-            #                                         data_type=NWEnum.InspectionDataType.VideoFront)
-            # self.rgbcam_front_handler.recorder.update_save_path(output_dir)
-            # self.rgbcam_front_handler.recorder.update_cap_save_path(output_dir)
             self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
             self.rgbcam_front_handler.start_recording()
 
-            # ### [video_rear]
+            ### [video_rear]
             self.nwmqttpub.rotate_camera(90)
-            # output_dir = self.folder_path_handler.construct_paths(
-            #                                         mission_id=self.lnd_mission_id,
-            #                                         inspection_type=NWEnum.InspectionType.LiftInspection,
-            #                                         data_type=NWEnum.InspectionDataType.VideoRear)
-            # self.rgbcam_rear_handler.recorder.update_save_path(output_dir)
-            # self.rgbcam_rear_handler.recorder.update_cap_save_path(output_dir)
             self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
             self.rgbcam_rear_handler.start_recording()
+
+            ### [nwdb]
+            self.lnd_temp_dir = self.folder_path_handler.construct_paths(mission_id=self.lnd_mission_id,inspection_type=NWEnum.InspectionType.LiftInspection,data_type=NWEnum.InspectionDataType.Temp)
+            self.lnd_preprocess_dir = self.folder_path_handler.construct_paths(mission_id=self.lnd_mission_id,inspection_type=NWEnum.InspectionType.LiftInspection,data_type=NWEnum.InspectionDataType.Preprocess)
+            self.nwdb.insert_lift_inspection_info(self.lnd_mission_id,self.raw_audio_file_dir,self.raw_video_front_file_dir,
+                                                  self.raw_video_rear_file_dir,self.lnd_temp_dir,self.lnd_preprocess_dir)
 
             return True
         except:
@@ -1075,24 +1071,13 @@ class Robot:
             print(f'<debug> all raw data')
             print(f'self.lnd_mission_id:        {self.lnd_mission_id}')
             print(f'self.video_front_file_path: {self.raw_video_front_file_dir}')
-            print(f'self.video_front_file_path: {self.raw_video_front_file_dir}')
+            print(f'self.video_rear_file_path:  {self.raw_video_rear_file_dir}')
             print(f'self.raw_audio_file_dir:    {self.raw_audio_file_dir}')
-
-            temp_dir = self.folder_path_handler.construct_paths(
-                                                    mission_id=self.lnd_mission_id,
-                                                    inspection_type=NWEnum.InspectionType.LiftInspection,
-                                                    data_type=NWEnum.InspectionDataType.Temp)
-            
-            preprocess_dir = self.folder_path_handler.construct_paths(
-                                                    mission_id=self.lnd_mission_id,
-                                                    inspection_type=NWEnum.InspectionType.LiftInspection,
-                                                    data_type=NWEnum.InspectionDataType.Preprocess)
-
-            print(f'temp_dir:       {temp_dir}')
-            print(f'preprocess_dir: {preprocess_dir}')
+            print(f'self.lnd_temp_dir:          {self.lnd_temp_dir}')
+            print(f'self.lnd_preprocess_dir:    {self.lnd_preprocess_dir}')
 
             self.lfa.start_analysing(self.lnd_mission_id, self.raw_audio_file_dir, self.raw_video_front_file_dir,
-                                     self.raw_video_front_file_dir, temp_dir, preprocess_dir, self.lnd_ds_model)
+                                     self.raw_video_rear_file_dir, self.lnd_temp_dir, self.lnd_preprocess_dir, self.lnd_ds_model)
             
             ### [audio] analysis
             ### [audio] grouop abnormal sounds
