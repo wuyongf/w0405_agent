@@ -141,6 +141,7 @@ class Robot:
         self.door_configured = False
 
         ## ai related - lift inspection
+        self.lnd_ds_model = config.get('LiftInspection', 'door_status_model_dir')
         self.lnd_mission_id     = None
         self.raw_audio_file_dir  = None
         self.raw_video_front_file_dir = None

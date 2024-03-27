@@ -261,12 +261,12 @@ if __name__ == '__main__':
     # lfa.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
 
     # EXAMPLE 2
-    mission_id = 539
-    raw_audio_dir = 'data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav'
-    raw_front_video_dir = 'data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi'
-    raw_rear_video_dir = 'data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi'
-    temp_dir = "data/lift-inspection/temp/20240318/539"
-    preprocess_dir = "data/lift-inspection/preprocess/20240318/539"
+    mission_id = 539# src/../utils/ src/analysis
+    raw_audio_dir = '../utils/data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav'
+    raw_front_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi'
+    raw_rear_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi'
+    temp_dir = "../utils/data/lift-inspection/temp/20240318/539"
+    preprocess_dir = "../utils/data/lift-inspection/preprocess/20240318/539"
     ai_model_ckpt_dir = '../ai_module/door_status/ckpt/best.pt'
 
     lfa.start_analysing(mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
