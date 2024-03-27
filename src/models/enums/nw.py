@@ -5,7 +5,7 @@ class CameraPosition(Enum):
     Front = 1
     Rear  = 2
 
-# AI - Lift Inspection
+# AI - Lift Inspection - Door Status
 class LiftDoorStatus(Enum):
     Unknown = -1
     FullyClose = 0
@@ -26,6 +26,19 @@ class InspectionType(Enum):
     LiftInspection = 1
     Surveillance   = 2
     WaterLeakage   = 3
+
+class InspectionDataType(Enum):
+    # Lift Inspection
+    Audio = 1
+    VideoFront = 2
+    VideoRear = 3
+    Preprocess = 4
+    Temp = 5
+    # Water Leakage
+    RGBImage = 6
+    ThermalImage = 7
+    ThermalImageResult = 8
+    WaterLeak_VideoRear = 9
 
 class MissionType(Enum):
     NULL            = 1

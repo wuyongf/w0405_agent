@@ -129,15 +129,15 @@ class RMAPI(api.AuthenticatedAPI):
             return current_time
 
         # start time
-        start_time = convertDate(2024,2,19,12,42,00,offset_hours = 8)
-        end_time =   convertDate(2024,2,19,12,44,00,offset_hours = 8)
+        start_time = convertDate(2024,3,22,23,42,00,offset_hours = 8)
+        end_time =   convertDate(2024,2,22,23,44,00,offset_hours = 8)
 
         payload = {}
         # payload["layoutId"] = '00000000-0000-0000-0000-000000000000'#'0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d'#
         # payload["layoutName"] = "6F-Layout"
         # payload["name"] = 'ChargingOffOn'
         payload["mode"] = 3
-        payload['id'] = '0114e711-1472-45f8-b75f-dda243541298' # this is rm_mission_guid
+        payload['id'] = '702a6a05-179e-46db-a209-5711c4e13c33' # this is rm_mission_guid
         payload["startTime"]   = start_time #'2024-01-12T12:37:00Z'
         payload["endTime"] = end_time
         payload["scheduledAt"] = start_time #'2024-01-12T12:37:00Z'
@@ -918,8 +918,8 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rmapi = RMAPI(config, skill_config_dir)
 
-    res = rmapi.get_layout_marker_detail('0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'DEMO1')
-    print(res)
+    # res = rmapi.get_layout_marker_detail('0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'DEMO1')
+    # print(res)
     
     rmapi.update_rm_mission()
 

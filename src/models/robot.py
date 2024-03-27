@@ -40,10 +40,10 @@ from src.top_module.sensor.gyro import Gyro as MoGyro
 # AI
 import numpy as np
 from src.handlers.ai_audio_handler import AudioAgent
-from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.handlers.ai_rgbcam_handler import RGBCamAgent
 from src.handlers.ai_thermalcam_handler import ThermalCamAgent
-from src.top_module.module.rgbcam import RGBCamRecorder
+from src.handlers.azure_blob_handler import AzureBlobHandler
+from src.handlers.folder_path_handler import FolderPathHandler
 # Notification
 from src.handlers.event_handler import EventHandler
 
@@ -69,12 +69,13 @@ class Robot:
         # rgbcam.update_cap_save_path('test')
         # rgbcam.cap_open_cam()
         # rgbcam.cap_rgb_img('test13.jpg')
-        # BUG: 2024.02.21: bug fixed. audio interruot with rgbcam. need to set default audio input in ubuntu.
+        # BUG: 2024.02.21: bug fixed. audio interrupt with rgbcam. need to set default audio input in ubuntu.
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
         self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)      
+        self.folder_path_handler = FolderPathHandler(config)
         
         ## Notification
         self.event_handler = EventHandler("localhost", self.status_summary)
@@ -139,9 +140,13 @@ class Robot:
         self.door_agent_finish = False
         self.door_configured = False
 
-        ## ai related
+        ## ai related - lift inspection
         self.lnd_mission_id     = None
-        self.lnd_wav_file_name  = None
+        self.raw_audio_file_dir  = None
+        self.raw_video_front_file_dir = None
+        self.raw_video_rear_file_dir = None
+
+        ## ai related - water leakage
         self.wld_mission_id     = None
         self.wld_image_folder_dir = None
 
@@ -1008,7 +1013,7 @@ class Robot:
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.LiftInspection)
             self.lnd_mission_id = self.nwdb.get_latest_mission_id()
-            print(f'mission_id: {self.lnd_mission_id}')
+            # print(f'mission_id: {self.lnd_mission_id}')
 
             ### [audio]
             self.audio_handler.construct_folder_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection)
@@ -1018,11 +1023,23 @@ class Robot:
             self.lift_vibration_on(task_json)
 
             ### [video_front]
+            # output_dir = self.folder_path_handler.construct_paths(
+            #                                         mission_id=self.lnd_mission_id,
+            #                                         inspection_type=NWEnum.InspectionType.LiftInspection,
+            #                                         data_type=NWEnum.InspectionDataType.VideoFront)
+            # self.rgbcam_front_handler.recorder.update_save_path(output_dir)
+            # self.rgbcam_front_handler.recorder.update_cap_save_path(output_dir)
             self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
             self.rgbcam_front_handler.start_recording()
 
             # ### [video_rear]
             self.nwmqttpub.rotate_camera(90)
+            # output_dir = self.folder_path_handler.construct_paths(
+            #                                         mission_id=self.lnd_mission_id,
+            #                                         inspection_type=NWEnum.InspectionType.LiftInspection,
+            #                                         data_type=NWEnum.InspectionDataType.VideoRear)
+            # self.rgbcam_rear_handler.recorder.update_save_path(output_dir)
+            # self.rgbcam_rear_handler.recorder.update_cap_save_path(output_dir)
             self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
             self.rgbcam_rear_handler.start_recording()
 
@@ -1033,18 +1050,57 @@ class Robot:
     def lift_noise_detect_end(self):
         try:
             ### [video_front]
-            self.video_front_file_path = self.rgbcam_front_handler.stop_and_save_recording()
+            self.raw_video_front_file_dir = self.rgbcam_front_handler.stop_and_save_recording()
 
             ### [video_rear]
             self.nwmqttpub.rotate_camera(0)
-            self.video_rear_file_path = self.rgbcam_rear_handler.stop_and_save_recording()
+            self.raw_video_rear_file_dir = self.rgbcam_rear_handler.stop_and_save_recording()
 
             ### [audio]
-            self.lnd_wav_file_name = self.audio_handler.stop_and_save_recording()
-            print(f'self.lnd_wav_file_name: {self.lnd_wav_file_name}')
+            self.raw_audio_file_dir = self.audio_handler.stop_and_save_recording()
+            # print(f'self.raw_audio_file_dir: {self.raw_audio_file_dir}')
 
             ### [gyro]
             self.lift_vibration_off()
+
+            return True
+        except:
+            return False
+
+    def lift_noise_detect_analysis2(self):
+        try:
+            print(f'<debug> all raw data')
+            print(f'self.lnd_mission_id:        {self.lnd_mission_id}')
+            print(f'self.video_front_file_path: {self.raw_video_front_file_dir}')
+            print(f'self.video_front_file_path: {self.raw_video_front_file_dir}')
+            print(f'self.raw_audio_file_dir:    {self.raw_audio_file_dir}')
+
+            temp_dir = self.folder_path_handler.construct_paths(
+                                                    mission_id=self.lnd_mission_id,
+                                                    inspection_type=NWEnum.InspectionType.LiftInspection,
+                                                    data_type=NWEnum.InspectionDataType.Temp)
+            
+            preprocess_dir = self.folder_path_handler.construct_paths(
+                                                    mission_id=self.lnd_mission_id,
+                                                    inspection_type=NWEnum.InspectionType.LiftInspection,
+                                                    data_type=NWEnum.InspectionDataType.Preprocess)
+
+            print(f'temp_dir:       {temp_dir}')
+            print(f'preprocess_dir: {preprocess_dir}')
+            ### [audio] analysis
+            ### [audio] grouop abnormal sounds
+            ### [audio] convert to mp3 
+            ### [audio] upload to cloud 
+            ### (1) Azure Containe
+            ### (2) NWDB
+
+            ### [video_front] upload to cloud
+            ### (1) Azure Containe
+            ### (2) NWDB
+
+            ### [video_rear] upload to cloud
+            ### (1) Azure Containe
+            ### (2) NWDB
 
             return True
         except:
@@ -1063,7 +1119,7 @@ class Robot:
             abnormal_sounds = [abnormal_sound_door, abnormal_sound_ambient, abnormal_sound_vocal]
             print(f'##2')
             ### [audio] convert to mp3 
-            mp3_file_path  = self.audio_handler.audio_utils.convert_to_mp3(self.lnd_wav_file_name)
+            mp3_file_path  = self.audio_handler.audio_utils.convert_to_mp3(self.raw_audio_file_dir)
 
             ### [audio] upload to cloud 
             ### (1) Azure Containe
@@ -1090,17 +1146,17 @@ class Robot:
             ### [video_front] upload to cloud
             ### (1) Azure Containe
             self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoFront)
-            self.blob_handler.upload_blobs(self.video_front_file_path)
+            self.blob_handler.upload_blobs(self.raw_video_front_file_dir)
             ### (2) NWDB
-            front_mp4_file_name = Path(self.video_front_file_path).name
+            front_mp4_file_name = Path(self.raw_video_front_file_dir).name
             self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Front, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=front_mp4_file_name)
 
             ### [video_rear] upload to cloud
             ### (1) Azure Containe
             self.blob_handler.update_container_name(AzureEnum.ContainerName.LiftInspection_VideoRear)
-            self.blob_handler.upload_blobs(self.video_rear_file_path)
+            self.blob_handler.upload_blobs(self.raw_video_rear_file_dir)
             ### (2) NWDB
-            rear_mp4_file_name = Path(self.video_rear_file_path).name
+            rear_mp4_file_name = Path(self.raw_video_rear_file_dir).name
             self.nwdb.insert_new_video_id(NWEnum.CameraPosition.Rear, robot_id=self.robot_nw_id, mission_id=self.lnd_mission_id, video_file_name=rear_mp4_file_name)
 
             return True

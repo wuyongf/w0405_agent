@@ -75,7 +75,7 @@ class RGBCamAgent:
         # self.audio_infer_result_path.mkdir(exist_ok=True, parents=True)        
 
         ## notify recorder the save path
-        self.recorder.update_save_path(output_dir=self.video_record_path)
+        self.recorder.update_save_path(self.video_record_path)
         # self.audio_recorder.update_save_path(self.video_record_path)
 
         ## notify capturer the save path
