@@ -7,7 +7,7 @@ import src.utils.methods as umethods
 # from src.ai_module.lift_noise.AudioUtils import AudioUtils
 # from src.ai_module.lift_noise.AnomalyDetector import AnomalyDetector as AudioAnomalyDetector
 from src.top_module.module.microphone import Recorder as AudioRecorder
-from src.top_module.module.rgbcam2 import RGBCamRecorder
+from src.top_module.module.rgbcam3 import RGBCamRecorder
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.models.enums.nw import InspectionType
 from src.models.enums.azure import ContainerName
@@ -98,6 +98,7 @@ class RGBCamAgent:
         try:
             print(f'[ai_rgbcam_handler.stop_and_save_recording] stop recording, saving...')
             video_file_name = self.recorder.stop_and_save_record()
+            self.recorder.close()
             print(f'[ai_rgbcam_handler.stop_and_save_recording] finished.')
 
             return video_file_name
