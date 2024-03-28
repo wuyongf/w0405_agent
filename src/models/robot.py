@@ -149,7 +149,7 @@ class Robot:
         self.raw_video_rear_file_dir = None
         self.lnd_temp_dir = None
         self.lnd_preprocess_dir = None
-        self.lfa = LiftInsectionAnalyser(config)
+        self.lfa = LiftInsectionAnalyser(config, self.nwdb)
 
         ## ai related - water leakage
         self.wld_mission_id     = None

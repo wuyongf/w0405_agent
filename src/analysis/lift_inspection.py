@@ -7,9 +7,10 @@ from src.utils.tool_video import VideoTool
 from src.utils.door_status_analyzer import DoorStatusAnalyzer
 from src.utils.methods import convert_timestamp2date
 from src.models.enums.nw import CameraPosition
+from src.models.db_robot import robotDBHandler
 
 class LiftInsectionAnalyser:
-    def __init__(self,config):
+    def __init__(self, config, nwdb: robotDBHandler):
         self.temp_folder_dir = None
         self.preprocess_folder_dir = None
         
@@ -26,6 +27,7 @@ class LiftInsectionAnalyser:
         self.task_id = 0
 
         #tools
+        self.nwdb = nwdb
         self.gyro_tool  = GyroTool(config)
         self.audio_tool = AudioTool()
         self.video_tool = VideoTool()
@@ -228,9 +230,34 @@ class LiftInsectionAnalyser:
         # [4] compact_door_status + temp_audio => sliced_audio
         self.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
 
+    def init_from_db(self,mission_id):
+        def extract_relative_path(abs_dir):
+            # Resolve the absolute path to remove any ".." components
+            absolute_dir_resolved = os.path.abspath(abs_dir)
+            index = absolute_dir_resolved.find("data/")
+            relative_dir = absolute_dir_resolved[index:]
+            return relative_dir
+        
+        ai_model_ckpt_dir = '/home/yf/dev/w0405_agent/src/ai_module/door_status/ckpt/best.pt'
+        
+        raw_audio_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','raw_audio_dir','ID',mission_id)
+        raw_video_front_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','raw_video_front_dir','ID',mission_id)
+        raw_video_rear_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','raw_video_rear_dir','ID',mission_id)
+        temp_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','temp_dir','ID',mission_id)
+        preprocess_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','preprocess_dir','ID',mission_id)
+        
+        raw_audio_dir = extract_relative_path(raw_audio_dir)
+        raw_video_front_dir = extract_relative_path(raw_video_front_dir)
+        raw_video_rear_dir = extract_relative_path(raw_video_rear_dir)
+        temp_dir = extract_relative_path(temp_dir)
+        preprocess_dir = extract_relative_path(preprocess_dir)
+        
+        return mission_id, raw_audio_dir, raw_video_front_dir, raw_video_rear_dir,temp_dir, preprocess_dir, ai_model_ckpt_dir
+
 if __name__ == '__main__':
     config = load_config('../../conf/config.properties')
-    lfa = LiftInsectionAnalyser(config)
+    nwdb = robotDBHandler(config)
+    lfa = LiftInsectionAnalyser(config, nwdb)
 
     # # EXAMPLE 1
     # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/001/recording_1709898801.1256263.wav',
@@ -260,17 +287,24 @@ if __name__ == '__main__':
     # # [4] compact_door_status + temp_audio => sliced_audio
     # lfa.trim_audio_for_training(mono_audio_dir, door_compact_statuses_info_dir)
 
-    # EXAMPLE 2
-    mission_id = 539# src/../utils/ src/analysis
-    raw_audio_dir = '../utils/data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav'
-    raw_front_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi'
-    raw_rear_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi'
-    temp_dir = "../utils/data/lift-inspection/temp/20240318/539"
-    preprocess_dir = "../utils/data/lift-inspection/preprocess/20240318/539"
-    ai_model_ckpt_dir = '../ai_module/door_status/ckpt/best.pt'
+    # # EXAMPLE 2
+    # mission_id = 539# src/../utils/ src/analysis
+    # raw_audio_dir = '../utils/data/lift-inspection/raw-data/20240318/539/recording_1710761694.0095713.wav'
+    # raw_front_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/front_video_1710761524.8510606.avi'
+    # raw_rear_video_dir = '../utils/data/lift-inspection/raw-data/20240318/539/rear_video_1710761525.0664573.avi'
+    # temp_dir = "../utils/data/lift-inspection/temp/20240318/539"
+    # preprocess_dir = "../utils/data/lift-inspection/preprocess/20240318/539"
+    # ai_model_ckpt_dir = '../ai_module/door_status/ckpt/best.pt'
 
-    lfa.start_analysing(mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
-             temp_dir, preprocess_dir, ai_model_ckpt_dir)
+    # lfa.start_analysing(mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
+    #          temp_dir, preprocess_dir, ai_model_ckpt_dir)
+    
+    # Example 4
+    mission_id = 555
+    info = lfa.init_from_db(mission_id)
+    print(info)
+    lfa.start_analysing(info[0], info[1], info[2], info[3], 
+             info[4], info[5], info[6])
 
     # # EXAMPLE 3
     # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/533/recording_1710760164.272739.wav',
