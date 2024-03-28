@@ -31,12 +31,29 @@ class VideoRecorder:
         while not self.stop_flag.is_set():
             time.sleep(10)
             break
-            pass  # Keep recording until the stop flag is set
         self.stop_recording()
 
-# Example usage:
-recorder = VideoRecorder(2)
-recorder.update_save_path(f'video_{time.time()}.avi')
-recorder.start_recording()
-time.sleep(10)
-recorder.stop_recording()
+    def capture_and_save_image(self, image_path):
+        # Command to capture a single frame from the video input and save it as an image
+        command = [
+            'ffmpeg',
+            '-f', 'v4l2',                         # Specify the input format (video4linux2 for webcams)
+            '-i', f'/dev/video{self.device_index}',  # Input device (change to your device)
+            '-frames:v', '1',                     # Number of frames to capture (1 for a single frame)
+            image_path                           # Output image file path
+        ]
+        
+        # Run the FFmpeg command to capture and save the image
+        subprocess.run(command)
+
+if __name__ == "__main__":
+
+    # Example usage:
+    recorder = VideoRecorder(2)
+    recorder.update_save_path(f'video_{time.time()}.avi')
+    recorder.start_recording()
+    time.sleep(10)
+    recorder.stop_recording()
+
+    # # [Capture and save an image]
+    # recorder.capture_and_save_image('image.png')
