@@ -3,18 +3,21 @@ import threading
 import time
 
 class VideoRecorder:
-    def __init__(self, output_file):
-        self.output_file = output_file
+    def __init__(self, device_index):
+        self.device_index = device_index
         self.stop_flag = threading.Event()
+
+    def update_save_path(self, output_dir):
+        self.output_dir = output_dir
 
     def start_recording(self):
         command = [
             'ffmpeg',
             '-f', 'v4l2',            # Specify the input format (video4linux2 for webcams)
-            '-i', '/dev/video0',    # Input device (change to your device)
+            '-i', f'/dev/video{self.device_index}',    # Input device (change to your device)
             '-vcodec', 'libx264',   # Video codec
             '-pix_fmt', 'yuv420p',  # Pixel format (required for compatibility)
-            self.output_file        # Output file path
+            self.output_dir         # Output file path
         ]
         self.process = subprocess.Popen(command)
 
@@ -31,7 +34,9 @@ class VideoRecorder:
             pass  # Keep recording until the stop flag is set
         self.stop_recording()
 
-# Example usage:y
-        
-recorder = VideoRecorder('output.mp4')
-recorder.record_until_flag_set()
+if __name__ == "__main__":
+
+    recorder = VideoRecorder(0)
+    recorder.update_save_path('')
+    recorder.start_recording()
+    recorder.record_until_flag_set()
