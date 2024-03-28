@@ -231,6 +231,7 @@ class ThermalCam:
 
             return filepath
         else:
+            print(f'[thermalcam] thermal image is None!')
             return None
     
     def gray_to_heatmap(self, filepath):
@@ -251,11 +252,6 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
-
-        # ### rgbcam
-        # rgbcam.update_cap_save_path(rgbcam_save_dir)
-        # rgbcam.cap_open_cam()
-
         ### capturing image
         while(self.capture_flag):
             self.capture_image(rgbcam)

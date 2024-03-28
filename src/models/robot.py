@@ -1168,8 +1168,7 @@ class Robot:
             # self.rgbcam_front_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage, NWEnum.CameraPosition.Rear)
 
             # <debug!!>
-            # self.rgbcam_rear_handler.recorder.cap_open_cam()
-            # self.rgbcam_rear_handler.recorder.cap_rgb_img('test.jpg')
+            # rgbcam.cap_rgb_img('test.jpg')
             
             ### [thermalcam]
             self.thermalcam_handler.construct_paths(self.wld_mission_id, NWEnum.InspectionType.WaterLeakage)
