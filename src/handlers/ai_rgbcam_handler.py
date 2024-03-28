@@ -7,7 +7,7 @@ import src.utils.methods as umethods
 # from src.ai_module.lift_noise.AudioUtils import AudioUtils
 # from src.ai_module.lift_noise.AnomalyDetector import AnomalyDetector as AudioAnomalyDetector
 from src.top_module.module.microphone import Recorder as AudioRecorder
-from src.top_module.module.rgbcam import RGBCamRecorder
+from src.top_module.module.rgbcam4 import RGBCamRecorder
 from src.handlers.azure_blob_handler import AzureBlobHandler
 from src.models.enums.nw import InspectionType
 from src.models.enums.azure import ContainerName

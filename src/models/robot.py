@@ -926,7 +926,6 @@ class Robot:
         except:
             return False
 
-
     def mission_end(self):
         try:
             # thread = threading.Thread(target=self.thread_demo_mission_info_updater3, args=())

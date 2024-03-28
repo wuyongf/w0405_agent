@@ -7,6 +7,7 @@ import threading
 import struct
 from multiprocessing import shared_memory
 from src.top_module.module import rpc
+from src.top_module.module.rgbcam import RGBCamRecorder
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):
@@ -205,7 +206,7 @@ class ThermalCam:
         else:
             return None
     
-    def capture_image(self, rgbcam):
+    def capture_image(self, rgbcam: RGBCamRecorder):
         image = self.__get_frame_buffer_call_back()
         # print(self.robot_position)
         if image is not None:
@@ -245,16 +246,15 @@ class ThermalCam:
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
 
-    def process_start_capturing(self, interval, shm_name, rgbcam):
+    def process_start_capturing(self, interval, shm_name, rgbcam: RGBCamRecorder):
         print(f'[thermalcam] start capturing...')
         existing_shm = shared_memory.SharedMemory(name=shm_name)
         self.robot_position = np.ndarray((4,), dtype=np.float32, buffer=existing_shm.buf)
         self.capture_flag = True
 
-        ### rgbcam
-        # self.rgbcam.update_cap_save_path(rgbcam_save_dir)
-        rgbcam.cap_open_cam()
-        # self.rgbcam.cap_rgb_img('test.jpg')
+        # ### rgbcam
+        # # self.rgbcam.update_cap_save_path(rgbcam_save_dir)
+        # rgbcam.cap_open_cam()
 
         ### capturing image
         while(self.capture_flag):

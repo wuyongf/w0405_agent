@@ -1,8 +1,9 @@
+import os
 import subprocess
 import threading
 import time
 
-class VideoRecorder:
+class RGBCamRecorder:
     def __init__(self, device_index):
         self.device_index = device_index
         self.stop_flag = threading.Event()
@@ -10,7 +11,8 @@ class VideoRecorder:
     def update_save_path(self, output_dir):
         self.output_dir = output_dir
     
-    def start_recording(self):
+    # start_recording
+    def capture_and_save_video(self):
         command = [
             'ffmpeg',
             '-f', 'v4l2',            # Specify the input format (video4linux2 for webcams)
@@ -21,7 +23,8 @@ class VideoRecorder:
         ]
         self.process = subprocess.Popen(command)
 
-    def stop_recording(self):
+    # stop_recording
+    def stop_and_save_record(self):
         self.stop_flag.set()
         self.process.terminate()
         self.process.wait()
@@ -33,16 +36,22 @@ class VideoRecorder:
             break
         self.stop_recording()
 
-    def capture_and_save_image(self, image_path):
+
+    ### [Image]
+    def update_cap_save_path(self, cap_save_dir):
+        self.cap_save_dir = cap_save_dir
+        os.makedirs(self.cap_save_dir, exist_ok=True)
+
+    def cap_rgb_img(self, image_name):
         # Command to capture a single frame from the video input and save it as an image
+        image_filename = os.path.join(self.cap_save_dir, image_name)
         command = [
             'ffmpeg',
             '-f', 'v4l2',                         # Specify the input format (video4linux2 for webcams)
             '-i', f'/dev/video{self.device_index}',  # Input device (change to your device)
             '-frames:v', '1',                     # Number of frames to capture (1 for a single frame)
-            image_path                           # Output image file path
+            image_filename                           # Output image file path
         ]
-        
         # Run the FFmpeg command to capture and save the image
         subprocess.run(command)
 
@@ -56,4 +65,4 @@ if __name__ == "__main__":
     recorder.stop_recording()
 
     # # [Capture and save an image]
-    # recorder.capture_and_save_image('image.png')
+    # recorder.cap_rgb_img('image.png')
