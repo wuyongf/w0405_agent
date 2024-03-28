@@ -16,8 +16,8 @@ class RGBCamRecorder:
 
     def update_save_path(self, output_dir):
         self.output_dir = output_dir
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
+        # if not os.path.exists(output_dir):
+        #     os.makedirs(output_dir, exist_ok=True)
 
     def capture_and_save_video(self):
         self.cap_open_cam()
@@ -33,6 +33,7 @@ class RGBCamRecorder:
         while self.record_flag.is_set():
             ret, frame = self.cap.read()
             if ret:
+                cv2.imshow('Frame', frame)
                 self.out.write(frame)
             else:
                 print("Failed to capture frame")
@@ -77,19 +78,18 @@ class RGBCamRecorder:
 
 # Example usage
 if __name__ == '__main__':
-    camera_index = 0  # Adjust as needed
-    save_directory = 'path/to/save/videos'  # Adjust as needed
-    cap_save_directory = 'path/to/save/images'  # Adjust as needed
-    image_name = 'captured_image.jpg'  # Adjust as needed
-    
-    recorder = RGBCamRecorder(camera_index)
-    recorder.update_save_path(save_directory)
-    recorder.update_cap_save_path(cap_save_directory)
+    ### Video Recording
+    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera.update_save_path(output_dir='')
+    rgb_camera.capture_and_save_video()
+    time.sleep(20)
+    rgb_camera.stop_and_save_record()
+    print('First video recording stopped and saved.')
 
-    try:
-        recorder.capture_and_save_video()
-        # Optionally capture an image during recording
-        recorder.cap_rgb_img(image_name)
-        time.sleep(60)  # Record for 60 seconds as an example
-    finally:
-        recorder.close()
+    # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
+    # rgb_camera.capture_and_save_video()
+    # time.sleep(5)
+    # rgb_camera.stop_and_save_record()
+    # print('Second video recording stopped and saved.')
+
+    rgb_camera.close()

@@ -9,72 +9,68 @@ class RGBCamRecorder:
         self.device_index = device_index
         self.output_file = None
         self.output_dir = ""
-        self.record_flag = Value(ctypes.c_bool, False)  # Use multiprocessing Value for process-safe flag
-        self.process = None  # Handle to the recording process
+        self.record_flag = Value(ctypes.c_bool, False)
+        self.process = None
+        self.cap = None
+        self.out = None
 
     def update_save_path(self, output_dir):
+        # Ensure the recording is stopped before updating save path
         if self.record_flag.value:
             self.stop_and_save_record()
-        self.output_dir = output_dir    
+        self.output_dir = output_dir
 
     def capture_and_save_video(self):
-        self.cap_open_cam()  # Ensures camera is opened once
-        try:
-            self.cap = cv2.VideoCapture(self.device_index)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-            self.cap.set(cv2.CAP_PROP_FPS, 15)
+        # Initialize camera and video writer
+        self.cap = cv2.VideoCapture(self.device_index)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        self.cap.set(cv2.CAP_PROP_FPS, 15)
 
-            if not self.cap.isOpened():
-                raise Exception(f"Could not open video device {self.device_index}")
+        if not self.cap.isOpened():
+            raise Exception(f"Could not open video device {self.device_index}")
 
-            output_file_name = f'video_{time.time()}.avi'
-            self.output_file = os.path.join(self.output_dir, output_file_name)
+        output_file_name = f'video_{int(time.time())}.avi'  # Use int for filename
+        self.output_file = os.path.join(self.output_dir, output_file_name)
 
-            if self.output_file:
-                fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-                self.out = cv2.VideoWriter(self.output_file, fourcc, 15.0, (1280, 720))
-                self.record_flag.value = True
-                self.process = Process(target=self.record)
-                self.process.start()
-            else:
-                raise ValueError("Output file not specified. Use update_save_path to set it.")
-        except Exception as e:
-            self.cleanup()
-            raise e  # Re-raise the exception after cleanup
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.out = cv2.VideoWriter(self.output_file, fourcc, 15.0, (1280, 720))
+
+        # Start recording process
+        self.record_flag.value = True
+        self.process = Process(target=self.record)
+        self.process.start()
 
     def record(self):
+        # Recording loop
         while self.record_flag.value:
             ret, frame = self.cap.read()
             if ret:
-                try:
-                    self.out.write(frame)
-                except Exception as e:
-                    print(f"Error during frame write: {e}")
-                    break
+                self.out.write(frame)
             else:
-                print("Failed to capture frame")
                 break
         self.cleanup()
 
     def stop_and_save_record(self):
+        # Signal to stop and wait for the process to finish
         self.record_flag.value = False
         if self.process is not None:
-            self.process.join()  # Ensure the recording process has finished
-        return self.output_file
+            self.process.join()
+        self.cleanup()  # Ensure resources are released properly
 
     def cleanup(self):
+        # Release resources in the right order
         if self.out is not None:
             self.out.release()
+            self.out = None  # Reset the writer to avoid potential double release
         if self.cap is not None:
             self.cap.release()
+            self.cap = None  # Reset the capture device
         cv2.destroyAllWindows()
 
     def close(self):
-        if self.record_flag.value:
-            self.stop_and_save_record()
-        self.cleanup()
-
+        # Ensure the stop_and_save_record is called correctly
+        self.stop_and_save_record()
 
     ### Image
     def update_cap_save_path(self, cap_save_dir):
@@ -109,20 +105,20 @@ def process_record():
 if __name__ == "__main__":
 
     #### Video Recording
-    # rgb_camera = RGBCamRecorder(device_index=0)
-    # rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
+    rgb_camera = RGBCamRecorder(device_index=0)
+    rgb_camera.update_save_path(output_dir='')
+    rgb_camera.capture_and_save_video()
+    time.sleep(20)
+    rgb_camera.stop_and_save_record()
+    print('First video recording stopped and saved.')
+
+    # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
     # rgb_camera.capture_and_save_video()
-    # time.sleep(60)
+    # time.sleep(5)
     # rgb_camera.stop_and_save_record()
-    # print('First video recording stopped and saved.')
+    # print('Second video recording stopped and saved.')
 
-    # # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
-    # # rgb_camera.capture_and_save_video()
-    # # time.sleep(5)
-    # # rgb_camera.stop_and_save_record()
-    # # print('Second video recording stopped and saved.')
-
-    # rgb_camera.close()
+    rgb_camera.close()
 
     # from multiprocessing import Process
     # process = Process(target=process_record, args=())
@@ -133,4 +129,6 @@ if __name__ == "__main__":
     # rgb_camera.update_cap_save_path('test')
     # rgb_camera.cap_open_cam()
     # rgb_camera.cap_rgb_img('003.jpg')
+
+    pass
 

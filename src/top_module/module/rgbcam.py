@@ -15,7 +15,7 @@ class RGBCamRecorder:
     def update_save_path(self, output_dir):
         if self.record_flag.value:
             self.stop_and_save_record()
-        self.output_dir = output_dir    
+        self.output_dir = output_dir
 
     def capture_and_save_video(self):
         try:
@@ -47,6 +47,7 @@ class RGBCamRecorder:
             while self.record_flag.value:
                 ret, frame = self.cap.read()
                 if ret:
+                    cv2.imshow('Frame', frame)
                     self.out.write(frame)
                 else:
                     print("Failed to capture frame")
@@ -97,6 +98,13 @@ class RGBCamRecorder:
         image_filename = os.path.join(self.cap_save_dir, image_name)
         cv2.imwrite(image_filename, frame)
 
+    # def start_cap_img(self, output_folder):
+    #     self.record_flag = True
+    #     self.cap_rgb_img(output_folder)
+
+    # def stop_cap_img(self):
+    #     self.record_flag = False
+
 def process_record():
     rgb_camera = RGBCamRecorder(device_index=2)
     rgb_camera.update_cap_save_path('test')
@@ -107,21 +115,21 @@ def process_record():
 
 if __name__ == "__main__":
 
-    #### Video Recording
-    # rgb_camera = RGBCamRecorder(device_index=0)
-    # rgb_camera.update_save_path(output_dir='', output_file_name='video_000.999.mp4')
+    ### Video Recording
+    rgb_camera = RGBCamRecorder(device_index=2)
+    rgb_camera.update_save_path(output_dir='')
+    rgb_camera.capture_and_save_video()
+    time.sleep(20)
+    rgb_camera.stop_and_save_record()
+    print('First video recording stopped and saved.')
+
+    # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
     # rgb_camera.capture_and_save_video()
-    # time.sleep(60)
+    # time.sleep(5)
     # rgb_camera.stop_and_save_record()
-    # print('First video recording stopped and saved.')
+    # print('Second video recording stopped and saved.')
 
-    # # rgb_camera.update_output_info(output_dir='', output_file_name='output_video2.mp4')
-    # # rgb_camera.capture_and_save_video()
-    # # time.sleep(5)
-    # # rgb_camera.stop_and_save_record()
-    # # print('Second video recording stopped and saved.')
-
-    # rgb_camera.close()
+    rgb_camera.close()
 
     # from multiprocessing import Process
     # process = Process(target=process_record, args=())
@@ -132,4 +140,3 @@ if __name__ == "__main__":
     # rgb_camera.update_cap_save_path('test')
     # rgb_camera.cap_open_cam()
     # rgb_camera.cap_rgb_img('003.jpg')
-
