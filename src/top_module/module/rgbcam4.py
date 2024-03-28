@@ -7,6 +7,7 @@ class RGBCamRecorder:
     def __init__(self, device_index):
         self.device_index = device_index
         self.stop_flag = threading.Event()
+        self.output_file = None
 
     def update_save_path(self, output_dir):
         self.output_dir = output_dir

@@ -98,7 +98,7 @@ class RGBCamAgent:
         try:
             print(f'[ai_rgbcam_handler.stop_and_save_recording] stop recording, saving...')
             video_file_name = self.recorder.stop_and_save_record()
-            self.recorder.close()
+            # self.recorder.close()
             print(f'[ai_rgbcam_handler.stop_and_save_recording] finished.')
 
             return video_file_name
