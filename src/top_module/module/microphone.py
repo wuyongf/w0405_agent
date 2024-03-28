@@ -23,11 +23,6 @@ class Recorder:
         # default_input_device_index = self.audio.get_default_input_device_info()['index']
         # print(f'default_input_device_index: {default_input_device_index}')
 
-        # rgbcam =  RGBCamRecorder(device_index=0)
-        # rgbcam.update_cap_save_path('test')
-        # rgbcam.cap_open_cam()
-        # rgbcam.cap_rgb_img('test23.jpg')
-
         # logic
         self.record_flag = True
 

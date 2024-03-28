@@ -253,7 +253,7 @@ class ThermalCam:
         self.capture_flag = True
 
         # ### rgbcam
-        # # self.rgbcam.update_cap_save_path(rgbcam_save_dir)
+        # rgbcam.update_cap_save_path(rgbcam_save_dir)
         # rgbcam.cap_open_cam()
 
         ### capturing image

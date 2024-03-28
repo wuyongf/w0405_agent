@@ -27,12 +27,6 @@ class AudioAgent:
         # for recording
         self.audio_recorder = AudioRecorder()
 
-        ### DEBUG
-        # rgbcam =  RGBCamRecorder(device_index=0)
-        # rgbcam.update_cap_save_path('test')
-        # rgbcam.cap_open_cam()
-        # rgbcam.cap_rgb_img('test24.jpg')
-
         # for preprocessing
         self.audio_utils = AudioUtils()
         

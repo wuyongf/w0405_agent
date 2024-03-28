@@ -66,10 +66,6 @@ class Robot:
         self.missionpub = MissionPublisher(skill_config_dir, self.rmapi)
 
         ## AI-Init
-        # rgbcam =  RGBCamRecorder(device_index=0)
-        # rgbcam.update_cap_save_path('test')
-        # rgbcam.cap_open_cam()
-        # rgbcam.cap_rgb_img('test13.jpg')
         # BUG: 2024.02.21: bug fixed. audio interrupt with rgbcam. need to set default audio input in ubuntu.
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
