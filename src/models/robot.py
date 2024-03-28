@@ -1032,7 +1032,7 @@ class Robot:
             self.rgbcam_front_handler.start_recording()
 
             ### [video_rear]
-            self.nwmqttpub.rotate_camera(90)
+            self.nwmqttpub.rotate_camera(45)
             self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
             self.rgbcam_rear_handler.start_recording()
 
