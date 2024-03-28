@@ -13,13 +13,15 @@ class RGBCamRecorder:
     
     # start_recording
     def capture_and_save_video(self):
+        output_file_name = f'video_{time.time()}.avi'
+        self.output_file = os.path.join(self.output_dir, output_file_name)
         command = [
             'ffmpeg',
             '-f', 'v4l2',            # Specify the input format (video4linux2 for webcams)
             '-i', f'/dev/video{self.device_index}',    # Input device (change to your device)
             '-vcodec', 'libx264',   # Video codec
             '-pix_fmt', 'yuv420p',  # Pixel format (required for compatibility)
-            self.output_dir        # Output file path
+            self.output_file        # Output file path
         ]
         self.process = subprocess.Popen(command)
 
