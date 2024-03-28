@@ -30,6 +30,7 @@ class RGBCamRecorder:
         self.stop_flag.set()
         self.process.terminate()
         self.process.wait()
+        return self.output_file
 
     def record_until_flag_set(self):
         self.start_recording()
