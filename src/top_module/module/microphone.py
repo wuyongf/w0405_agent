@@ -2,8 +2,6 @@ import pyaudio
 import wave
 import os, time
 import threading
-# DEBUG
-from src.top_module.module.rgbcam import RGBCamRecorder
 
 class Recorder:
     def __init__(self):

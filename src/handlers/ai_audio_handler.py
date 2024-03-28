@@ -13,8 +13,6 @@ from src.models.enums.nw import InspectionType
 from src.models.enums.azure import ContainerName
 from src.models.db_robot import robotDBHandler
 import src.models.enums.nw as NWEnums
-# DEBUG
-from src.top_module.module.rgbcam import RGBCamRecorder
 
 class AudioAgent:
     def __init__(self, config, ai_config):

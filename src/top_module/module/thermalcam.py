@@ -1,21 +1,12 @@
+import os
 import cv2
+import time
 import numpy as np
 import copy
-from src.top_module.module import rpc
-import struct
-import os
-import time
-from datetime import datetime, timedelta
-from multiprocessing import shared_memory
-import cv2
-import io
-import numpy as np
 import threading
-from multiprocessing import Process
-from src.top_module.module.rgbcam import RGBCamRecorder
-import multiprocessing
-# import pygame
-
+import struct
+from multiprocessing import shared_memory
+from src.top_module.module import rpc
 
 class ThermalCam:
     def __init__(self, port="/dev/ttyACM0", debug=False):

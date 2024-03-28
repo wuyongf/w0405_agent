@@ -15,7 +15,7 @@ class RGBCamRecorder:
     def update_save_path(self, output_dir):
         if self.record_flag.value:
             self.stop_and_save_record()
-        self.output_dir = output_dir
+        self.output_dir = output_dir    
 
     def capture_and_save_video(self):
         try:
@@ -97,13 +97,6 @@ class RGBCamRecorder:
         image_filename = os.path.join(self.cap_save_dir, image_name)
         cv2.imwrite(image_filename, frame)
 
-    # def start_cap_img(self, output_folder):
-    #     self.record_flag = True
-    #     self.cap_rgb_img(output_folder)
-
-    # def stop_cap_img(self):
-    #     self.record_flag = False
-
 def process_record():
     rgb_camera = RGBCamRecorder(device_index=2)
     rgb_camera.update_cap_save_path('test')
@@ -134,9 +127,9 @@ if __name__ == "__main__":
     # process = Process(target=process_record, args=())
     # process.start()
 
-    #### Image Capture
-    rgb_camera = RGBCamRecorder(device_index=0)
-    rgb_camera.update_cap_save_path('test')
-    rgb_camera.cap_open_cam()
-    rgb_camera.cap_rgb_img('003.jpg')
+    # #### Image Capture
+    # rgb_camera = RGBCamRecorder(device_index=0)
+    # rgb_camera.update_cap_save_path('test')
+    # rgb_camera.cap_open_cam()
+    # rgb_camera.cap_rgb_img('003.jpg')
 
