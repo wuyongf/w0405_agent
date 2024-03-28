@@ -9,7 +9,7 @@ class VideoRecorder:
 
     def update_save_path(self, output_dir):
         self.output_dir = output_dir
-
+    
     def start_recording(self):
         command = [
             'ffmpeg',
@@ -17,7 +17,7 @@ class VideoRecorder:
             '-i', f'/dev/video{self.device_index}',    # Input device (change to your device)
             '-vcodec', 'libx264',   # Video codec
             '-pix_fmt', 'yuv420p',  # Pixel format (required for compatibility)
-            self.output_dir         # Output file path
+            self.output_dir        # Output file path
         ]
         self.process = subprocess.Popen(command)
 
@@ -34,9 +34,9 @@ class VideoRecorder:
             pass  # Keep recording until the stop flag is set
         self.stop_recording()
 
-if __name__ == "__main__":
-
-    recorder = VideoRecorder(0)
-    recorder.update_save_path('')
-    recorder.start_recording()
-    recorder.record_until_flag_set()
+# Example usage:
+recorder = VideoRecorder(2)
+recorder.update_save_path(f'video_{time.time()}.avi')
+recorder.start_recording()
+time.sleep(10)
+recorder.stop_recording()
