@@ -26,6 +26,10 @@ pyaudio
 azure-storage-blob 
 azure-identity
 
+# Audio ------------------------------------------------------------------------
+soundfile
+sounddevice
+
 # YOLOv5-Base ------------------------------------------------------------------------
 gitpython>=3.1.30
 matplotlib>=3.3
