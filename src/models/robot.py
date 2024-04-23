@@ -111,6 +111,7 @@ class Robot:
         self.is_manual_control = False
         self.is_followme = False
         self.mission_id = 0
+        self.is_iaq_on = False
 
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -1636,8 +1637,8 @@ class Robot:
         time.sleep(1)
         self.rvjoystick.disable()
 
-        # [sensor] start recording: mic + rgbcam
-        self.lift_noise_detect_start(task_json)
+        # # [sensor] start recording: mic + rgbcam
+        # self.lift_noise_detect_start(task_json)
         
         # robot moving
         self.wait_for_robot_arrived()
@@ -1651,8 +1652,8 @@ class Robot:
         self.call_lift_and_check_arrive(target_floor_int, 5)
         time.sleep(1)
 
-        # [sensor] stop recording: gyro
-        self.lift_vibration_off()
+        # # [sensor] stop recording: gyro
+        # self.lift_vibration_off()
         
         # robot moving
         self.rvjoystick.disable()

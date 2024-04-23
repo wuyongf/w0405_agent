@@ -70,23 +70,27 @@ class Gyro():
         self.stop_event.set()
 
     def get_acc(self, datahex):
-        axh = datahex[0]
-        axl = datahex[1]
-        ayh = datahex[2]
-        ayl = datahex[3]
-        azh = datahex[4]
-        azl = datahex[5]
-        k_acc = 9.81 * 2
-        acc_x = (axh << 8 | axl) / 32768.0 * k_acc
-        acc_y = (ayh << 8 | ayl) / 32768.0 * k_acc
-        acc_z = (azh << 8 | azl) / 32768.0 * k_acc
-        if acc_x >= k_acc:
-            acc_x -= 2 * k_acc
-        if acc_y >= k_acc:
-            acc_y -= 2 * k_acc
-        if acc_z >= k_acc:
-            acc_z -= 2 * k_acc
-        return [acc_x, acc_y, acc_z]
+        try:
+            axh = datahex[0]
+            axl = datahex[1]
+            ayh = datahex[2]
+            ayl = datahex[3]
+            azh = datahex[4]
+            azl = datahex[5]
+            k_acc = 9.81 * 2
+            acc_x = (axh << 8 | axl) / 32768.0 * k_acc
+            acc_y = (ayh << 8 | ayl) / 32768.0 * k_acc
+            acc_z = (azh << 8 | azl) / 32768.0 * k_acc
+            if acc_x >= k_acc:
+                acc_x -= 2 * k_acc
+            if acc_y >= k_acc:
+                acc_y -= 2 * k_acc
+            if acc_z >= k_acc:
+                acc_z -= 2 * k_acc
+            return [acc_x, acc_y, acc_z]
+        except:
+            print(f'[gyro.py] get_acc error!!')
+            return [0,0,0]
 
     def get_gyro(self, datahex):
         wxh = datahex[0]

@@ -53,6 +53,7 @@ if __name__ == "__main__":
     print('enable the joystick...')
     joystick.enable()
     time.sleep(2)
+    joystick.disable()
 
     # count = 0
     # while(True):
