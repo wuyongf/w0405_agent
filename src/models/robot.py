@@ -1828,6 +1828,16 @@ class Robot:
         self.emsdlift.close()
 
     ## Mission Designer
+    ### LiftInspection
+    def lift_inspection_mission_publisher(self):
+        # Enter 7th Floor
+        # press the lift button
+        for floor_no in range(8):
+            self.emsdlift.rm_to(floor_no)
+            time.sleep(0.1)
+        
+        pass
+
     ### Delivery
     def delivery_mission_publisher(self):
 
@@ -2473,10 +2483,9 @@ if __name__ == '__main__':
     skill_config_path = '../../conf/rm_skill.properties'
     ai_config = umethods.load_config('../ai_module/lift_noise/cfg/config.properties')
 
-
-
     robot = Robot(config, port_config, skill_config_path, ai_config)
 
+    robot.lift_inspection_mission_publisher()
     time.sleep(5)
 
     # robot.sensor_start()
