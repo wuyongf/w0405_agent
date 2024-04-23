@@ -6,50 +6,40 @@ import threading
 class Recorder:
     def __init__(self):
         self.sampling_rate = 44100
-        self.n_channels = 1 #1
+        self.n_channels = 1
         self.frames_per_buffer = 1024
 
         self.audio = pyaudio.PyAudio()
 
         self.stream = self.audio.open(format=pyaudio.paInt16, 
-                            # input_device_index=5,
-                            channels=self.n_channels, 
-                            rate=self.sampling_rate,
-                            input=True,
-                            frames_per_buffer=self.frames_per_buffer)
+                                      channels=self.n_channels, 
+                                      rate=self.sampling_rate,
+                                      input=True,
+                                      frames_per_buffer=self.frames_per_buffer)
         self.frames = []
-
-        # # Get the current default input audio device index
-        # default_input_device_index = self.audio.get_default_input_device_info()['index']
-        # print(f'default_input_device_index: {default_input_device_index}')
-
-        # logic
-        self.record_flag = True
-        # Use an Event to signal the recording thread to stop
         self.stop_event = threading.Event()
 
     def update_save_path(self, path):
-        self.path = path # "/home/nw/Desktop/Sounds"
-        pass
-    
+        self.path = path
+
     def start_recording(self):
-        # Ensure the event is clear at the start of recording
         self.stop_event.clear()
-        self.record_flag = True
-        self.frames = []  # Ensure frames are cleared before starting
+        self.frames = []
         threading.Thread(target=self.thread_recording).start()
 
     def thread_recording(self):
         while not self.stop_event.is_set():
-            data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
-            self.frames.append(data)
+            try:
+                data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
+                self.frames.append(data)
+            except IOError as e:
+                # Log or handle the error as needed
+                print(f'[microphone.py] e: {e}')
+                pass
 
     def stop_and_save_record(self):
-        # Signal the thread to stop
         self.stop_event.set()
-        self.record_flag = False
 
-        # Close the PyAudio stream
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
