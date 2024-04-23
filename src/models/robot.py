@@ -1025,6 +1025,7 @@ class Robot:
             ### [video_front]
             self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
             self.rgbcam_front_handler.start_recording()
+            time.sleep(2)
 
             ### [video_rear]
             self.nwmqttpub.rotate_camera(45)
@@ -1041,12 +1042,13 @@ class Robot:
 
     def lift_noise_detect_end(self):
         try:
-            ### [video_front]
-            self.raw_video_front_file_dir = self.rgbcam_front_handler.stop_and_save_recording()
 
             ### [video_rear]
             self.nwmqttpub.rotate_camera(0)
             self.raw_video_rear_file_dir = self.rgbcam_rear_handler.stop_and_save_recording()
+
+            ### [video_front]
+            self.raw_video_front_file_dir = self.rgbcam_front_handler.stop_and_save_recording()
 
             ### [audio]
             self.raw_audio_file_dir = self.audio_handler.stop_and_save_recording()

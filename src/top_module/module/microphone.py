@@ -71,6 +71,20 @@ if __name__ == "__main__":
         if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
             print("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
 
+    name = p.get_device_info_by_index(0)['name']
+    print(name)
+
+    def find_input_device_index(device_name):
+        audio = pyaudio.PyAudio()
+        for i in range(audio.get_device_count()):
+            device_info = audio.get_device_info_by_index(i)
+            if device_info['name'] == device_name:
+                return i
+        return None
+
+    desired_device_name = 'RØDE VideoMic GO II: USB Audio (hw:0,0)'
+    device_index = find_input_device_index(desired_device_name)
+    print(f'index: {device_index}')
 
     recorder = Recorder()
     # try:
