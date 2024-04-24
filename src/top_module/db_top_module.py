@@ -34,7 +34,8 @@ class TopModuleDBHandler(db.AzureDB):
         pos_theta = obj["position"]["theta"]
         map_id = obj["map_id"]
         map_rm_guid = obj["map_rm_guid"]
-        return (pos_x, pos_y, pos_theta, map_id, map_rm_guid)
+        floor_id = obj["floor_id"]
+        return (pos_x, pos_y, pos_theta, map_id, map_rm_guid, floor_id)
 
     def GetRobotId(self):
         statement = f'SELECT ID FROM {self.database}.`robot.status` WHERE guid = "{self.robot_guid}";'
@@ -106,10 +107,11 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
+        (pos_x, pos_y, pos_theta, map_id, map_rm_guid, floor_id) = self.get_robot_summary()
+        if(map_id is None): map_id = 999
         # statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
-        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
-        print(statement)
+        statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id, floor_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id}, {floor_id})'
+        # print(statement)
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")

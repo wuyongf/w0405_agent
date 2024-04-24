@@ -267,9 +267,11 @@ class Robot:
         map_id = self.map_nw_id
         map_rm_guid = self.get_current_map_rm_guid()
 
+        floor_id = self.lift_floor
+
         # 3) convert to json
         pos = NWSchema.Position(x, y, theta)
-        status = NWSchema.Status(battery, pos, map_id, map_rm_guid)
+        status = NWSchema.Status(battery, pos, map_id, map_rm_guid, floor_id)
         return status.to_json()
 
     # robot status
