@@ -867,9 +867,6 @@ class Robot:
 
     def led_on(self, task: RMSchema.Task):
         try:
-            ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'DEMO2', 90)
-            self.goto_no_status_callback(ckpt_json)
-            self.wait_for_robot_arrived()
             self.rvapi.set_led_status(on=1)
             return True
         except:
@@ -1841,7 +1838,7 @@ class Robot:
     def thread_check_gnsc_arrive(self, task_json):
 
         print('[goto.check_gnsc_arrive] Starting...')
-        rm_task_data = RMSchema.Task(task_json)
+        # rm_task_data = RMSchema.Task(task_json)
         self.is_moving = True
         self.has_arrived = False
 
