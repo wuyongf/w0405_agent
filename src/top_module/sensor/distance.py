@@ -153,6 +153,8 @@ class LaserDistanceSensor():
             collected_data_l.append(collected_data[0])
             collected_data_r.append(collected_data[1])
             # print(data_stack)
+            print(f'[distance.py] collected_data_l: {collected_data_l}')
+            print(f'[distance.py] collected_data_r: {collected_data_r}')
             
             if self.stop_event.is_set():
                 print('finish, Upload immediately')
