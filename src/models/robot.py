@@ -867,6 +867,9 @@ class Robot:
 
     def led_on(self, task: RMSchema.Task):
         try:
+            ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'DEMO2', 90)
+            self.goto_no_status_callback(ckpt_json)
+            self.wait_for_robot_arrived()
             self.rvapi.set_led_status(on=1)
             return True
         except:
@@ -1835,6 +1838,97 @@ class Robot:
     li_lift_in_audio  -> thread_li_lift_in_audio
     li_lift_out_audio -> thread_li_lift_out_audio
     '''
+    def thread_check_gnsc_arrive(self, task_json):
+
+        print('[goto.check_gnsc_arrive] Starting...')
+        rm_task_data = RMSchema.Task(task_json)
+        self.is_moving = True
+        self.has_arrived = False
+
+        continue_flag = True
+        while (continue_flag):
+            time.sleep(1)
+            if (self.rvapi.get_robot_is_moving()):
+                print('[goto.check_gnsc_arrive] robot is moving...')
+                # time.sleep(1)
+                continue
+            else:
+                time.sleep(1)
+                # check if arrive, callback
+                if (self.check_goto_has_arrived()):
+                    print('[goto.check_gnsc_arrive] robot has arrived!')
+                    continue_flag = False
+                    self.is_moving = False
+
+                    ## info [robot.wait_for_robot_arrived]
+                    self.has_arrived = True
+
+                # # if error
+                # if(self.check_goto_has_error):
+                #     print('flag error') # throw error log
+                #     status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Fail)
+                # if cancelled
+                if (self.check_goto_is_cancelled()):
+                    print('[goto.check_gnsc_arrive] robot has cancelled moving task')
+                    continue_flag = False
+                    self.is_moving = False
+                self.door_agent_start = False
+                self.door_agent_finish = True  # door-agent logic
+        print('[goto.check_gnsc_arrive] Exiting...')
+
+    def goto_no_status_callback(self, task_json):
+        '''
+        No TMat Transformation!!! Just RM_MAP -> RV_MAP
+        '''
+        try:
+            self.rvapi.put_safety_zone_minimum()
+            self.rvapi.put_maximum_speed(0.4)
+
+            self.door_configured = False
+            self.door_agent_start = True  # door-agent logic
+            self.door_agent_finish = False
+            while( not self.door_configured): time.sleep(1)
+            print(f'[goto] door configuredd!')
+
+            # step 0. init. clear current task
+            self.cancel_moving_task()
+            # step 1. get rm_map_id, rv_map_name, map_metadata
+            # print('step1')
+            rm_map_metadata = RMSchema.TaskParams(task_json['parameters'])
+            rv_map_name = self.nwdb.get_map_amr_guid(rm_map_metadata.mapId)
+            rv_map_metadata = self.rvapi.get_map_metadata(rv_map_name)
+            # step 2. transformation. rm2rv
+            # print('step2')
+            self.T.update_rv_map_info(rv_map_metadata.width, rv_map_metadata.height, rv_map_metadata.x,
+                                      rv_map_metadata.y, rv_map_metadata.angle)
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading + self.T_RM.map_rotate_angle)  ## new     
+            # rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+            #                                     rm_map_metadata.y, rm_map_metadata.heading - self.T_RM.map_rotate_angle)  ## 0
+            rv_waypoint = self.T.waypoint_rm2rv(rv_map_name, rm_map_metadata.positionName, rm_map_metadata.x,
+                                                rm_map_metadata.y, rm_map_metadata.heading )  ## 271
+
+            # step3. rv. create point base on rm. localization.
+            # print('step3')
+            self.rvapi.delete_all_waypoints(rv_map_name)
+            pose_name = 'TEMP'
+            time.sleep(1)
+            print(f'goto--rm_map_x: {rm_map_metadata.x}')
+            print(f'goto--rm_map_y: {rm_map_metadata.y}')
+            print(f'goto--rm_map_heading: {rm_map_metadata.heading}')
+            self.rvapi.post_new_waypoint(rv_map_name, pose_name, rv_waypoint.x, rv_waypoint.y, rv_waypoint.angle)
+            time.sleep(1)
+            self.rvapi.post_new_navigation_task(pose_name, orientationIgnored=False)
+
+            self.has_arrived = False
+            thread = threading.Thread(target=self.thread_check_gnsc_arrive, args=(task_json,))
+            thread.setDaemon(True)
+            thread.start()
+
+            return True
+        except:
+            return False
+        
     def thread_li_lift_in_audio(self, cur_floor_int, target_floor_int, task_json):
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
@@ -2206,9 +2300,6 @@ class Robot:
     ### Delivery
     def pub_delivery_goto_charging_station(self, charging_station: NWSchema.ChargingStation):
         try:
-            #region Notify the receiver
-            #endregion
-
             # pos_origin details
             # pos_origin: RMSchema
             pos_origin = self.nwdb.get_delivery_position_detail(charging_station.pos_origin_id)
@@ -2628,9 +2719,8 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
 
-    status_callback = None
     ckpt_json = robot.rmapi.get_pos_task_json(robot.status.mapPose.mapId, 'DEMO2', 90)
-    robot.goto(ckpt_json, status_callback)
+    robot.goto_no_status_callback(ckpt_json)
     robot.wait_for_robot_arrived()
 
     print(f'donedonedone')
