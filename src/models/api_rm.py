@@ -793,6 +793,31 @@ class RMAPI(api.AuthenticatedAPI):
         # print(json_data)
         list_data = json_data['result']['list']
         return list_data[0]
+    
+    ### Get Position Info
+    def get_pos_task_json(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        task_params_dict = {
+            'mapId': str(map_rm_guid),
+            'positionName': str(layoutMarkerName),
+            'x': map_x,
+            'y': map_y,
+            'heading': map_heading
+        }
+
+        task_json = {
+            'parameters': task_params_dict
+        } 
+
+        return task_json
 
 def goto_charging_staion():
     config = umethods.load_config('../../conf/config.properties')
@@ -920,8 +945,10 @@ if __name__ == '__main__':
 
     # res = rmapi.get_layout_marker_detail('0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'DEMO1')
     # print(res)
-    
-    rmapi.update_rm_mission()
+
+    res = rmapi.get_pos_task_json('1f7f78ab-5a3b-467b-9179-f7508a99ad6e', 'Levelling-G', 90)
+    print(res)
+    # rmapi.update_rm_mission()
 
     # res = rmapi.list_rm_missions()
     # print(res)

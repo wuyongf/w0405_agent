@@ -1480,9 +1480,6 @@ class Robot:
 
     def charging_goto(self):
         try:
-            #region Notify the receiver
-            #endregion
-
             # # charging_station_detail
             charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
             charging_station = self.nwdb.get_charing_station_detail(charging_station_id) 
@@ -1915,29 +1912,38 @@ class Robot:
         except:
             return False
 
-    def thread_li_lift_out_levelling(self, target_floor_int):
+    def thread_li_lift_out_levelling(self, target_floor_int, status_callback):
         
         floor_list = range(8)
         if target_floor_int == 0: floor_list = range(8)
         if target_floor_int == 7: floor_list = reversed(range(8))
 
         # Execute Levelling Mission
+        print(f'[li.levelling] Execute Levelling Mission')
         for idx, floor_no in enumerate(floor_list): # e.g 0-7
             # [lift operation] check arrive and then hold
             # self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(floor_no, hold_min=15)
+            self.call_lift_and_check_arrive(floor_no, hold_min=25)
             time.sleep(1)
 
             # [robot operation]
             ## goto # current floor_no: self.lift_floor
-            # self.goto(task_json, status_callback)
-            # self.wait_for_robot_arrived()
+            ckpt_json = None
+            if(floor_no is 0): 
+                ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling-G', 90)
+            else:
+                ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling', 270)
+            
+            self.goto(ckpt_json, status_callback)
+            self.wait_for_robot_arrived()
 
             ## check levelling
             self.inspect_lift_levelling()
+
             ## goback
-            # self.goto(task_json, status_callback)
-            # self.wait_for_robot_arrived()
+            goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Transit', 270)
+            self.goto(goback_json, status_callback)
+            self.wait_for_robot_arrived()
 
             # [lift operation] release
             self.func_lift_pressbutton_releasedoor(target_floor_int)
@@ -1954,7 +1960,7 @@ class Robot:
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
-            threading.Thread(target=self.thread_li_lift_out_levelling, args=(target_floor_int,)).start()
+            threading.Thread(target=self.thread_li_lift_out_levelling, args=(target_floor_int,status_callback,)).start()
             return True
         except:
             return False
@@ -2622,8 +2628,15 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
 
-    robot.lift_inspection_mission_publisher()
-    time.sleep(5)
+    status_callback = None
+    ckpt_json = robot.rmapi.get_pos_task_json(robot.status.mapPose.mapId, 'DEMO2', 90)
+    robot.goto(ckpt_json, status_callback)
+    robot.wait_for_robot_arrived()
+
+    print(f'donedonedone')
+
+    # robot.lift_inspection_mission_publisher()
+    # time.sleep(5)
 
     # robot.sensor_start()
 
