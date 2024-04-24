@@ -1315,6 +1315,7 @@ class Robot:
             mission_id = self.nwdb.get_latest_mission_id()
 
             floor_id = self.lift_floor #int(task_json['parameters']['current_floor'])
+            print(floor_id)
             self.nwdb.update_single_value('sys.mission', 'floor_id', floor_id, 'ID', mission_id)
 
             self.mo_lift_levelling.set_task_id(id=mission_id)
@@ -1915,8 +1916,8 @@ class Robot:
     def thread_li_lift_out_levelling(self, target_floor_int):
         
         floor_list = range(8)
-        if target_floor_int is 0: floor_list = range(8)
-        if target_floor_int is 7: floor_list = reversed(range(8))
+        if target_floor_int == 0: floor_list = range(8)
+        if target_floor_int == 7: floor_list = reversed(range(8))
 
         # Execute Levelling Mission
         for idx, floor_no in enumerate(floor_list): # e.g 0-7
