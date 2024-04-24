@@ -533,6 +533,12 @@ class MissionPublisher:
     # back to 6. charging station
 
 if __name__ == '__main__':
+    '''
+    How to use:
+    1. start robot-agent on robot-side
+    2. start main program on robot-side
+    3. run this script on notebook
+    '''
 
     ### [config]
     skill_config_dir = '../../conf/rm_skill.properties'
@@ -541,7 +547,6 @@ if __name__ == '__main__':
     rmapi = RMAPI(config, skill_config_dir)
 
     pub = MissionPublisher(skill_config_dir, rmapi)
-
     pub.const_lift_taking(4,6)
     # pub.construct_demo_iaq()
 

@@ -226,7 +226,7 @@ class TaskHandler:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
 
-            case 'LIFT-LEVLLING':
+            case 'LIFT-LEVELLING':
                 res = self.robot.inspect_lift_levelling(task_json)
                 if (res):
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Completed)
@@ -400,7 +400,25 @@ class TaskHandler:
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
-
+            
+            ### Lift Inspection - Audio + Levelling
+            case 'LI-LIFT-IN-AUDIO':
+                print(f'LI-LIFT-IN JSON: {task_json}')
+                res = self.robot.li_lift_in_audio(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
+            
+            case 'LI-LIFT-OUT-AUDIO':
+                print(f'LI-LIFT-OUT JSON: {task_json}')
+                res = self.robot.li_lift_out_audio(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
 
 if __name__ == "__main__":
 
