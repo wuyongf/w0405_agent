@@ -109,6 +109,7 @@ class TopModuleDBHandler(db.AzureDB):
         (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
         # statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", now(), {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datapack` (task_id, created_date, robot_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
+        print(statement)
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
         return self.Select("SELECT LAST_INSERT_ID()")
