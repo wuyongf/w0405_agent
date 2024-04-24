@@ -86,11 +86,13 @@ class LaserDistanceSensor():
                     current_ser.write(send_data)
                     time.sleep(self.time_interval)
                     len_return_data = current_ser.inWaiting()
+                    # print(f'[distance.py]collect_data:len_return_data {len_return_data}')
 
                     if len_return_data:
                         return_data = current_ser.read(len_return_data)
                         return_data_arr = list(bytearray(return_data))
-                        # print(return_data)
+                        # print(f'[distance.py]collect_data:return_data {return_data} ')
+                        # print(f'[distance.py]collect_data:return_data_arr {return_data_arr} ')
                         if len(return_data_arr) == 9:
                             
                             distant_data = return_data_arr[5] * \
@@ -104,6 +106,9 @@ class LaserDistanceSensor():
                         elif len(return_data_arr) == 5:
                             return 0
                             # print(f'***Error {return_data}')
+                    else:
+                        # print(f'***Sensor Error***')
+                        return 0
 
                 except serial.SerialException:
                     print("failed to send command")
@@ -119,12 +124,13 @@ class LaserDistanceSensor():
     
     def data_integration(self):
         while True:
+            print(f'[data_integration] enter')
             self.laser_distance = [0,0]
             self.laser_distance[0]=self.collect_data(self.left)
             self.laser_distance[1]=self.collect_data(self.right)
             # self.laser_distance[0]=self.debug_generate_random_number()
             # self.laser_distance[1]=self.debug_generate_random_number()
-            # print(self.laser_distance)
+            print(f'[data_integration] self.laser_distance: {self.laser_distance}')
             return self.laser_distance[0], self.laser_distance[1]
 
 
@@ -143,13 +149,19 @@ class LaserDistanceSensor():
         """
         Collects data and stores it in the database.
         """
+        # print(f'[distance.py] store_data flag1')
+
         collected_data_l = []
         collected_data_r = []
         collecting_data = True
         while collecting_data:
+            # print(f'[distance.py] store_data flag2')
+
             # collected_data = self.collect_data(current_ser)
             # collected_data = round(self.debug_generate_random_number(), 5)
             collected_data = self.data_integration()
+            # print(f'[distance.py] collected_data {collected_data}')
+            # print(f'[distance.py] store_data flag3')
             collected_data_l.append(collected_data[0])
             collected_data_r.append(collected_data[1])
             # print(data_stack)

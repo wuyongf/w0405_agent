@@ -129,15 +129,15 @@ class lift_leveling_detection:
                 self.result_stack.append(result)
                 
         print(f"[levelling_detection.py] result: {self.result_stack}" )
-        print(f'<debug> flag -1')
+        # print(f'<debug> flag -1')
         result_avg = self.get_result_avg(self.result_stack)
-        print(f'<debug> flag 0')
+        # print(f'<debug> flag 0')
         # wrapped_item = [[result_avg]]
         # Add x,y
         wrapped_item = [self.append_robot_position([result_avg], xyonly = True)]
         self.user_rules.check_stack(wrapped_item, task_id=task_id)
         
-        print(f'<debug> flag 1')
+        # print(f'<debug> flag 1')
         
         # Update result to modb
         db_header = ["result_el", "result_rl", "result_er", "result_rr"]
@@ -145,7 +145,7 @@ class lift_leveling_detection:
             self.modb.UpdateDistanceResult(column=db_header[i], id=self.pack_id, result=r)
             self.result_stack = []
         self.modb.UpdateDistanceResult(column='result_avg', id=self.pack_id, result=result_avg)
-        print(f'<debug> flag 2')
+        # print(f'<debug> flag 2')
                    
     def get_result_avg(self, resultlist): 
         sumlist = []

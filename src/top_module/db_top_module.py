@@ -122,6 +122,7 @@ class TopModuleDBHandler(db.AzureDB):
 
     def InsertDistanceChunk(self, pack_id, distance_chunk_left, distance_chunk_right, move_dir):
         statement = f'INSERT INTO {self.database}.`sensor.distance_sensor.datachunk` (pack_id, distance_chunk_left, distance_chunk_right, move_dir, created_date, robot_id) VALUES ("{pack_id}", "{distance_chunk_left}", "{distance_chunk_right}", "{move_dir}" , "{self.now()}", {self.robot_id})'
+        print(statement)
         self.Insert(statement)
 
     # Get raw data set of laser distance chunk
