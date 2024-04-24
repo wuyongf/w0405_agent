@@ -1925,22 +1925,22 @@ class Robot:
             return True
         except:
             return False
-        
+    
     def thread_li_lift_in_audio(self, cur_floor_int, target_floor_int, task_json):
+        '''
+        e.g. 
+        cur_floor_int = 6
+        target_floor_int = 7
+        '''
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
         time.sleep(1)
         self.rvjoystick.disable()
         # robot moving
         self.wait_for_robot_arrived()
-        # press all lift buttons
-        for floor_no in range(8):
-            self.emsdlift.rm_to(floor_no)
-            time.sleep(0.1)
-        # [sensor] start recording: mic + rgbcam + gyro
-        self.lift_noise_detect_start(task_json)
+
         # lift operation
-        self.func_lift_pressbutton_releasedoor(target_floor_int)
+        self.func_lift_pressbutton_releasedoor(target_floor_int) #7 or 0
 
     def li_lift_in_audio(self, task_json, status_callback):
         try:
@@ -1954,9 +1954,25 @@ class Robot:
         except:
             return False
 
-    def thread_li_lift_out_audio(self, target_floor_int):
+    def thread_li_lift_out_audio(self, final_floor_int, target_floor_int,task_json):
+        '''
+        e.g. 
+        final_floor_int = 0
+        target_floor_int = 7
+        '''
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(target_floor_int, hold_min=15)
+        time.sleep(1)
+
+        # press all lift buttons
+        for floor_no in range(8):
+            self.emsdlift.rm_to(floor_no)
+            time.sleep(0.1)
+        # [sensor] start recording: mic + rgbcam + gyro
+        self.lift_noise_detect_start(task_json)
+
+        # final
+        self.call_lift_and_check_arrive(final_floor_int, hold_min=15)
         time.sleep(1)
 
         # [sensor] stop recording: mic + rgbcam + gyro
@@ -1974,12 +1990,17 @@ class Robot:
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
-            threading.Thread(target=self.thread_li_lift_out_audio, args=(target_floor_int,)).start()
+            final_floor_int = int(self.lift_task_json['parameters']['final_floor'])
+            threading.Thread(target=self.thread_li_lift_out_audio, args=(final_floor_int, target_floor_int,task_json,)).start()
             return True
         except:
             return False
         
     def thread_li_lift_in_levelling(self, cur_floor_int, target_floor_int, task_json):
+        '''
+        e.g. 
+        cur_floor_int:0
+        '''
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=15)
         time.sleep(1)
@@ -2003,11 +2024,14 @@ class Robot:
         except:
             return False
 
-    def thread_li_lift_out_levelling(self, target_floor_int, status_callback):
-        
+    def thread_li_lift_out_levelling(self, target_floor_int, task_json, status_callback):
+        '''
+        e.g.
+        target_floor_int = 7
+        '''
         floor_list = range(8)
-        if target_floor_int == 0: floor_list = range(8)
-        if target_floor_int == 7: floor_list = reversed(range(8))
+        if target_floor_int == 0: floor_list = reversed(range(8))
+        if target_floor_int == 7: floor_list = range(8)
 
         # Execute Levelling Mission
         print(f'[li.levelling] Execute Levelling Mission')
@@ -2025,7 +2049,7 @@ class Robot:
             else:
                 ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling', 270)
             
-            self.goto(ckpt_json, status_callback)
+            self.goto_no_status_callback(ckpt_json)
             self.wait_for_robot_arrived()
 
             ## check levelling
@@ -2033,25 +2057,39 @@ class Robot:
 
             ## goback
             goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Transit', 270)
-            self.goto(goback_json, status_callback)
+            self.goto_no_status_callback(goback_json)
             self.wait_for_robot_arrived()
 
-            # [lift operation] release
-            self.func_lift_pressbutton_releasedoor(target_floor_int)
-                
+            # **release the lift door
+            self.emsdlift.release_all_keys()
+            self.emsdlift.close()
+
         # # robot moving
         # self.rvjoystick.disable()
         # self.wait_for_robot_arrived()
+        print(f'[li.levelling] go to 6th floor and then out...')
+        self.call_lift_and_check_arrive(6, hold_min=15)
         
-        # # **release the lift door
-        # self.emsdlift.release_all_keys()
-        # self.emsdlift.close()
+        goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
+        self.goto_no_status_callback(goout_json)
+        self.wait_for_robot_arrived()
+        # self.rvjoystick.enable()
+        
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+
+        # status_callback
+        rm_task_data = RMSchema.Task(task_json)
+        status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+                    
             
     def li_lift_out_levelling(self, task_json, status_callback):
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
             target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
-            threading.Thread(target=self.thread_li_lift_out_levelling, args=(target_floor_int,status_callback,)).start()
+            # final_floor_int = int(self.lift_task_json['parameters']['final_floor'])
+            threading.Thread(target=self.thread_li_lift_out_levelling, args=(target_floor_int,task_json,status_callback,)).start()
             return True
         except:
             return False

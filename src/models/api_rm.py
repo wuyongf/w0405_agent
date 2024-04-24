@@ -385,6 +385,142 @@ class RMAPI(api.AuthenticatedAPI):
         }
 
         return task
+    
+    def new_task_li_liftin_audio(self, map_rm_guid, layoutMarkerName = None, order = 1, 
+                            layout_heading = 0, current_floor = 7, target_floor =0):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-IN-AUDIO')
+
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def position_params(map_id, pos_name, x, y, heading, current_floor, target_floor):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            param_current_floor = {"paramKey": "current_floor", "paramValue": current_floor}
+            param_target_floor = {"paramKey": "target_floor", "paramValue": target_floor}
+            params = [param_map, param_name, param_x, param_y, param_heading, param_current_floor, param_target_floor]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading,current_floor,target_floor)
+        }     
+
+        return task
+
+    def new_task_li_liftout_audio(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-OUT-AUDIO')
+        
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def goto_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            # "params": goto_params2(layoutMarkerName)
+            "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
+        }     
+
+        return task  
+    
+    def new_task_li_lift_in_levelling(self, map_rm_guid, layoutMarkerName = None, order = 1, 
+                            layout_heading = 0, current_floor = 7, target_floor =0):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-IN-LEVELLING')
+
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def position_params(map_id, pos_name, x, y, heading, current_floor, target_floor):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            param_current_floor = {"paramKey": "current_floor", "paramValue": current_floor}
+            param_target_floor = {"paramKey": "target_floor", "paramValue": target_floor}
+            params = [param_map, param_name, param_x, param_y, param_heading, param_current_floor, param_target_floor]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading,current_floor,target_floor)
+        }     
+
+        return task
+    
+    def new_task_li_liftout_levelling(self, map_rm_guid, layoutMarkerName = None, layout_heading = 0, order = 1):
+        
+        layout_guid =  self.get_layout_guid(map_rm_guid)
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-OUT-LEVELLING')
+        
+        params = self.get_layout_map_list(layout_guid, map_rm_guid)
+        self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
+
+        layoutMarkerId, layout_x, layout_y = self.get_layout_marker_detail(layout_guid, layoutMarkerName)
+        map_x, map_y, map_heading = self.T_rmapi.find_cur_map_point(layout_x, layout_y, layout_heading)
+
+        def goto_params(map_id, pos_name, x, y, heading):
+            params = []
+            param_map = {"paramKey": "mapId", "paramValue": str(map_id)}
+            param_name = {"paramKey": "positionName", "paramValue": str(pos_name)}
+            param_x = {"paramKey": "x", "paramValue": x}
+            param_y = {"paramKey": "y", "paramValue": y}
+            param_heading = {"paramKey": "heading", "paramValue": heading}
+            params = [param_map, param_name, param_x, param_y, param_heading]
+            return params
+
+        task = {
+            "skillId": skill_id,
+            "layoutId": layout_guid,
+            "order": order,
+            "layoutMakerId": layoutMarkerId,
+            "executionType": 1, # 1: series 2: parallel
+            # "params": goto_params2(layoutMarkerName)
+            "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
+        }     
+
+        return task   
 
     def new_task_nw_lift_in(self, map_rm_guid, layoutMarkerName = None, order = 1, 
                             layout_heading = 0, current_floor = 4, target_floor =6):

@@ -516,6 +516,45 @@ class MissionPublisher:
         self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
         pass
 
+
+    ### 2024.04.24 
+    def task_li(self):
+        current_floor_id = 6
+        target_floor_id = 7
+
+        current_map_rm_guid = self.dict_map_guid[current_floor_id]
+        target_map_rm_guid = self.dict_map_guid[target_floor_id]
+        sixth_map_rm_guid = self.dict_map_guid[6]
+        lift_map_rm_guid = self.dict_map_guid[999]
+        
+        g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
+        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        
+        liftin_audio = self.rmapi.new_task_li_liftin_audio(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+        
+        if(target_floor_id == 0):
+            liftout_audio = self.rmapi.new_task_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, final, target_floor_id)
+        else:
+            liftout_audio = self.rmapi.new_task_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270, final, target)
+
+        liftin_levelling = self.rmapi.new_task_li_lift_in_levelling(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=0)
+        if(target_floor_id == 0):
+            liftout_levelling = self.rmapi.new_task_li_liftout_levelling(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, target)
+        else:
+            liftout_levelling = self.rmapi.new_task_li_liftout_levelling(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270, target)
+
+        post_localization = self.rmapi.new_task_localize(sixth_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
+        
+        tasks = []
+        tasks.append(g1)
+        tasks.append(localization)
+        tasks.append(liftin_audio)
+        tasks.append(liftout_audio)
+        tasks.append(liftin_levelling)
+        tasks.append(liftout_levelling)
+        tasks.append(post_localization)
+        return tasks
+    
     # functions: 
     # 1. take lift
     # 2. 
