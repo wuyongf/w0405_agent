@@ -2064,6 +2064,8 @@ class Robot:
         # Execute Levelling Mission
         print(f'[li.levelling] Execute Levelling Mission')
         for idx, floor_no in enumerate(floor_list): # e.g 0-7
+
+            if idx == 2: break
             # [lift operation] check arrive and then hold
             # self.rvjoystick.enable()
             self.call_lift_and_check_arrive(floor_no, hold_min=5)
@@ -2109,11 +2111,18 @@ class Robot:
         self.emsdlift.close()
 
         # localization
+        localize_json = self.rmapi.get_pos_task_json('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a', 'LiftWaitingPoint', 180)
+        self.localize(localize_json)
         # goback to charging station
+        goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
+        self.goto_no_status_callback(goback_json)
+        self.wait_for_robot_arrived()
+        # charging
+        self.rv_charging_start(task_json, status_callback)
 
-        # status_callback
-        rm_task_data = RMSchema.Task(task_json)
-        status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+        # # status_callback
+        # rm_task_data = RMSchema.Task(task_json)
+        # status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
                     
             
     def li_liftout_levelling(self, task_json, status_callback):
