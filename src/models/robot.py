@@ -2026,10 +2026,11 @@ class Robot:
         # robot moving
         # self.wait_for_robot_arrived()
         # press all lift buttons
-        for floor_no in range(8):
-            self.emsdlift.rm_to(floor_no)
-            self.emsdlift.open(10 * 60 * 5)
-            time.sleep(0.2)
+
+        # for floor_no in range(8):
+        #     self.emsdlift.rm_to(floor_no)
+        #     self.emsdlift.open(10 * 60 * 5)
+        #     time.sleep(0.2)
 
         # status_callback
         rm_task_data = RMSchema.Task(task_json)
@@ -2106,6 +2107,9 @@ class Robot:
         # **release the lift door
         self.emsdlift.release_all_keys()
         self.emsdlift.close()
+
+        # localization
+        # goback to charging station
 
         # status_callback
         rm_task_data = RMSchema.Task(task_json)
