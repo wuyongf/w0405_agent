@@ -1030,7 +1030,8 @@ class Robot:
             time.sleep(2)
 
             ### [video_rear]
-            self.nwmqttpub.rotate_camera(45)
+            # self.nwmqttpub.rotate_camera(45)
+            self.nwmqttpub.rotate_camera(90)
             self.rgbcam_rear_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Rear)
             self.rgbcam_rear_handler.start_recording()
 

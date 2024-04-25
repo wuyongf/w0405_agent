@@ -425,7 +425,7 @@ class RMAPI(api.AuthenticatedAPI):
                             final_floor = 0, target_floor =7):
         
         layout_guid =  self.get_layout_guid(map_rm_guid)
-        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-OUT-AUDIO')
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFTOUT-AUDIO')
         
         params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
@@ -461,7 +461,7 @@ class RMAPI(api.AuthenticatedAPI):
                             layout_heading = 0, current_floor = 7):
         
         layout_guid =  self.get_layout_guid(map_rm_guid)
-        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-IN-LEVELLING')
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFTIN-LEVELLING')
 
         params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)
@@ -495,7 +495,7 @@ class RMAPI(api.AuthenticatedAPI):
                                 target_floor = 7):
         
         layout_guid =  self.get_layout_guid(map_rm_guid)
-        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFT-OUT-LEVELLING')
+        skill_id = self.skill_config.get('RM-Skill', 'LI-LIFTOUT-LEVELLING')
         
         params = self.get_layout_map_list(layout_guid, map_rm_guid)
         self.T_rmapi.update_layoutmap_params(params.imageWidth, params.imageHeight,params.scale, params.angle, params.translate)

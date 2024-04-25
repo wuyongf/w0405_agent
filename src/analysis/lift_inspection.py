@@ -28,6 +28,7 @@ class LiftInsectionAnalyser:
 
         #tools
         self.nwdb = nwdb
+        self.config = config
         self.gyro_tool  = GyroTool(config)
         self.audio_tool = AudioTool()
         self.video_tool = VideoTool()
@@ -238,7 +239,8 @@ class LiftInsectionAnalyser:
             relative_dir = absolute_dir_resolved[index:]
             return relative_dir
         
-        ai_model_ckpt_dir = '/home/yf/dev/w0405_agent/src/ai_module/door_status/ckpt/best.pt'
+        ai_model_ckpt_dir = self.config.get('LiftInspection','yolov8_ckpt_dir2')
+        print(f'[lift_inspection.py] load yolov8 model dir: {ai_model_ckpt_dir}')
         
         raw_audio_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','raw_audio_dir','ID',mission_id)
         raw_video_front_dir = self.nwdb.get_single_value('ai.lift_inspection.task_info','raw_video_front_dir','ID',mission_id)
@@ -258,6 +260,13 @@ if __name__ == '__main__':
     config = load_config('../../conf/config.properties')
     nwdb = robotDBHandler(config)
     lfa = LiftInsectionAnalyser(config, nwdb)
+
+    # Example 4
+    mission_id = 708
+    info = lfa.init_from_db(mission_id)
+    print(info)
+    lfa.start_analysing(info[0], info[1], info[2], info[3], 
+             info[4], info[5], info[6])
 
     # # EXAMPLE 1
     # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/001/recording_1709898801.1256263.wav',
@@ -299,12 +308,12 @@ if __name__ == '__main__':
     # lfa.start_analysing(mission_id, raw_audio_dir, raw_front_video_dir, raw_rear_video_dir, 
     #          temp_dir, preprocess_dir, ai_model_ckpt_dir)
     
-    # Example 4
-    mission_id = 555
-    info = lfa.init_from_db(mission_id)
-    print(info)
-    lfa.start_analysing(info[0], info[1], info[2], info[3], 
-             info[4], info[5], info[6])
+    # # Example 4
+    # mission_id = 555
+    # info = lfa.init_from_db(mission_id)
+    # print(info)
+    # lfa.start_analysing(info[0], info[1], info[2], info[3], 
+    #          info[4], info[5], info[6])
 
     # # EXAMPLE 3
     # lfa.set_raw_data_dir_path(audio_dir='data/lift-inspection/raw-data/20240318/533/recording_1710760164.272739.wav',
