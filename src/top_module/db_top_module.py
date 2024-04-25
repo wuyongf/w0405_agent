@@ -142,7 +142,7 @@ class TopModuleDBHandler(db.AzureDB):
         # pos_x
         # pos_y
         # floor_id
-        (pos_x, pos_y, pos_theta, map_id, map_rm_guid) = self.get_robot_summary()
+        (pos_x, pos_y, pos_theta, map_id, map_rm_guid, floor_id) = self.get_robot_summary()
         statement = f'INSERT INTO {self.database}.`sensor.gyro.datapack` (task_id, created_date, robot_id, lift_id, pos_x, pos_y, pos_theta, map_id) VALUES ("{task_id}", "{self.now()}", {self.robot_id}, {lift_id}, {pos_x}, {pos_y}, {pos_theta}, {map_id})'
         self.Insert(statement)
         # return the auto-generated ID of the new data pack
