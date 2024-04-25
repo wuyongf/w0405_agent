@@ -596,7 +596,7 @@ class MissionPublisher:
         tasks.append(liftout_audio)
         tasks.append(liftin_levelling)
         tasks.append(liftout_levelling)
-        tasks.append(post_localization)
+        # tasks.append(post_localization)
         return tasks
     
     # functions: 
