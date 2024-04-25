@@ -1970,9 +1970,12 @@ class Robot:
         time.sleep(1)
 
         # press all lift buttons
-        for floor_no in range(8):
-            self.emsdlift.rm_to(floor_no)
-            time.sleep(0.01)
+        self.emsdlift.rm_to(0)
+        # for floor_no in range(8):
+        #     self.emsdlift.rm_to(floor_no)
+        #     self.emsdlift.open(10 * 60 * 5)
+        #     time.sleep(0.01)
+
 
         print(f'<debug> lo_audio 4')
         # [sensor] start recording: mic + rgbcam + gyro
@@ -2017,13 +2020,15 @@ class Robot:
         '''
         # self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
+        self.emsdlift.open(10 * 60 * 5)
         time.sleep(1)
         # self.rvjoystick.disable()
         # robot moving
-        self.wait_for_robot_arrived()
+        # self.wait_for_robot_arrived()
         # press all lift buttons
         for floor_no in range(8):
             self.emsdlift.rm_to(floor_no)
+            self.emsdlift.open(10 * 60 * 5)
             time.sleep(0.2)
 
         # status_callback
@@ -2033,7 +2038,7 @@ class Robot:
     def li_liftin_levelling(self, task_json, status_callback):
         try:
             self.lift_task_json = task_json
-            self.goto(task_json, status_callback)
+            # self.goto(task_json, status_callback)
             cur_floor_int = int(task_json['parameters']['current_floor'])
             # target_floor_int = int(task_json['parameters']['target_floor'])
             threading.Thread(target=self.thread_li_liftin_levelling, args=(cur_floor_int,task_json,status_callback,)).start()
@@ -2061,6 +2066,7 @@ class Robot:
             # [lift operation] check arrive and then hold
             # self.rvjoystick.enable()
             self.call_lift_and_check_arrive(floor_no, hold_min=5)
+            self.emsdlift.open(10 * 60 * 5)
             time.sleep(1)
 
             # [robot operation]
