@@ -401,24 +401,44 @@ class TaskHandler:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
             
-            ### Lift Inspection - Audio + Levelling
-            case 'LI-LIFT-IN-AUDIO':
-                print(f'LI-LIFT-IN JSON: {task_json}')
-                res = self.robot.li_lift_in_audio(task_json, self.task_status_callback)
+            #region Lift Inspection
+            case 'LI-LIFTIN-AUDIO':
+                print(f'LI-LIFTIN-AUDIO JSON: {task_json}')
+                res = self.robot.li_liftin_audio(task_json, self.task_status_callback)
                 if (res):
                     return res
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
             
-            case 'LI-LIFT-OUT-AUDIO':
-                print(f'LI-LIFT-OUT JSON: {task_json}')
-                res = self.robot.li_lift_out_audio(task_json, self.task_status_callback)
+            case 'LI-LIFTOUT-AUDIO':
+                print(f'LI-LIFTOUT-AUDIO JSON: {task_json}')
+                res = self.robot.li_liftout_audio(task_json, self.task_status_callback)
                 if (res):
                     return res
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
+            
+            case 'LI-LIFTIN-LEVELLING':
+                print(f'LI-LIFTIN-LEVELLING JSON: {task_json}')
+                res = self.robot.li_liftin_audio(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
+            
+            case 'LI-LIFTOUT-LEVELLING':
+                print(f'LI-LIFTOUT-LEVELLING JSON: {task_json}')
+                res = self.robot.li_liftout_audio(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
+            #endregion 
+
 
 if __name__ == "__main__":
 

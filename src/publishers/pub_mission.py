@@ -506,10 +506,15 @@ class MissionPublisher:
         # self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, mission_name, tasks)
     
     ### 2024.04.23 LiftInspection ###
-    def const_lift_taking(self, current_floor_id, target_floor_id):
-        tasks = self.tasks_take_lift(current_floor_id, target_floor_id)
+    def const_li(self, current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor,
+                li_levelling_cur_floor, lo_levelling_target_floor):
+        
+        tasks = self.task_li(current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor,
+                li_levelling_cur_floor, lo_levelling_target_floor)
 
-        job_name = '[LI] const_lift_taking'
+        job_name = '[LI] const_lift_inspection_full'
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
@@ -518,31 +523,70 @@ class MissionPublisher:
 
 
     ### 2024.04.24 
-    def task_li(self):
-        current_floor_id = 6
-        target_floor_id = 7
+    def task_li(self, current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor,
+                li_levelling_cur_floor, lo_levelling_target_floor):
+        '''
+        1. localize robot to 6th floor map first [RM-WEB]
+        2. robot moves to LiftWaitingPoint, change to lift-map
+        3. liftin_audio
+        4. liftout_audio
+        5. liftin_levelling
+        6. liftout_levelling
+        7. post_localize
+        '''
+        # current_floor_id            = 6  # 6
+        # li_audio_target_floor       = 7  # 0
+
+        # lo_audio_final_floor        = 0  # 7
+
+        # li_levelling_cur_floor      = 0  # 7
+        # lo_levelling_target_floor   = 7  # 0
 
         current_map_rm_guid = self.dict_map_guid[current_floor_id]
-        target_map_rm_guid = self.dict_map_guid[target_floor_id]
+        # target_map_rm_guid = self.dict_map_guid[target_floor_id]
         sixth_map_rm_guid = self.dict_map_guid[6]
         lift_map_rm_guid = self.dict_map_guid[999]
         
         g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
         localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
         
-        liftin_audio = self.rmapi.new_task_li_liftin_audio(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
-        
-        if(target_floor_id == 0):
-            liftout_audio = self.rmapi.new_task_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, final, target_floor_id)
-        else:
-            liftout_audio = self.rmapi.new_task_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270, final, target)
+        '''
+        1. robot will call lift to arrive current_floor.
+        2. robot will move to transit pos.
+        3. robot will press litf button to target_floor. either 0 or 7 (li_audio_target_floor)
+        '''
+        liftin_audio = self.rmapi.nt_li_liftin_audio(lift_map_rm_guid, 'Transit', layout_heading=90, 
+                                                     current_floor=current_floor_id, target_floor= li_audio_target_floor)
+        '''
+        0. robot will check if it arrive target_floor. (li_audio_target_floor)
+        1. robot will press all buttons.
+        2. robot will start noise_inspection_task.
+        3. lift will move to final_floor. either 7 or 0
+        4. robot will finish noise_inspection_task. hold the lift door.
+        '''
+        #TODO: delete WaitingPoint
+        liftout_audio = self.rmapi.nt_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, 
+                                                        final_floor=lo_audio_final_floor, target_floor=li_audio_target_floor)
 
-        liftin_levelling = self.rmapi.new_task_li_lift_in_levelling(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=0)
-        if(target_floor_id == 0):
-            liftout_levelling = self.rmapi.new_task_li_liftout_levelling(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, target)
-        else:
-            liftout_levelling = self.rmapi.new_task_li_liftout_levelling(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270, target)
+        '''
+        1. robot will stay at transit pos, and hold lift door.
+        2. robot will press all buttons.
+        '''
+        liftin_levelling = self.rmapi.nt_li_liftin_levelling(lift_map_rm_guid, 'Transit', layout_heading=90, 
+                                                             current_floor=li_levelling_cur_floor)
+        '''
+        1. robot will release lift door. lift move to target_floor. either 0 or 7
+        2. at each floor. robot will hold the lift door. goto measure_pos. do leveling_task. goback transit_pos. release the door.
+        3. call lift to 6th floor. robot goback to 6th floor waiting_pos.
+        '''
+        #TODO: delete WaitingPoint
+        liftout_levelling = self.rmapi.nt_li_liftout_levelling(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270, 
+                                                               target_floor=lo_levelling_target_floor)
 
+        '''
+        1. robot post_localization
+        '''
         post_localization = self.rmapi.new_task_localize(sixth_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
         
         tasks = []
@@ -586,7 +630,14 @@ if __name__ == '__main__':
     rmapi = RMAPI(config, skill_config_dir)
 
     pub = MissionPublisher(skill_config_dir, rmapi)
-    pub.const_lift_taking(4,6)
+    # pub.const_li(67007)
+    pub.const_li(current_floor_id=6,
+                 li_audio_target_floor=7, lo_audio_final_floor=0,
+                 li_levelling_cur_floor=0, lo_levelling_target_floor=7)
+
+    # pub.const_li(current_floor_id=6,
+    #              li_audio_target_floor=0, lo_audio_final_floor=7,
+    #              li_levelling_cur_floor=7, lo_levelling_target_floor=0)
     # pub.construct_demo_iaq()
 
     ##20240221 new task_json
