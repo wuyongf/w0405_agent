@@ -422,7 +422,7 @@ class TaskHandler:
             
             case 'LI-LIFTIN-LEVELLING':
                 print(f'LI-LIFTIN-LEVELLING JSON: {task_json}')
-                res = self.robot.li_liftin_audio(task_json, self.task_status_callback)
+                res = self.robot.li_liftin_levelling(task_json, self.task_status_callback)
                 if (res):
                     return res
                 else:
@@ -431,7 +431,7 @@ class TaskHandler:
             
             case 'LI-LIFTOUT-LEVELLING':
                 print(f'LI-LIFTOUT-LEVELLING JSON: {task_json}')
-                res = self.robot.li_liftout_audio(task_json, self.task_status_callback)
+                res = self.robot.li_liftout_levelling(task_json, self.task_status_callback)
                 if (res):
                     return res
                 else:

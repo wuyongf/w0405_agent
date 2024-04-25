@@ -1963,20 +1963,24 @@ class Robot:
         final_floor_int = 0
         target_floor_int = 7
         '''
-        self.rvjoystick.enable()
-        self.call_lift_and_check_arrive(target_floor_int, hold_min=15)
+        print(f'<debug> lo_audio 2')
+        # self.rvjoystick.enable()
+       
+        self.call_lift_and_check_arrive(target_floor_int, hold_min=5)
         time.sleep(1)
 
         # press all lift buttons
         for floor_no in range(8):
             self.emsdlift.rm_to(floor_no)
-            # time.sleep(0.05)
-        self.emsdlift.open(10 * 60 * 15)
+            time.sleep(0.01)
+
+        print(f'<debug> lo_audio 4')
         # [sensor] start recording: mic + rgbcam + gyro
         self.lift_noise_detect_start(task_json)
 
+        print(f'<debug> lo_audio 5')
         # final
-        self.call_lift_and_check_arrive(final_floor_int, hold_min=15)
+        self.call_lift_and_check_arrive(final_floor_int, hold_min=5)
         time.sleep(1)
 
         # [sensor] stop recording: mic + rgbcam + gyro
@@ -1997,8 +2001,10 @@ class Robot:
     def li_liftout_audio(self, task_json, status_callback):
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
-            target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
-            final_floor_int = int(self.lift_task_json['parameters']['final_floor'])
+            print(f'<debug> lo_audio 0')
+            target_floor_int = int(task_json['parameters']['target_floor'])
+            final_floor_int = int(task_json['parameters']['final_floor'])
+            print(f'<debug> lo_audio 1')
             threading.Thread(target=self.thread_li_liftout_audio, args=(final_floor_int, target_floor_int,task_json,status_callback,)).start()
             return True
         except:
@@ -2009,16 +2015,16 @@ class Robot:
         e.g. 
         cur_floor_int:0
         '''
-        self.rvjoystick.enable()
-        self.call_lift_and_check_arrive(cur_floor_int, hold_min=15)
+        # self.rvjoystick.enable()
+        self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
         time.sleep(1)
-        self.rvjoystick.disable()
+        # self.rvjoystick.disable()
         # robot moving
         self.wait_for_robot_arrived()
         # press all lift buttons
         for floor_no in range(8):
             self.emsdlift.rm_to(floor_no)
-            # time.sleep(0.05)
+            time.sleep(0.2)
 
         # status_callback
         rm_task_data = RMSchema.Task(task_json)
@@ -2042,8 +2048,8 @@ class Robot:
         target_floor_int = 7
         '''
         # **release the lift door
-        self.emsdlift.release_all_keys()
-        self.emsdlift.close()
+        # self.emsdlift.release_all_keys()
+        # self.emsdlift.close()
 
         floor_list = range(8)
         if target_floor_int == 0: floor_list = reversed(range(8))
@@ -2054,7 +2060,7 @@ class Robot:
         for idx, floor_no in enumerate(floor_list): # e.g 0-7
             # [lift operation] check arrive and then hold
             # self.rvjoystick.enable()
-            self.call_lift_and_check_arrive(floor_no, hold_min=25)
+            self.call_lift_and_check_arrive(floor_no, hold_min=5)
             time.sleep(1)
 
             # [robot operation]
@@ -2084,7 +2090,7 @@ class Robot:
         # self.rvjoystick.disable()
         # self.wait_for_robot_arrived()
         print(f'[li.levelling] go to 6th floor and then out...')
-        self.call_lift_and_check_arrive(6, hold_min=15)
+        self.call_lift_and_check_arrive(6, hold_min=5)
         
         goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
         self.goto_no_status_callback(goout_json)
@@ -2103,7 +2109,7 @@ class Robot:
     def li_liftout_levelling(self, task_json, status_callback):
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
-            target_floor_int = int(self.lift_task_json['parameters']['target_floor'])
+            target_floor_int = int(task_json['parameters']['target_floor'])
             # final_floor_int = int(self.lift_task_json['parameters']['final_floor'])
             threading.Thread(target=self.thread_li_liftout_levelling, args=(target_floor_int,task_json,status_callback,)).start()
             return True
