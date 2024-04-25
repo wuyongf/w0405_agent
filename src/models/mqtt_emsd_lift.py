@@ -294,10 +294,13 @@ if __name__ == "__main__":
     lift = EMSDLift(config)
     lift.start()
 
+    # hold_min = 5
+    # lift.open(10 * 60 * hold_min) 
+
     while(True):
         time.sleep(2)
         lift.get_state()
-        # lift.release_all_keys()
+        lift.release_all_keys()
         res = lift.occupied
         print(res)
         # lift.update_motion_state()

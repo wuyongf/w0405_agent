@@ -631,7 +631,7 @@ if __name__ == '__main__':
 
     pub = MissionPublisher(skill_config_dir, rmapi)
     # pub.const_li(67007)
-    pub.const_li(current_floor_id=6,
+    pub.const_li(current_floor_id=4,
                  li_audio_target_floor=7, lo_audio_final_floor=0,
                  li_levelling_cur_floor=0, lo_levelling_target_floor=7)
 
