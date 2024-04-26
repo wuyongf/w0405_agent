@@ -2082,7 +2082,9 @@ class Robot:
             else:
                 ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling', 270)
             
+            print(f'<debug> mqtt msg checking 1')
             self.goto_no_status_callback(ckpt_json)
+            print(f'<debug> mqtt msg checking 2')
             self.wait_for_robot_arrived()
 
             ## check levelling
@@ -2138,7 +2140,6 @@ class Robot:
             return False
 
     #endregion
-
 
     ###---------------------------------------------------------------------------------------
     ###---------------------------------------------------------------------------------------
