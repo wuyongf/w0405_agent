@@ -12,7 +12,7 @@ import src.top_module.enums.enums_linear_actuator as LAEnum
 
 class LaserDistanceSensor():
 
-    def __init__(self, modb, config, port_config):
+    def __init__(self, modb, port_config):
         self.sid_left = port_config.get('LASER_L', 'sid')
         self.sid_right = port_config.get('LASER_R', 'sid')
         self.port_left = port.port().port_match(self.sid_left)
@@ -213,25 +213,26 @@ if __name__ == '__main__':
     # laser.laser_control(1)       #signal = 1/0 , 1 = on, 0 = off
     # laser.store_data()
     
-    # laser.collect_data(laser.left)
+    laser.collect_data(laser.left)
+    time.sleep(100)
 
-    # laser = LaserDistanceSensor('COM5', 'COM7')
-    # print(laser.data_integration())
-    # laser.debug_generate_random_number()
-    # laser.retract_flag = False
-    # laser.set_pack_id(12)
-    # #******************** move_dir cannot be argument
-    # # laser.set_thread(1,1,laser.move_dir)
-    laser.start()
-    time.sleep(50)
-    # laser.run_thread.join()
+    # # laser = LaserDistanceSensor('COM5', 'COM7')
+    # # print(laser.data_integration())
+    # # laser.debug_generate_random_number()
+    # # laser.retract_flag = False
+    # # laser.set_pack_id(12)
+    # # #******************** move_dir cannot be argument
+    # # # laser.set_thread(1,1,laser.move_dir)
     # laser.start()
-    # laser.set_move_dir(1)
-    laser.stop()
+    # time.sleep(50)
+    # # laser.run_thread.join()
+    # # laser.start()
+    # # laser.set_move_dir(1)
+    # laser.stop()
     
-    # # laser.retract_flag = True
-    # time.sleep(5)
-    # laser.start()
+    # # # laser.retract_flag = True
+    # # time.sleep(5)
+    # # laser.start()
     
-    # laser.store_data(1,1,1)
+    # # laser.store_data(1,1,1)
 
