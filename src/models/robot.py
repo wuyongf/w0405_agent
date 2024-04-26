@@ -1985,7 +1985,7 @@ class Robot:
 
         print(f'<debug> lo_audio 5')
         # final
-        
+
         # **release the lift door
         self.emsdlift.release_all_keys()
         self.emsdlift.close()
@@ -1996,8 +1996,8 @@ class Robot:
         # [sensor] stop recording: mic + rgbcam + gyro
         self.lift_noise_detect_end()
 
-        # hold lift door for 5min
-        self.emsdlift.open(10 * 60 * 5)
+        # hold lift door for 5s
+        self.emsdlift.open(10 * 5)
         
         # # robot moving
         # self.rvjoystick.disable()
