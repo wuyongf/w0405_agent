@@ -1761,7 +1761,7 @@ class Robot:
                     if(self.emsdlift.occupied):
                         print(f'[robot_call_lift] self.emsdlift.occupied {self.emsdlift.occupied}')
                         # # debug usage
-                        # self.emsdlift.release_all_keys()
+                        self.emsdlift.release_all_keys()
                         # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
                         print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
                         time.sleep(1)
@@ -1997,8 +1997,12 @@ class Robot:
         # [sensor] stop recording: mic + rgbcam + gyro
         self.lift_noise_detect_end()
 
-        # # hold lift door for 5s
-        # self.emsdlift.open(10 * 5)
+        # hold lift door for 5s
+        self.emsdlift.open(10 * 60 * 5)
+
+        # # **release the lift door
+        # self.emsdlift.release_all_keys()
+        # self.emsdlift.close()
         
         # # robot moving
         # self.rvjoystick.disable()
