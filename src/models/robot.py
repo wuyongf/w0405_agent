@@ -1760,8 +1760,8 @@ class Robot:
                 while(True):
                     if(self.emsdlift.occupied):
                         print(f'[robot_call_lift] self.emsdlift.occupied {self.emsdlift.occupied}')
-                        # debug usage
-                        self.emsdlift.release_all_keys()
+                        # # debug usage
+                        # self.emsdlift.release_all_keys()
                         # print(f'[robocore_call_lift] try to call emsd lift... wait for available...')
                         print(f'[robocore_call_lift] emsd lift occupied... wait for available...')
                         time.sleep(1)
@@ -2080,7 +2080,7 @@ class Robot:
             if(floor_no is 0): 
                 ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling-G', 90)
             else:
-                ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling', 270)
+                ckpt_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'Levelling', 268)
             
             print(f'<debug> mqtt msg checking 1')
             self.goto_no_status_callback(ckpt_json)
@@ -2139,6 +2139,50 @@ class Robot:
         except:
             return False
 
+    def thread_li_liftout_return(self, task_json, status_callback):
+        '''
+        situation:robot inside the lift.
+        workflow:
+        1. call lift to 6th floor
+        2. move out. release door. localize to 6th floor.
+        3. goto ChargingStation.
+        4. start charging. 
+        '''
+
+        print(f'[thread_li_liftout_return] go to 6th floor and then out...')
+        self.call_lift_and_check_arrive(6, hold_min=5)
+        
+        goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
+        self.goto_no_status_callback(goout_json)
+        self.wait_for_robot_arrived()
+        # self.rvjoystick.enable()
+        
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+
+        # localization
+        localize_json = self.rmapi.get_pos_task_json('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a', 'LiftWaitingPoint', 180)
+        self.localize(localize_json)
+        
+        # # goback to charging station
+        # goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
+        # self.goto_no_status_callback(goback_json)
+        # self.wait_for_robot_arrived()
+
+        # status_callback
+        rm_task_data = RMSchema.Task(task_json)
+        status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+
+        # # # charging
+        # self.missionpub.constrcut_charging_on(6)
+
+    def li_liftout_return(self, task_json, status_callback):
+        try:
+            threading.Thread(target=self.thread_li_liftout_return, args=(task_json,status_callback,)).start()
+            return True
+        except:
+            return False
     #endregion
 
     ###---------------------------------------------------------------------------------------

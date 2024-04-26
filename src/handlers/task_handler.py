@@ -437,6 +437,15 @@ class TaskHandler:
                 else:
                     self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
                 return res
+
+            case 'LI-LIFTOUT-RETURN':
+                print(f'LI-LIFTOUT-RETURN JSON: {task_json}')
+                res = self.robot.li_liftout_return(task_json, self.task_status_callback)
+                if (res):
+                    return res
+                else:
+                    self.task_status_callback(task.taskId, task.taskType, RMEnum.TaskStatusType.Failed)
+                return res
             #endregion 
 
 

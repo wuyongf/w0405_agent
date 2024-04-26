@@ -521,7 +521,6 @@ class MissionPublisher:
         self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
         pass
 
-
     ### 2024.04.24 
     def task_li(self, current_floor_id,
                 li_audio_target_floor, lo_audio_final_floor,
@@ -599,6 +598,77 @@ class MissionPublisher:
         # tasks.append(post_localization)
         return tasks
     
+    ### 2024.04.26
+    def const_li_data_collection(self, current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor):
+        
+        tasks = self.task_li_data_collection(current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor)
+
+        job_name = '[LI] data_collection'
+        map_rm_guid = self.dict_map_guid[current_floor_id]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
+        self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
+        pass
+
+    def task_li_data_collection(self, current_floor_id,
+                li_audio_target_floor, lo_audio_final_floor):
+        '''
+        1. localize robot to 6th floor map first [RM-WEB]
+        2. robot moves to LiftWaitingPoint, change to lift-map
+        3. liftin_audio
+        4. liftout_audio
+        5. liftin_levelling
+        6. liftout_levelling
+        7. post_localize
+        '''
+        # current_floor_id            = 6  # 6
+        # li_audio_target_floor       = 7  # 0
+
+        # lo_audio_final_floor        = 0  # 7
+
+        # li_levelling_cur_floor      = 0  # 7
+        # lo_levelling_target_floor   = 7  # 0
+
+        current_map_rm_guid = self.dict_map_guid[current_floor_id]
+        # target_map_rm_guid = self.dict_map_guid[target_floor_id]
+        sixth_map_rm_guid = self.dict_map_guid[6]
+        lift_map_rm_guid = self.dict_map_guid[999]
+        
+        g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
+        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        
+        '''
+        1. robot will call lift to arrive current_floor.
+        2. robot will move to transit pos.
+        3. robot will press litf button to target_floor. either 0 or 7 (li_audio_target_floor)
+        '''
+        liftin_audio = self.rmapi.nt_li_liftin_audio(lift_map_rm_guid, 'Transit', layout_heading=90, 
+                                                     current_floor=current_floor_id, target_floor= li_audio_target_floor)
+        '''
+        0. robot will check if it arrive target_floor. (li_audio_target_floor)
+        1. robot will press all buttons.
+        2. robot will start noise_inspection_task.
+        3. lift will move to final_floor. either 7 or 0
+        4. robot will finish noise_inspection_task. hold the lift door.
+        '''
+        #TODO: delete WaitingPoint
+        liftout_audio = self.rmapi.nt_li_liftout_audio(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90, 
+                                                        final_floor=lo_audio_final_floor, target_floor=li_audio_target_floor)
+
+
+        # reference: liftout_levelling
+        liftout_return = self.rmapi.nt_li_liftout_return(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270)
+
+        tasks = []
+        tasks.append(g1)
+        tasks.append(localization)
+        tasks.append(liftin_audio)
+        tasks.append(liftout_audio)
+        tasks.append(liftout_return)
+        return tasks
+
     # functions: 
     # 1. take lift
     # 2. 
@@ -630,18 +700,23 @@ if __name__ == '__main__':
     rmapi = RMAPI(config, skill_config_dir)
 
     pub = MissionPublisher(skill_config_dir, rmapi)
-    # pub.const_li(67007)
-    pub.const_li(current_floor_id=4,
-                 li_audio_target_floor=7, lo_audio_final_floor=0,
-                 li_levelling_cur_floor=0, lo_levelling_target_floor=7)
     
-    # pub.const_li(current_floor_id=6,
+    # ###[workflow evidence]
+    # # pub.const_li(67007)
+    # pub.const_li(current_floor_id=4,
     #              li_audio_target_floor=7, lo_audio_final_floor=0,
     #              li_levelling_cur_floor=0, lo_levelling_target_floor=7)
+    
+    # ##[patrol] from 7 to 0
+    # pub.const_li_data_collection(current_floor_id=6,
+    #              li_audio_target_floor=7, lo_audio_final_floor=0)
 
-    # pub.const_li(current_floor_id=6,
-    #              li_audio_target_floor=0, lo_audio_final_floor=7,
-    #              li_levelling_cur_floor=7, lo_levelling_target_floor=0)
+    ##[patrol] from 0 to 7
+    pub.const_li_data_collection(current_floor_id=6,
+                 li_audio_target_floor=0, lo_audio_final_floor=7)
+
+
+
     # pub.construct_demo_iaq()
 
     ##20240221 new task_json
