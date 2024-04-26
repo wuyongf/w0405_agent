@@ -1975,7 +1975,7 @@ class Robot:
         # press all lift buttons
         # self.emsdlift.rm_to(0)
         for floor_no in range(8):
-            time.sleep(1)
+            time.sleep(2)
             self.emsdlift.rm_to(floor_no)
             # self.emsdlift.open(10 * 60 * 5)
             # time.sleep(1)
