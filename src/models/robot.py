@@ -1991,13 +1991,14 @@ class Robot:
         self.emsdlift.close()
         
         self.call_lift_and_check_arrive(final_floor_int, hold_min=5)
+        self.emsdlift.open(10 * 60 * 5)
         time.sleep(1)
 
         # [sensor] stop recording: mic + rgbcam + gyro
         self.lift_noise_detect_end()
 
-        # hold lift door for 5s
-        self.emsdlift.open(10 * 5)
+        # # hold lift door for 5s
+        # self.emsdlift.open(10 * 5)
         
         # # robot moving
         # self.rvjoystick.disable()
