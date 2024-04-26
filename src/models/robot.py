@@ -1631,6 +1631,7 @@ class Robot:
         
     ## Methods
     ### Lift
+    #region Lift 
     def thread_lift_in(self, cur_floor_int, target_floor_int, task_json):
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
@@ -1830,10 +1831,11 @@ class Robot:
         # **release the lift door
         self.emsdlift.release_all_keys()
         self.emsdlift.close()
-    
+    #endregion
+
     ###---------------------------------------------------------------------------------------
     ###---------------------------------------------------------------------------------------
-    #region [Lift Inspection]
+    #region Lift Inspection
     '''
     li_lift_in_audio  -> thread_li_lift_in_audio
     li_lift_out_audio -> thread_li_lift_out_audio
@@ -1970,11 +1972,11 @@ class Robot:
         time.sleep(1)
 
         # press all lift buttons
-        self.emsdlift.rm_to(0)
-        # for floor_no in range(8):
-        #     self.emsdlift.rm_to(floor_no)
-        #     self.emsdlift.open(10 * 60 * 5)
-        #     time.sleep(0.01)
+        # self.emsdlift.rm_to(0)
+        for floor_no in range(8):
+            self.emsdlift.rm_to(floor_no)
+            self.emsdlift.open(10 * 60 * 5)
+            time.sleep(0.01)
 
 
         print(f'<debug> lo_audio 4')
@@ -2065,7 +2067,7 @@ class Robot:
         print(f'[li.levelling] Execute Levelling Mission')
         for idx, floor_no in enumerate(floor_list): # e.g 0-7
 
-            if idx == 2: break
+            # if idx == 2: break
             # [lift operation] check arrive and then hold
             # self.rvjoystick.enable()
             self.call_lift_and_check_arrive(floor_no, hold_min=5)
@@ -2117,14 +2119,14 @@ class Robot:
         goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
         self.goto_no_status_callback(goback_json)
         self.wait_for_robot_arrived()
-        # charging
-        self.rv_charging_start(task_json, status_callback)
 
-        # # status_callback
-        # rm_task_data = RMSchema.Task(task_json)
-        # status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+        # status_callback
+        rm_task_data = RMSchema.Task(task_json)
+        status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
+
+        # # charging
+        self.missionpub.constrcut_charging_on(6)
                     
-            
     def li_liftout_levelling(self, task_json, status_callback):
         try:
             # self.goto(task_json, status_callback) # No need to go out!!
@@ -2140,7 +2142,7 @@ class Robot:
 
     ###---------------------------------------------------------------------------------------
     ###---------------------------------------------------------------------------------------
-    ## Mission Designer
+    #region Mission Designer
     ### LiftInspection
     def lift_inspection_mission_publisher(self):
         # Enter 7th Floor
@@ -2207,6 +2209,8 @@ class Robot:
         self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
         self.delivery_clear_positions(self.a_delivery_mission)
         return True
+    
+    #endregion
 
     ### Lift
     def lift_mission_publisher(self):
@@ -2281,7 +2285,7 @@ class Robot:
         # if not done: return False  # stop assigning lift mission
 
         return True
-    
+
     def thread_check_lift_arrive(self, target_floor_int):
         # pasue robot first!
         self.rvjoystick.enable()

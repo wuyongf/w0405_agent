@@ -634,6 +634,10 @@ if __name__ == '__main__':
     pub.const_li(current_floor_id=4,
                  li_audio_target_floor=7, lo_audio_final_floor=0,
                  li_levelling_cur_floor=0, lo_levelling_target_floor=7)
+    
+    # pub.const_li(current_floor_id=6,
+    #              li_audio_target_floor=7, lo_audio_final_floor=0,
+    #              li_levelling_cur_floor=0, lo_levelling_target_floor=7)
 
     # pub.const_li(current_floor_id=6,
     #              li_audio_target_floor=0, lo_audio_final_floor=7,
