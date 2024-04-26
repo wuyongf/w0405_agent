@@ -1976,7 +1976,7 @@ class Robot:
         for floor_no in range(8):
             self.emsdlift.rm_to(floor_no)
             self.emsdlift.open(10 * 60 * 5)
-            time.sleep(0.01)
+            time.sleep(1)
 
 
         print(f'<debug> lo_audio 4')
@@ -1985,11 +1985,19 @@ class Robot:
 
         print(f'<debug> lo_audio 5')
         # final
+        
+        # **release the lift door
+        self.emsdlift.release_all_keys()
+        self.emsdlift.close()
+        
         self.call_lift_and_check_arrive(final_floor_int, hold_min=5)
         time.sleep(1)
 
         # [sensor] stop recording: mic + rgbcam + gyro
         self.lift_noise_detect_end()
+
+        # hold lift door for 5min
+        self.emsdlift.open(10 * 60 * 5)
         
         # # robot moving
         # self.rvjoystick.disable()
@@ -2151,6 +2159,8 @@ class Robot:
 
         print(f'[thread_li_liftout_return] go to 6th floor and then out...')
         self.call_lift_and_check_arrive(6, hold_min=5)
+        # hold lift door for 5min
+        self.emsdlift.open(10 * 60 * 5)
         
         goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
         self.goto_no_status_callback(goout_json)
