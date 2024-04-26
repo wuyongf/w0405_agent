@@ -1970,13 +1970,15 @@ class Robot:
        
         self.call_lift_and_check_arrive(target_floor_int, hold_min=5)
         time.sleep(1)
-
+        self.emsdlift.open(10 * 60 * 5)
+        
         # press all lift buttons
         # self.emsdlift.rm_to(0)
         for floor_no in range(8):
-            self.emsdlift.rm_to(floor_no)
-            self.emsdlift.open(10 * 60 * 5)
             time.sleep(1)
+            self.emsdlift.rm_to(floor_no)
+            # self.emsdlift.open(10 * 60 * 5)
+            # time.sleep(1)
 
 
         print(f'<debug> lo_audio 4')
