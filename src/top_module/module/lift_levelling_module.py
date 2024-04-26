@@ -16,7 +16,7 @@ class LiftLevellingModule():
         self.modb = modb
         self.status_summary = status_summary
         self.lld = LevelingDetection.lift_leveling_detection(modb, config, status_summary)
-        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(modb, config, port_config)
+        self.laser_distance = LaserDistanceSensor.LaserDistanceSensor(modb, port_config)
         self.cb_dir = self.callback_direction
         self.cb_finish = self.callback_finish
         self.linear_actuator = LinearActuator.LinearActuator(port_config, self.cb_dir, self.cb_finish)

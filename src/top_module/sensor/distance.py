@@ -210,11 +210,11 @@ if __name__ == '__main__':
 
     laser = LaserDistanceSensor(config, port_config)
     time.sleep(1)
-    # laser.laser_control(1)       #signal = 1/0 , 1 = on, 0 = off
+    laser.laser_control(1)       #signal = 1/0 , 1 = on, 0 = off
     # laser.store_data()
     
-    laser.collect_data(laser.left)
-    time.sleep(100)
+    # laser.collect_data(laser.left)
+    # time.sleep(100)
 
     # # laser = LaserDistanceSensor('COM5', 'COM7')
     # # print(laser.data_integration())
