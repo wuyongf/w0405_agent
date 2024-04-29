@@ -24,4 +24,6 @@ class port():
             
 if __name__ == "__main__":
     port = port()
-    port.list_ports()
+    # port.list_ports()
+    # print(port.port_match('MI7U45IE')) #left
+    # print(port.port_match('A700N45L')) #right
