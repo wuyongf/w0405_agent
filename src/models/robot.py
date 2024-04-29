@@ -94,7 +94,7 @@ class Robot:
         self.surface_ip_addr = config.get('SURFACE', 'localhost')
         self.robot_nw_id = self.nwdb.robot_id
         self.robot_rm_guid = self.nwdb.robot_rm_guid
-        self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose())
+        self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose(), False)
         self.map_nw_id = None
         self.layout_nw_id = None
         self.layout_rm_guid = None
@@ -112,6 +112,7 @@ class Robot:
         self.is_followme = False
         self.mission_id = 0
         self.is_iaq_on = False
+        self.prev_is_blocked = False
 
         self.a_delivery_mission = None
         self.robot_locker_is_closed = self.locker_is_closed()
@@ -212,6 +213,7 @@ class Robot:
                 self.status.state = 1  # todo: robot status
                 self.status.mapPose.mapId = self.get_current_map_rm_guid()  # map
                 self.status.batteryPct = self.get_battery_state(protocol)  # battery
+                self.check_robot_is_block()
 
                 # Modules
                 self.robot_locker_is_closed = self.locker_is_closed()
@@ -275,6 +277,28 @@ class Robot:
         return status.to_json()
 
     # robot status
+    def check_robot_is_block(self):
+
+        if(self.prev_is_blocked is False and self.status.is_blocked):
+            self.prev_is_blocked = True
+            self.event_handler.add_mapPose(is_current_pos=False, 
+                                           pos_x=self.status.mapPose.x, 
+                                           pos_y=self.status.mapPose.y, 
+                                           pos_theta=self.status.mapPose.heading, 
+                                           map_rm_guid=self.robot_rm_guid)
+            self.event_handler.publish_plain_text('Obstacle Detected!','Please check...')
+        
+        if(self.prev_is_blocked and self.status.is_blocked):
+            pass
+        
+        if(self.prev_is_blocked is False and self.status.is_blocked is False):
+            self.event_handler.add_mapPose(is_current_pos=False, 
+                                           pos_x=self.status.mapPose.x, 
+                                           pos_y=self.status.mapPose.y, 
+                                           pos_theta=self.status.mapPose.heading, 
+                                           map_rm_guid=self.robot_rm_guid)
+            self.event_handler.publish_plain_text('Obstacle Clear!','Robot Keep Moving...')
+
     def get_battery_state(self, protocol=NWEnum.Protocol):
         if (protocol == NWEnum.Protocol.RVMQTT):
             battery = self.rvmqtt.get_battery_percentage()

@@ -11,11 +11,12 @@ import uuid
 
 
 class Status:
-    def __init__(self, batteryPct, state, mapPose, layoutPose):
+    def __init__(self, batteryPct, state, mapPose, layoutPose, is_blocked):
         self.batteryPct = batteryPct
         self.state = state
         self.mapPose = mapPose
         self.layoutPose = layoutPose
+        self.is_blocked = is_blocked
 
     def to_json(self):
         return json.dumps(self.__dict__, default=lambda o: o.__dict__)

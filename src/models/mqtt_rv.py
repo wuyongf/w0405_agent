@@ -37,6 +37,7 @@ class RVMQTT():
         # init-mission/task
         self.moving = True
         self.task_is_executing = False
+        self.obstacle_detected = True
 
     def start(self):
         
@@ -66,6 +67,9 @@ class RVMQTT():
         if topic == 'rvautotech/fobo/baseController/move':
             self.moving = data['moving']
             pass
+        if topic == 'rvautotech/fobo/obstacle/detection':
+            self.obstacle_detected = data['detected']
+            pass
         if topic == 'rvautotech/fobo/map/active':
             pass
             # self.resolution = data['resolution']
@@ -94,6 +98,9 @@ class RVMQTT():
     def get_robot_is_moving(self):
         return self.moving
 
+    def get_robot_is_blocked(self):
+        return self.obstacle_detected
+
 import src.models.trans as Trans
 
 if __name__ == '__main__':
@@ -109,6 +116,12 @@ if __name__ == '__main__':
     while(True):
         pos = rvmqtt.get_current_pose()
         print(pos)
-        
+
+        is_blocked = rvmqtt.get_robot_is_blocked()
+        print(f'get_robot_is_blocked: {is_blocked}')
+
+        is_moving = rvmqtt.get_robot_is_moving()
+        print(f'get_robot_is_moving: {is_moving}')
+
         time.sleep(0.1)
     

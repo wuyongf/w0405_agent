@@ -707,13 +707,13 @@ if __name__ == '__main__':
     #              li_audio_target_floor=7, lo_audio_final_floor=0,
     #              li_levelling_cur_floor=0, lo_levelling_target_floor=7)
     
-    # ##[patrol] from 7 to 0
-    # pub.const_li_data_collection(current_floor_id=6,
-    #              li_audio_target_floor=7, lo_audio_final_floor=0)
-
-    ##[patrol] from 0 to 7
+    ##[patrol1] from 7 to 0
     pub.const_li_data_collection(current_floor_id=6,
-                 li_audio_target_floor=0, lo_audio_final_floor=7)
+                 li_audio_target_floor=7, lo_audio_final_floor=0)
+
+    # ##[patrol2] from 0 to 7
+    # pub.const_li_data_collection(current_floor_id=6,
+    #              li_audio_target_floor=0, lo_audio_final_floor=7)
 
 
 

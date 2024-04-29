@@ -173,6 +173,12 @@ class RVAPI(api.AuthenticatedAPI):
         return json_data["taskCompletionDTO"]["exception"]
 
     # baseControl
+    def get_robot_is_blocked(self):
+        json_data = self.get('/baseControl/v1/obstacle/detection')
+        # json_data = self.get('/task/v1/status')
+        if json_data is None: return json_data
+        return json_data["detected"]    
+
     def get_robot_is_moving(self):
         json_data = self.get('/baseControl/v1/move')
         # json_data = self.get('/task/v1/status')
@@ -258,8 +264,12 @@ if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     rvapi = RVAPI(config)
 
+    while(True):
+        time.sleep(0.1)
+        is_blocked = rvapi.get_robot_is_blocked()
+        print(f'is_blocked: {is_blocked}')
     res = rvapi.get_battery_state()
-    print(res)
+    print(f'get_battery_state: {res}')
 
     ####################################################################################################
     # Robot
