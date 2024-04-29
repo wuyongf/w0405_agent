@@ -279,7 +279,7 @@ class Robot:
     # robot status
     def check_robot_is_block(self):
 
-        if(self.prev_is_blocked is False and self.status.is_blocked):
+        if(self.prev_is_blocked is False and self.status.is_blocked is True):
             self.prev_is_blocked = True
             self.event_handler.add_mapPose(is_current_pos=False, 
                                            pos_x=self.status.mapPose.x, 
@@ -291,7 +291,8 @@ class Robot:
         if(self.prev_is_blocked and self.status.is_blocked):
             pass
         
-        if(self.prev_is_blocked is False and self.status.is_blocked is False):
+        if(self.prev_is_blocked is True and self.status.is_blocked is False):
+            self.prev_is_blocked = False
             self.event_handler.add_mapPose(is_current_pos=False, 
                                            pos_x=self.status.mapPose.x, 
                                            pos_y=self.status.mapPose.y, 
