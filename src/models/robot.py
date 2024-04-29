@@ -513,6 +513,34 @@ class Robot:
         return False
 
     # status_callback: check task_handler3.py
+    def thread_handle_block_issue(self, task_json, status_callback):
+
+        block_time = 0
+
+        while(self.is_moving):
+            if(self.status.is_blocked):
+                block_time +=1
+                time.sleep(1)
+            if(block_time >60):
+                # clear block time
+                block_time = 0
+
+                print(f'block_time > 60s')
+                self.cancel_moving_task()
+
+                # status callback
+                rm_task_data = RMSchema.Task(task_json)
+                status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Failed)
+
+                # goback to charging station
+                goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
+                self.goto_no_status_callback(goback_json)
+                self.wait_for_robot_arrived()
+
+                # # charging
+                self.missionpub.constrcut_charging_on(6)
+        
+
     def delivery_goto(self, task_json, status_callback):
         '''
         No TMat Transformation!!! Just RM_MAP -> RV_MAP
@@ -682,6 +710,7 @@ class Robot:
             #     return True
             # self.rvapi.put_safety_zone_minimum()
             # self.rvapi.put_maximum_speed(0.3)
+            
 
             self.rvapi.put_safety_zone_minimum()
             self.rvapi.put_maximum_speed(0.4)
@@ -729,6 +758,11 @@ class Robot:
 
             # [UI-BIM-INFO]
             thread = threading.Thread(target=self.thread_demo_mission_info_updater, args=())
+            thread.setDaemon(True)
+            thread.start()
+
+            # [Block Issue Handling]
+            thread = threading.Thread(target=self.thread_handle_block_issue, args=(task_json, status_callback))
             thread.setDaemon(True)
             thread.start()
 
@@ -1627,7 +1661,7 @@ class Robot:
             self.cancel_moving_task()
 
             time.sleep(1)
-            self.rvapi.post_charging(upperLimit=100, duration_min=60, shutdownAfterCharging=False)
+            self.rvapi.post_charging(upperLimit=110, duration_min=60, shutdownAfterCharging=False)
 
             thread = threading.Thread(target=self.thread_check_charging_status, args=(task_json, status_callback))
             thread.setDaemon(True)
