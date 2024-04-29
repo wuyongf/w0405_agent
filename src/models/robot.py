@@ -279,7 +279,8 @@ class Robot:
     # robot status
     def check_robot_is_block(self):
 
-        print(f'check_robot_is_block: ')
+        print(f'[check_robot_is_block] self.prev_is_blocked: {self.prev_is_blocked} ')
+        print(f'[check_robot_is_block] self.status.is_blocked: {self.status.is_blocked} ')
 
         if((self.prev_is_blocked is False) and (self.status.is_blocked is True)):
             self.prev_is_blocked = True
