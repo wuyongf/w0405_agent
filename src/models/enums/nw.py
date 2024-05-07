@@ -85,6 +85,9 @@ class DeliveryStatus(Enum):
     Active_BackToSender = 9
     Active_BackToChargingStation = 10
 
+'''
+Robot
+'''
 class RobotStatusMode(Enum):
     IDLE = 1
     EXECUTING = 2
@@ -95,6 +98,13 @@ class RobotStatusMode(Enum):
     FOLLOWME = 7
     DELIVERY = 8
     INSPECTION = 9
+    pass
+
+class RobotMissionStatus(Enum):
+    NULL = -1
+    IDLE = 1
+    EXECUTING = 2
+    FINISH = 3
     pass
 
 class TaskStatus(Enum):
@@ -108,6 +118,9 @@ class TaskStatus(Enum):
     ERROR = 5
     pass
 
+'''
+UI
+'''
 class UIMissionStatus(Enum):
     IDEL = 1
     EXECUTING = 2

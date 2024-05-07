@@ -280,6 +280,13 @@ class robotDBHandler(db.AzureDB):
         # self.update_single_value('sys.mission','detailed_info',detailed_info,'ID',mission_id)
         pass
 
+    # robot
+    def update_robot_mission_status(self, mission_status: NWEnums.RobotMissionStatus):
+        try: 
+            self.update_single_value('robot.status', 'mission_status', mission_status.value, 'ID', self.robot_id)
+        except:
+            print('[db_robot.update_robot_status_mode] error')
+
     # AI
 
     ### rgbcam
@@ -370,11 +377,24 @@ if __name__ == '__main__':
     # from src.models.schema.nw import Door    
     # nwdb.update_robot_status_mode(NWEnums.RobotStatusMode.Error)
 
+    ### robot position
+    x=y= 400
+    z=90
+    import time
+    while(True):
+        start_time = time.time()
+        nwdb.update_robot_position(x,y,z)
+        x+=0.5
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"Execution time: {execution_time} seconds")
+        time.sleep(0.5)
+
     ### Lift
     # base64 = nwdb.get_single_value('robot.map.layout', 'base64', 'name', "'GF-Layout'")
 
-    ### ui_mission_status
-    nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=1)
+    # ### ui_mission_status
+    # nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=1)
 
     # ### Update base64
     # text_file = open("sample.txt", "r")

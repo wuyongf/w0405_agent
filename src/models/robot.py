@@ -189,8 +189,11 @@ class Robot:
 
     def thread_update_position(self):
         while True:
+            #<time>
+            start_time = time.time()
+
             # map_pose
-            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVAPI)  # current map pose
+            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
             self.status.mapPose.x = pixel_x
             self.status.mapPose.y = pixel_y
             self.status.mapPose.heading = heading
@@ -203,7 +206,12 @@ class Robot:
             self.status.layoutPose.y = layout_y
             self.status.layoutPose.heading = layout_heading
             self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
-
+            
+            #<time>
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print(f"[thread_update_position]: Execution time: {execution_time} seconds")
+            
             time.sleep(0.1)
 
     def thread_update_status(self, protocol):  # update thread
@@ -891,14 +899,15 @@ class Robot:
                     # [1] info UI(real-time)
                     self.nwdb.update_ui_mission_detailed_info(detailed_info=6,robot_nw_id=self.robot_nw_id)
 
-                    # for demo
+                    # for demo finish
                     if(not self.is_iaq_on):
                         # [UI-BIM-MissionBar]
                         self.nwdb.update_ui_mission_status(status=3, robot_nw_id=self.robot_nw_id)
                         time.sleep(2)
                         # [UI-BIM-MissionBar]
                         self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)
-                        
+                        # [Robot-MissionStaus]
+                        self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
                         time.sleep(1)
                         self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
 
@@ -951,6 +960,8 @@ class Robot:
             self.nwdb.update_ui_mission_status(status=2, robot_nw_id=self.robot_nw_id)
             # [UI-BIM-INFO]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
+            # [Robot-MissionStaus]
+            self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.EXECUTING)
 
             rm_mission_guid = self.rmapi.get_mission_id(task_json)
 

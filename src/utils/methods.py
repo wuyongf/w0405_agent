@@ -3,7 +3,6 @@ from datetime import datetime
 import time
 import requests
 
-
 def load_config(config_addr):
         # Load config file
         configs = configparser.ConfigParser()
@@ -57,6 +56,17 @@ def convert_list2txt(list, output_file_dir):
             else:output_file.write(str(result) + '\n')
     return output_file_dir
 
+def count_duration(sleep_sec):
+    start_time = time.time()
+    
+    # your method
+    time.sleep(sleep_sec)
+    
+    end_time = time.time()
+
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time} seconds")
+
 if __name__ == '__main__':
 
     # ## method 1 - load config file and then retrieve data
@@ -80,5 +90,7 @@ if __name__ == '__main__':
     #     check_network_connection()
     #     time.sleep(1)
 
-    timestamp = get_current_date()
-    print(timestamp)
+    # timestamp = get_current_date()
+    # print(timestamp)
+
+    count_duration(5)

@@ -33,6 +33,20 @@ class LiftInsectionAnalyser:
         self.audio_tool = AudioTool()
         self.video_tool = VideoTool()
         self.dsa = DoorStatusAnalyzer()
+
+        ## [nwdb data integration]
+        # table'ai.lift_inspection.audio'
+        self.audio_mission_id = 0
+        self.gyro_task_id = 0
+        self.raw_audio_name = None
+        ## [azure]
+        self.foreground_file_dir = None
+        self.background_file_dir = None
+        # self.raw_audio_dir 
+
+        # table 'ai.lift_inspection.audio.analysis'
+
+        
         pass
     
     def set_raw_data_dir_path(self, audio_dir, front_video_dir, rear_video_dir):
@@ -42,7 +56,10 @@ class LiftInsectionAnalyser:
 
         self.raw_audio_path = Path(audio_dir)
         self.raw_front_video_path = Path(front_video_dir)
-        self.raw_rear_video_path = Path(rear_video_dir)        
+        self.raw_rear_video_path = Path(rear_video_dir)    
+
+        ## [nwdb data integration]
+        self.raw_audio_name = self.raw_audio_path.name    
         pass
 
     def set_temp_dir(self, temp_dir):
@@ -53,6 +70,10 @@ class LiftInsectionAnalyser:
     
     def set_task_id(self, task_id):
         self.task_id = task_id
+
+        ## [nwdb data integration]
+        self.audio_mission_id = self.task_id
+        self.gyro_task_id = self.task_id + 1
 
     # [Workflow]
     def get_raw_data_duration(self,):
@@ -108,8 +129,8 @@ class LiftInsectionAnalyser:
 
         trimmed_audio_dir = self.audio_tool.trim_audio(self.raw_audio_dir, start_sec=trim_sec_from_start, end_sec=trim_sec_from_start+self.front_video_duration)
         stereo_audio_dir = self.audio_tool.convert_to_stereo_audio(trimmed_audio_dir)
-        foreground_file_dir, _ = self.audio_tool.separate_audio(stereo_audio_dir)
-        self.mono_audio_dir = self.audio_tool.convert_to_mono_audio(foreground_file_dir) # mono_audio will be used for model training and inference
+        self.foreground_file_dir, self.background_file_dir = self.audio_tool.separate_audio(stereo_audio_dir)
+        self.mono_audio_dir = self.audio_tool.convert_to_mono_audio(self.foreground_file_dir) # mono_audio will be used for model training and inference
         mp3_audio_dir = self.audio_tool.convert_to_mp3(self.mono_audio_dir) # mp3 file will be uploaded to cloud
 
         # print(f'[LiftInsectionTool] front_video_duration: {front_video_duration}')
@@ -255,6 +276,9 @@ class LiftInsectionAnalyser:
         preprocess_dir = extract_relative_path(preprocess_dir)
         
         return mission_id, raw_audio_dir, raw_video_front_dir, raw_video_rear_dir,temp_dir, preprocess_dir, ai_model_ckpt_dir
+
+    # update nwdb
+    
 
 if __name__ == '__main__':
     config = load_config('../../conf/config.properties')

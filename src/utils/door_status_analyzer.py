@@ -99,7 +99,7 @@ class DoorStatusAnalyzer:
             out.write(frame)
 
             # Save the frame as image
-            predicted_video_frames_dir = None
+            predicted_video_frames_dir = None # for predicted_video
             match(self.camera_position):
                 case CameraPosition.Front:
                     predicted_video_frames_dir = 'predicted-' + 'front' + '-video-frames'
@@ -113,7 +113,10 @@ class DoorStatusAnalyzer:
             resized_frame = cv2.resize(frame, (160, 120))  # Reduce Image Size.
             rotated_frame = cv2.rotate(resized_frame, cv2.ROTATE_90_CLOCKWISE) # Rotate the frame by 90 degrees clockwise
             file_name = "{:05d}".format(idx)+".jpg"
-            cv2.imwrite(os.path.join(predicted_video_frames_dir, file_name), rotated_frame)   
+            cv2.imwrite(os.path.join(predicted_video_frames_dir, file_name), rotated_frame)  
+
+            # # Slice raw video
+            # raw_video_frame_dir = None
 
         # Release everything when job is finished
         out.release()
