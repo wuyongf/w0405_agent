@@ -316,6 +316,12 @@ class robotDBHandler(db.AzureDB):
         print(f'statement: {statement}')
         return self.Insert(statement)
 
+    def insert_new_audio_id2(self,robot_id, mission_id, audio_file_name, is_abnormal, gyro_id):
+        statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio` (robot_id, mission_id, audio_file_name, is_abnormal, created_date, gyro_id) VALUES \
+                                                                ({robot_id}, {mission_id}, "{audio_file_name}", {is_abnormal}, "{self.now()}", {gyro_id})'
+        print(f'statement: {statement}')
+        return self.Insert(statement)
+
     def get_latest_audio_id(self):
         statement = f"SELECT LAST_INSERT_ID() FROM {self.database}.`ai.lift_inspection.audio`"
         return self.Select(statement)
@@ -338,6 +344,18 @@ class robotDBHandler(db.AzureDB):
             self.Insert(statement)
         
         return True
+    
+    def insert_new_audio_analysis2(self, audio_id, order, audio_type, start_time, end_time, is_error, slice_count =1):
+        
+        try:
+            statement = f'INSERT INTO {self.database}.`ai.lift_inspection.audio.analysis`\
+                            (audio_id, `order`, slice_count, audio_type, start_time, end_time, is_error, created_date) VALUES \
+                            ({audio_id}, {order}, {slice_count}, {audio_type}, {start_time}, {end_time}, {is_error}, "{self.now()}")'
+                
+            print(statement)
+            self.Insert(statement)
+            return True
+        except: return False
 
     ### thermal
     def insert_new_thermal_id(self,robot_id, mission_id, image_folder_name, is_abnormal):

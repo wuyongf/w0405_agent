@@ -185,9 +185,41 @@ class Robot:
     def status_start(self, protocol: NWEnum.Protocol):
         threading.Thread(target=self.thread_update_status, args=(protocol, )).start()  # from RV API
         threading.Thread(target=self.thread_update_position).start()  # from RV API
+        # Process(target=self.thread_update_position).start()  # from RV API
         print(f'[robot.status_start]: Start...')
 
     def thread_update_position(self):
+        while True:
+            #<time>
+            start_time = time.time()
+
+            # map_pose
+            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
+            self.status.mapPose.x = pixel_x
+            self.status.mapPose.y = pixel_y
+            self.status.mapPose.heading = heading
+            # print(pixel_x, pixel_y, heading)
+
+            # layout_pose
+            self.layout_nw_id = self.get_current_layout_nw_id()
+            layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
+            self.status.layoutPose.x = layout_x
+            self.status.layoutPose.y = layout_y
+            self.status.layoutPose.heading = layout_heading
+            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
+            
+            #<time>
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print(f"[thread_update_position]: Execution time: {execution_time} seconds")
+            
+            time.sleep(0.1)
+    
+    def process_update_position(self):
+
+        # cur_map_rv_name = self.rvmqtt.get_current_map_name()
+        # self.layout_nw_id = self.get_current_layout_nw_id()
+
         while True:
             #<time>
             start_time = time.time()

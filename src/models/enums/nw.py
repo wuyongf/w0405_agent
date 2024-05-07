@@ -5,6 +5,17 @@ class CameraPosition(Enum):
     Front = 1
     Rear  = 2
 
+'''
+AI
+'''
+class LiftStatus(Enum):
+    # related to nwdb table `data.ai.lift_inspection.audio.type`
+    door_close = 7
+    door_open  = 9
+    lift_down  = 10
+    lift_up    = 8
+    unknown = 11
+
 # AI - Lift Inspection - Door Status
 class LiftDoorStatus(Enum):
     Unknown = -1

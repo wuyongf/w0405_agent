@@ -5,6 +5,7 @@ import supervision as sv
 import numpy as np
 from src.models.enums.nw import CameraPosition
 from src.utils.door_sequence_analyzer_rev01 import DoorSquenceAnalyzer
+from src.utils.tool_video import VideoTool
 
 class DoorStatusAnalyzer:
     def __init__(self,):
@@ -18,6 +19,9 @@ class DoorStatusAnalyzer:
         
         #door_sequence_analyzer
         self.dsq = DoorSquenceAnalyzer()
+
+        #tool
+        self.video_tool = VideoTool()
 
     def set_ckpt(self, model_ckpt_dir):
         self.model_ckpt_dir = model_ckpt_dir
@@ -36,6 +40,9 @@ class DoorStatusAnalyzer:
     def set_camera_position(self, camera_position: CameraPosition):
         self.camera_position = camera_position
         pass
+
+    # def set_task_id(self, task_id):
+    #     self.task_id = task_id
 
     def yolov8_detect_door_status(self, ):
         '''
@@ -115,8 +122,17 @@ class DoorStatusAnalyzer:
             file_name = "{:05d}".format(idx)+".jpg"
             cv2.imwrite(os.path.join(predicted_video_frames_dir, file_name), rotated_frame)  
 
-            # # Slice raw video
-            # raw_video_frame_dir = None
+        # # Slice raw video
+        raw_video_frame_dir = None
+        match(self.camera_position):
+            case CameraPosition.Front:
+                raw_video_frame_dir = 'raw-' + 'front' + '-video-frames'
+            case CameraPosition.Rear:
+                raw_video_frame_dir = 'raw-' + 'rear' + '-video-frames'
+            case _:
+                raw_video_frame_dir = 'raw-' + 'null' + '-video-frames'
+        raw_video_frame_dir = os.path.join(self.temp_folder_dir, raw_video_frame_dir)
+        self.video_tool.slice_video_to_images2(self.source_video_dir, raw_video_frame_dir)
 
         # Release everything when job is finished
         out.release()
@@ -127,7 +143,7 @@ class DoorStatusAnalyzer:
             for line in self.detect_list:
                 f.write(f"{line}\n")
 
-        return predicted_video_dir, predicted_video_frames_dir, door_sliced_classes_dir
+        return predicted_video_dir, predicted_video_frames_dir, door_sliced_classes_dir, raw_video_frame_dir
 
     def analyse(self,):
         

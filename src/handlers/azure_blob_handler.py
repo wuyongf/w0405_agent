@@ -31,6 +31,10 @@ class AzureBlobHandler():
                 self.container_name = self.config.get('Azure', 'container_li_video_front')
             case ContainerName.LiftInspection_VideoRear:
                 self.container_name = self.config.get('Azure', 'container_li_video_rear')
+            case ContainerName.LiftInspection_Analysis:
+                self.container_name = self.config.get('Azure', 'container_li_analysis') + '/' + str(folder_name)
+            case ContainerName.LiftInspection_AnalysisImages:
+                self.container_name = self.config.get('Azure', 'container_li_analysis_images') + '/' + str(folder_name)+ '/images'
             case ContainerName.WaterLeakage_Thermal:
                 self.container_name = self.config.get('Azure', 'container_wl_thermal_image') + '/' + folder_name
             case ContainerName.WaterLeakage_Thermal_Result:
@@ -70,7 +74,7 @@ class AzureBlobHandler():
 
         # Upload the created file
         with open(file=upload_file_dir, mode="rb") as data:
-            blob_client.upload_blob(data)
+            blob_client.upload_blob(data, overwrite=True)
         
         pass
 

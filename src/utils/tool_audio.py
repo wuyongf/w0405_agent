@@ -47,9 +47,16 @@ class AudioTool:
         trimmed_audio.export(trimmed_audio_file_dir, format='wav')  # Export the trimmed audio to a new file
         return trimmed_audio_file_dir
 
-    def convert_to_mp3(self, audio_dir):
+    def convert_to_mp3_raw(self, audio_dir):
         audio = AudioSegment.from_file(audio_dir)
-        mp3_file_dir = os.path.join(self.temp_folder, 'converted_audio.mp3')
+        mp3_file_dir = os.path.join(self.temp_folder, 'audio_raw.mp3')
+        audio.export(mp3_file_dir, format='mp3')  # Export the audio to MP3 format
+        return mp3_file_dir
+
+    def convert_to_mp3_ver2(self, audio_dir):
+        audio = AudioSegment.from_file(audio_dir)
+        audio_path = Path(audio_dir)
+        mp3_file_dir = os.path.join(str(audio_path.parent), f'{audio_path.stem}.mp3')
         audio.export(mp3_file_dir, format='mp3')  # Export the audio to MP3 format
         return mp3_file_dir
         
@@ -155,7 +162,7 @@ if __name__ == '__main__':
     mono_audio_dir = audio_tool.convert_to_mono_audio(foreground_file_dir)
     print(mono_audio_dir) # mono_audio will be used for model training and inference
 
-    res = audio_tool.convert_to_mp3(mono_audio_dir) # mp3 file will be uploaded to cloud
+    res = audio_tool.convert_to_mp3_raw(mono_audio_dir) # mp3 file will be uploaded to cloud
     print(res)
 
     pass

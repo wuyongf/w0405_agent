@@ -12,3 +12,5 @@ class ContainerName(Enum):
     Surveillance_VideoFront     = 8
     Surveillance_VideoRear      = 9
     Surveillance_Thermal        = 10
+    LiftInspection_Analysis     = 11
+    LiftInspection_AnalysisImages   = 12

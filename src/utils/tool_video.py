@@ -47,6 +47,37 @@ class VideoTool:
 
         return output_folder_dir
 
+    def slice_video_to_images2(self, video_dir, output_dir):
+        # Create the output folder if it doesn't exist
+        output_folder_dir = output_dir
+        os.makedirs(output_folder_dir, exist_ok=True)
+
+        # Open the video file
+        cap = cv2.VideoCapture(video_dir)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        # Read and save frames
+        count = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # Save each frame as an image
+            resized_frame = cv2.resize(frame, (320, 240))  # Image Size.
+            # Rotate the frame by 90 degrees clockwise
+            rotated_frame = cv2.rotate(resized_frame, cv2.ROTATE_90_CLOCKWISE)
+            
+            image_path = os.path.join(output_folder_dir, f"{count:04d}.jpg")
+            cv2.imwrite(image_path, rotated_frame)
+
+            count += 1
+
+        cap.release()
+        # cv2.destroyAllWindows()
+
+        return output_folder_dir
+
     def slowdown_video(self, input_file, slowdown_factor=2):
         # Open the input video
         cap = cv2.VideoCapture(input_file)
