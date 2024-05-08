@@ -954,7 +954,7 @@ class Robot:
                         # [UI-BIM-MissionBar]
                         self.nwdb.update_ui_mission_status(status=-1, robot_nw_id=self.robot_nw_id)
                         # # [Robot-MissionStaus]
-                        # self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
+                        self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
                         time.sleep(1)
                         self.nwdb.update_ui_mission_detailed_info(detailed_info=1,robot_nw_id=self.robot_nw_id)
 
@@ -1050,8 +1050,8 @@ class Robot:
             # thread.setDaemon(True)
             # thread.start()
             
-            # [Robot-MissionStaus]
-            self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
+            # # [Robot-MissionStaus]
+            # self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
 
             return True
         except:
