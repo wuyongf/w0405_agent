@@ -193,13 +193,19 @@ class Robot:
             #<time>
             start_time = time.time()
 
+            #<time>
+            map_pose_start_time = time.time()
             # map_pose
             pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
             self.status.mapPose.x = pixel_x
             self.status.mapPose.y = pixel_y
             self.status.mapPose.heading = heading
             # print(pixel_x, pixel_y, heading)
+            #<time>
+            map_pose_end_time = time.time()
 
+            #<time>
+            layout_pose_start_time = time.time()
             # layout_pose
             self.layout_nw_id = self.get_current_layout_nw_id()
             layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
@@ -207,12 +213,21 @@ class Robot:
             self.status.layoutPose.y = layout_y
             self.status.layoutPose.heading = layout_heading
             self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
-            
+            #<time>
+            layout_pose_end_time = time.time()
+
             #<time>
             end_time = time.time()
             execution_time = end_time - start_time
-            print(f"[thread_update_position]: Execution time: {execution_time} seconds")
-            
+            map_pose_execution_time = map_pose_end_time - map_pose_start_time
+            layout_pose_execution_time = layout_pose_end_time - layout_pose_start_time
+            execution_time = end_time - start_time
+            print(f'[thread_update_position]:-----------------------------------------')
+            print(f"[thread_update_position]: Execution time:  {execution_time} seconds")
+            print(f"[thread_update_position]: map_pos time:    {map_pose_execution_time} seconds")
+            print(f"[thread_update_position]: layout_pos time: {layout_pose_execution_time} seconds")
+            print(f'[thread_update_position]:-----------------------------------------')
+            print(f'')
             time.sleep(0.1)
     
     def process_update_position(self):
