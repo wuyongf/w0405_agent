@@ -229,7 +229,7 @@ class Robot:
             execution_time = end_time - start_time
             map_pose_execution_time = map_pose_end_time - map_pose_start_time
             layout_pose_execution_time = layout_pose_end_time - layout_pose_start_time
-            execution_time_f1 = end_time_f1 - start_time_f1
+            # execution_time_f1 = end_time_f1 - start_time_f1
             execution_time_f2 = end_time_f2 - start_time_f2
             execution_time_f3 = end_time_f3 - start_time_f3
 
@@ -238,7 +238,7 @@ class Robot:
             print(f"[thread_update_position]: Execution time:  {execution_time} seconds")
             print(f"[thread_update_position]: map_pos time:    {map_pose_execution_time} seconds")
             print(f"[thread_update_position]: layout_pos time: {layout_pose_execution_time} seconds")
-            print(f"[thread_update_position]: f1 time: {execution_time_f1} seconds")
+            # print(f"[thread_update_position]: f1 time: {execution_time_f1} seconds")
             print(f"[thread_update_position]: f2 time: {execution_time_f2} seconds")
             print(f"[thread_update_position]: f3 time: {execution_time_f3} seconds")
             print(f'[thread_update_position]:-----------------------------------------')
