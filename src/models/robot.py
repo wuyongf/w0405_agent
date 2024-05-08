@@ -207,12 +207,20 @@ class Robot:
             #<time>
             layout_pose_start_time = time.time()
             # layout_pose
+            start_time_f1 = time.time()
             self.layout_nw_id = self.get_current_layout_nw_id()
+            end_time_f1 = time.time()
+
+            start_time_f2 = time.time()
             layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
+            end_time_f2 = time.time()
+
             self.status.layoutPose.x = layout_x
             self.status.layoutPose.y = layout_y
             self.status.layoutPose.heading = layout_heading
+            start_time_f3 = time.time()
             self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
+            end_time_f3 = time.time()
             #<time>
             layout_pose_end_time = time.time()
 
@@ -221,11 +229,18 @@ class Robot:
             execution_time = end_time - start_time
             map_pose_execution_time = map_pose_end_time - map_pose_start_time
             layout_pose_execution_time = layout_pose_end_time - layout_pose_start_time
+            execution_time_f1 = end_time_f1 - start_time_f1
+            execution_time_f2 = end_time_f2 - start_time_f2
+            execution_time_f3 = end_time_f3 - start_time_f3
+
             execution_time = end_time - start_time
             print(f'[thread_update_position]:-----------------------------------------')
             print(f"[thread_update_position]: Execution time:  {execution_time} seconds")
             print(f"[thread_update_position]: map_pos time:    {map_pose_execution_time} seconds")
             print(f"[thread_update_position]: layout_pos time: {layout_pose_execution_time} seconds")
+            print(f"[thread_update_position]: f1 time: {execution_time_f1} seconds")
+            print(f"[thread_update_position]: f2 time: {execution_time_f2} seconds")
+            print(f"[thread_update_position]: f3 time: {execution_time_f3} seconds")
             print(f'[thread_update_position]:-----------------------------------------')
             print(f'')
             time.sleep(0.1)
