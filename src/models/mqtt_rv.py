@@ -31,6 +31,7 @@ class RVMQTT():
         self.percentage = 0.0
         self.powerSupplyStatus = None
         # init-map
+        self.map_activated = None
         self.resolution = 0.05
         self.originX = self.originY = 0.0
         self.imageWidth = self.imageHeight = 0
@@ -71,6 +72,7 @@ class RVMQTT():
             self.obstacle_detected = data['detected']
             pass
         if topic == 'rvautotech/fobo/map/active':
+            self.map_activated = data['name']
             pass
             # self.resolution = data['resolution']
             # self.originX = data['originX']
@@ -100,6 +102,9 @@ class RVMQTT():
 
     def get_robot_is_blocked(self):
         return self.obstacle_detected
+    
+    def get_active_map(self):
+        return self.map_activated 
 
 import src.models.trans as Trans
 
@@ -114,14 +119,17 @@ if __name__ == '__main__':
 
 
     while(True):
-        pos = rvmqtt.get_current_pose()
-        print(pos)
+        map_activated = rvmqtt.get_active_map()
+        print(map_activated)
 
-        is_blocked = rvmqtt.get_robot_is_blocked()
-        print(f'get_robot_is_blocked: {is_blocked}')
+        # pos = rvmqtt.get_current_pose()
+        # print(pos)
 
-        is_moving = rvmqtt.get_robot_is_moving()
-        print(f'get_robot_is_moving: {is_moving}')
+        # is_blocked = rvmqtt.get_robot_is_blocked()
+        # print(f'get_robot_is_blocked: {is_blocked}')
+
+        # is_moving = rvmqtt.get_robot_is_moving()
+        # print(f'get_robot_is_moving: {is_moving}')
 
         time.sleep(0.1)
     

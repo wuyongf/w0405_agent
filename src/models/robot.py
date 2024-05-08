@@ -207,9 +207,9 @@ class Robot:
             #<time>
             layout_pose_start_time = time.time()
             # layout_pose
-            start_time_f1 = time.time()
-            self.layout_nw_id = self.get_current_layout_nw_id()
-            end_time_f1 = time.time()
+            # start_time_f1 = time.time()
+            # self.layout_nw_id = self.get_current_layout_nw_id()
+            # end_time_f1 = time.time()
 
             start_time_f2 = time.time()
             layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
@@ -571,6 +571,8 @@ class Robot:
             map_is_active = self.rvapi.get_active_map().name == rv_map_name
             if (pose_is_valid & map_is_active): 
                 # self.nwdb.update_robot_status_mode(NWEnum.RobotStatusMode.IDLE)
+                print(f'<pass>')
+                self.layout_nw_id = self.get_current_layout_nw_id()
                 return True
             else: return False
         except:
