@@ -144,7 +144,7 @@ class LiftInsectionAnalyser:
         stereo_audio_dir = self.audio_tool.convert_to_stereo_audio(trimmed_audio_dir)
         self.foreground_file_dir, self.background_file_dir = self.audio_tool.separate_audio(stereo_audio_dir)
         self.mono_audio_dir = self.audio_tool.convert_to_mono_audio(self.foreground_file_dir) # mono_audio will be used for model training and inference
-        self.mp3_raw_audio_dir = self.audio_tool.convert_to_mp3_raw(self.raw_audio_dir) # mp3 file will be uploaded to cloud
+        self.mp3_raw_audio_dir = self.audio_tool.convert_to_mp3_raw(trimmed_audio_dir) # mp3 file will be uploaded to cloud
 
         # print(f'[LiftInsectionTool] front_video_duration: {front_video_duration}')
         # print(f'[LiftInsectionTool] front_video_start_tiemstamp:  {front_video_start_timestamp}')
