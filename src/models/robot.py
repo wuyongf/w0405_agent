@@ -96,7 +96,7 @@ class Robot:
         self.robot_rm_guid = self.nwdb.robot_rm_guid
         self.status = RMSchema.Status(0.0, 0, RMSchema.mapPose(), RMSchema.layoutPose(), False)
         self.map_nw_id = None
-        self.layout_nw_id = None
+        self.layout_nw_id = 6 #None
         self.layout_rm_guid = None
         ## robot status: position
         self.prev_map_rm_guid = None
@@ -234,46 +234,15 @@ class Robot:
             execution_time_f3 = end_time_f3 - start_time_f3
 
             execution_time = end_time - start_time
-            print(f'[thread_update_position]:-----------------------------------------')
-            print(f"[thread_update_position]: Execution time:  {execution_time} seconds")
-            print(f"[thread_update_position]: map_pos time:    {map_pose_execution_time} seconds")
-            print(f"[thread_update_position]: layout_pos time: {layout_pose_execution_time} seconds")
-            # print(f"[thread_update_position]: f1 time: {execution_time_f1} seconds")
-            print(f"[thread_update_position]: f2 time: {execution_time_f2} seconds")
-            print(f"[thread_update_position]: f3 time: {execution_time_f3} seconds")
-            print(f'[thread_update_position]:-----------------------------------------')
-            print(f'')
-            time.sleep(0.1)
-    
-    def process_update_position(self):
-
-        # cur_map_rv_name = self.rvmqtt.get_current_map_name()
-        # self.layout_nw_id = self.get_current_layout_nw_id()
-
-        while True:
-            #<time>
-            start_time = time.time()
-
-            # map_pose
-            pixel_x, pixel_y, heading = self.get_current_pose(NWEnum.Protocol.RVMQTT)  # current map pose
-            self.status.mapPose.x = pixel_x
-            self.status.mapPose.y = pixel_y
-            self.status.mapPose.heading = heading
-            # print(pixel_x, pixel_y, heading)
-
-            # layout_pose
-            self.layout_nw_id = self.get_current_layout_nw_id()
-            layout_x,  layout_y,  layout_heading = self.get_current_layout_pose() # update self.layout_rm_guid also
-            self.status.layoutPose.x = layout_x
-            self.status.layoutPose.y = layout_y
-            self.status.layoutPose.heading = layout_heading
-            self.robot_position[:] = np.array([self.layout_nw_id, layout_x, layout_y, layout_heading], dtype=np.float32)[:]
-            
-            #<time>
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print(f"[thread_update_position]: Execution time: {execution_time} seconds")
-            
+            # print(f'[thread_update_position]:-----------------------------------------')
+            # print(f"[thread_update_position]: Execution time:  {execution_time} seconds")
+            # print(f"[thread_update_position]: map_pos time:    {map_pose_execution_time} seconds")
+            # print(f"[thread_update_position]: layout_pos time: {layout_pose_execution_time} seconds")
+            # # print(f"[thread_update_position]: f1 time: {execution_time_f1} seconds")
+            # print(f"[thread_update_position]: f2 time: {execution_time_f2} seconds")
+            # print(f"[thread_update_position]: f3 time: {execution_time_f3} seconds")
+            # print(f'[thread_update_position]:-----------------------------------------')
+            # print(f'')
             time.sleep(0.1)
 
     def thread_update_status(self, protocol):  # update thread
@@ -298,19 +267,19 @@ class Robot:
                 ## Lift
                 self.lift_floor = self.emsdlift.rm_current_floor
 
-                # # Summary
-                # print(f'-------------------------------------------------------------------')
-                # print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
-                # print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
-                # print(f'robot_status.battery:        {self.status.batteryPct}')
-                # print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
-                # print(f'robot_status.map_rm_pose:    {self.status.mapPose.x, self.status.mapPose.y, self.status.mapPose.heading}')
-                # print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
-                # print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
-                # print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
-                # print(f'robot_status.mode:           {self.mode}')
-                # print(f'robot_status.lift_floor:     {self.lift_floor}')
-                # print(f'-------------------------------------------------------------------')
+                # Summary
+                print(f'-------------------------------------------------------------------')
+                print(f'robot_status.robot_nw_id:    {self.robot_nw_id}')
+                print(f'robot_status.robot_rm_guid:  {self.robot_rm_guid}')
+                print(f'robot_status.battery:        {self.status.batteryPct}')
+                print(f'robot_status.map_rm_guid:    {self.status.mapPose.mapId}')
+                print(f'robot_status.map_rm_pose:    {self.status.mapPose.x, self.status.mapPose.y, self.status.mapPose.heading}')
+                print(f'robot_status.layout_nw_id:   {self.layout_nw_id}')
+                print(f'robot_status.layout_rm_guid: {self.layout_rm_guid}')
+                print(f'robot_status.layout_rm_pose: {self.status.layoutPose.x, self.status.layoutPose.y, self.status.layoutPose.heading}')
+                print(f'robot_status.mode:           {self.mode}')
+                print(f'robot_status.lift_floor:     {self.lift_floor}')
+                print(f'-------------------------------------------------------------------')
             except:
                 print('[robot.update_status] error!')
 
