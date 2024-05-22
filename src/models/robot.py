@@ -2049,6 +2049,7 @@ class Robot:
         self.rvjoystick.enable()
         self.call_lift_and_check_arrive(cur_floor_int, hold_min=5)
         time.sleep(1)
+        print(f'<disable rvjoystick>')
         self.rvjoystick.disable()
         # robot moving
         self.wait_for_robot_arrived()
