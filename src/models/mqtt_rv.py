@@ -39,6 +39,8 @@ class RVMQTT():
         self.moving = True
         self.task_is_executing = False
         self.obstacle_detected = True
+        # init-charging
+        self.charging_status = None
 
     def start(self):
         
@@ -74,6 +76,9 @@ class RVMQTT():
         if topic == 'rvautotech/fobo/map/active':
             self.map_activated = data['name']
             pass
+        if topic == 'rvautotech/fobo/docking/charging/feedback':
+            self.charging_status = data['chargingStatus']
+            pass
             # self.resolution = data['resolution']
             # self.originX = data['originX']
             # self.originY = data['originY']
@@ -105,6 +110,9 @@ class RVMQTT():
     
     def get_active_map(self):
         return self.map_activated 
+    
+    def get_charging_status(self):
+        return self.charging_status
 
 import src.models.trans as Trans
 
@@ -119,7 +127,7 @@ if __name__ == '__main__':
 
 
     while(True):
-        map_activated = rvmqtt.get_active_map()
+        map_activated = rvmqtt.get_charging_status()
         print(map_activated)
 
         # pos = rvmqtt.get_current_pose()

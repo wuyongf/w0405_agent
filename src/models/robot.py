@@ -1668,6 +1668,8 @@ class Robot:
         """
         Interact with RM API
         """
+        if(self.rvapi.get_charging_feedback() == "NOT_CHARGING"): return True
+
         try:
             # # charging_station_detail
             charging_station_id = self.nwdb.get_available_charging_station_id(self.robot_nw_id)
