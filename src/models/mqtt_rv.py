@@ -111,8 +111,8 @@ class RVMQTT():
     def get_active_map(self):
         return self.map_activated 
     
-    def get_charging_status(self):
-        return self.charging_status
+    # def get_charging_status(self):
+    #     return self.charging_status
 
 import src.models.trans as Trans
 
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
 
     while(True):
-        map_activated = rvmqtt.get_charging_status()
+        map_activated = rvmqtt.get_powerSupplyStatus()
         print(map_activated)
 
         # pos = rvmqtt.get_current_pose()

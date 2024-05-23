@@ -266,7 +266,7 @@ if __name__ == '__main__':
 
     while(True):
         time.sleep(0.1)
-        is_blocked = rvapi.get_robot_is_blocked()
+        is_blocked = rvapi.get_battery_state().powerSupplyStatus
         print(f'is_blocked: {is_blocked}')
     res = rvapi.get_battery_state()
     print(f'get_battery_state: {res}')

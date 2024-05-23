@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # os.chdir(previous_directory)
 
     # Sleep for 30 seconds for Pi to connect to MiR network...
-    time.sleep(60)
+    time.sleep(90)
 
     # Logging...
 
@@ -82,5 +82,5 @@ if __name__ == '__main__':
     from src.publishers.pub_mission import MissionPublisher
     pub = MissionPublisher(skill_config_dir, robot.rmapi)
     pub.const_Charging_off(6)
-    time.sleep(5)
+    time.sleep(10)
     pub.const_bootup_localization(current_floor_id=6)

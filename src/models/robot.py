@@ -1721,6 +1721,7 @@ class Robot:
             return False
 
     def rv_charging_stop(self, task_json, status_callback):
+        if(self.rvapi.get_battery_state().powerSupplyStatus == "DISCHARGING"): return True
         try:
             # # update robot_status
             self.is_charging = False
@@ -2334,10 +2335,10 @@ class Robot:
 
         a_delivery_mission = self.get_delivery_mission_detail()
 
-        # # charging off
-        # self.missionpub.constrcut_charging_off(6,3)
-        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        # if not done: return False  # stop assigning delivery mission
+        # charging off
+        self.missionpub.constrcut_charging_off(6,180)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
 
         # to sender
         done = self.pub_delivery_goto_sender(a_delivery_mission)
@@ -2369,16 +2370,16 @@ class Robot:
         done = self.wait_for_job_done(duration_min=30)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
-        # # go back charging
-        # self.missionpub.constrcut_go_back_charging(6,3)
-        # self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        # if not done: return False  # stop assigning delivery mission
+        # go back charging
+        self.missionpub.constrcut_go_back_charging(6,180)
+        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
 
-        # # charging
-        # self.missionpub.constrcut_charging_on(6)
-        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        # if not done: return False  # stop assigning delivery mission
+        # charging
+        self.missionpub.constrcut_charging_on(6)
+        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        if not done: return False  # stop assigning delivery mission
 
         # finish. status -> Idle and wait for next mission...
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
