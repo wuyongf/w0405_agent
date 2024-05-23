@@ -175,10 +175,10 @@ class MissionPublisher:
         # q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
         # q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
         # q10 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
-        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 180)
-        q14 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
-        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
-        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 90)
+        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q13", layout_heading= 180)
+        q14 = self.rmapi.new_task_goto(map_rm_guid, "Q14", layout_heading= 270)
+        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q12", layout_heading= 270)
+        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 90)
         
         tasks = []
         tasks.append(iaq_on)
