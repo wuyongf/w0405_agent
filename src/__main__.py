@@ -81,4 +81,6 @@ if __name__ == '__main__':
     
     from src.publishers.pub_mission import MissionPublisher
     pub = MissionPublisher(skill_config_dir, robot.rmapi)
+    pub.const_Charging_off(6)
+    time.sleep(5)
     pub.const_bootup_localization(current_floor_id=6)
