@@ -23,6 +23,13 @@ class MissionPublisher:
         }
 
     def tasks_take_lift(self, current_floor_id, target_floor_id):
+        '''
+        1. Move to LiftWaitingPoint
+        2. Localize to Temp Map
+        3. Lift In
+        4. Lift Out
+        5. Localize to Target Map
+        '''
             
         current_map_rm_guid = self.dict_map_guid[current_floor_id]
         target_map_rm_guid = self.dict_map_guid[target_floor_id]
@@ -151,27 +158,31 @@ class MissionPublisher:
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
 
-        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 180)
-        q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
-        q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
-        q10 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
+        # q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 180)
+        # q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
+        # q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
+        # q10 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
+        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 180)
+        q14 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
+        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
+        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 90)
         
         tasks = []
         tasks.append(iaq_on)
         tasks.append(water_leak_start)
 
+        tasks.append(q13)
+        tasks.append(q14)
+        tasks.append(q12)
         tasks.append(q0)
-        tasks.append(q1)
-        tasks.append(q9)
-        tasks.append(q10)
+        tasks.append(q13)
 
-        tasks.append(q0)
         tasks.append(water_leak_end)
         tasks.append(iaq_off)
         tasks.append(water_leak_analysis)
         return tasks
 
-    def patrol_4f_iaq(self, current_floor_id):
+    def patrol_4f(self, current_floor_id):
         
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
@@ -187,14 +198,21 @@ class MissionPublisher:
         q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 90)
         q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
         
+        water_leak_start = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-START'), layout_rm_guid)
+        water_leak_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-END'), layout_rm_guid)
+        water_leak_analysis = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-ANALYSIS'), layout_rm_guid)
+
         tasks = []
         tasks.append(iaq_on)
+        tasks.append(water_leak_start)
 
         tasks.append(q0)
         tasks.append(q1)
-
         tasks.append(q0)
+
+        tasks.append(water_leak_end)
         tasks.append(iaq_off)
+        tasks.append(water_leak_analysis)
 
         return tasks
     
@@ -372,17 +390,27 @@ class MissionPublisher:
         self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, mission_name)
  
     def constrcut_patrol_4n6(self):
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+
         tasks = []
-        x1 = self.patrol_charging_off(6,180)
+        x1 = rv_charging_off #self.patrol_charging_off(6,180)
         x2 = self.patrol_6f(6)
         x3 = self.tasks_take_lift(6,4)
-        x4 = self.patrol_4f_iaq(4)
+        x4 = self.patrol_4f(4)
         x5 = self.tasks_take_lift(4,6)
-        x6 = self.patrol_go_back_charging(6,180)
+        x6 = goto_dock #self.patrol_go_back_charging(6,180)
+        x7 = rv_charging_on
 
-        tasks = x1 + x2 + x3 + x4 + x5 + x6
+        tasks.append(x1)
+        tasks = tasks + x2 + x3 + x4 + x5 
+        tasks.append(x6) 
+        tasks.append(x7) 
 
-        mission_name = 'Patrol-4n6-temp'
+        mission_name = '[Patrol]6th and 4th floor'
         map_rm_guid = self.dict_map_guid[0]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
@@ -514,11 +542,13 @@ class MissionPublisher:
                 li_audio_target_floor, lo_audio_final_floor,
                 li_levelling_cur_floor, lo_levelling_target_floor)
 
-        job_name = '[LI] const_lift_inspection_full'
+        # job_name = '[LiftInspection] Noise Detection and Lift Levelling'
+        job_name = '[LiftInspection] Noise Detection'
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
         self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
+        self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, job_name, tasks)
         pass
 
     ### 2024.04.24 
@@ -548,7 +578,7 @@ class MissionPublisher:
         lift_map_rm_guid = self.dict_map_guid[999]
         
         g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
-        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 87)
         
         '''
         1. robot will call lift to arrive current_floor.
@@ -584,18 +614,46 @@ class MissionPublisher:
                                                                target_floor=lo_levelling_target_floor)
 
         '''
-        1. robot post_localization
+        Other Methods
         '''
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+
+        liftout_return = self.rmapi.nt_li_liftout_return(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270)
         post_localization = self.rmapi.new_task_localize(sixth_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
         
+        '''
+        For Noise Detection and Lift Levelling
+        '''
+        # tasks = []
+        # tasks.append(rv_charging_off)
+        # tasks.append(g1)
+        # tasks.append(localization)
+        # tasks.append(liftin_audio)
+        # tasks.append(liftout_audio)
+        # tasks.append(liftin_levelling)
+        # tasks.append(liftout_levelling)
+        # tasks.append(liftout_return)
+        # tasks.append(goto_dock)
+        # tasks.append(rv_charging_on)
+
+        '''
+        For Noise Detection Only
+        '''
         tasks = []
+        tasks.append(rv_charging_off)
         tasks.append(g1)
         tasks.append(localization)
         tasks.append(liftin_audio)
         tasks.append(liftout_audio)
-        tasks.append(liftin_levelling)
-        tasks.append(liftout_levelling)
-        # tasks.append(post_localization)
+        # tasks.append(liftin_levelling)
+        # tasks.append(liftout_levelling)
+        tasks.append(liftout_return)
+        tasks.append(goto_dock)
+        tasks.append(rv_charging_on)
         return tasks
     
     ### 2024.04.26
@@ -638,7 +696,7 @@ class MissionPublisher:
         lift_map_rm_guid = self.dict_map_guid[999]
         
         g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
-        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 87)
         
         '''
         1. robot will call lift to arrive current_floor.
@@ -785,26 +843,27 @@ if __name__ == '__main__':
     # pub.const_bootup_localization(current_floor_id=6)
 
     ###[back to ChargingStation]
-    
 
+    ###[patrol]
+    pub.constrcut_patrol_4n6()
     
     # ###[workflow evidence]
     # # pub.const_li(67007)
-    # pub.const_li(current_floor_id=4,
+    # pub.const_li(current_floor_id=6,
     #              li_audio_target_floor=7, lo_audio_final_floor=0,
     #              li_levelling_cur_floor=0, lo_levelling_target_floor=7)
 
     
     #*******************************************************************#
-    # PATROL - LIFT DATA COLLECTION
+    # Lift Inspection - Data Collection
     #####################################################################
-    #[patrol1] from 7 to 0
+    # # [patrol1] from 7 to 0
     # pub.const_li_data_collection(current_floor_id=6,
     #              li_audio_target_floor=7, lo_audio_final_floor=0)
 
-    # # ##[patrol2] from 0 to 7
-    pub.const_li_data_collection(current_floor_id=6,
-                 li_audio_target_floor=0, lo_audio_final_floor=7)
+    # # # [patrol2] from 0 to 7
+    # pub.const_li_data_collection(current_floor_id=6,
+    #              li_audio_target_floor=0, lo_audio_final_floor=7)
     #####################################################################
     #*******************************************************************#
 

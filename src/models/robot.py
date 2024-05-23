@@ -2227,32 +2227,34 @@ class Robot:
         # # robot moving
         # self.rvjoystick.disable()
         # self.wait_for_robot_arrived()
-        print(f'[li.levelling] go to 6th floor and then out...')
-        self.call_lift_and_check_arrive(6, hold_min=5)
-        
-        goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
-        self.goto_no_status_callback(goout_json)
-        self.wait_for_robot_arrived()
-        # self.rvjoystick.enable()
-        
-        # **release the lift door
-        self.emsdlift.release_all_keys()
-        self.emsdlift.close()
 
-        # localization
-        localize_json = self.rmapi.get_pos_task_json('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a', 'LiftWaitingPoint', 180)
-        self.localize(localize_json)
-        # goback to charging station
-        goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
-        self.goto_no_status_callback(goback_json)
-        self.wait_for_robot_arrived()
+
+        # print(f'[li.levelling] go to 6th floor and then out...')
+        # self.call_lift_and_check_arrive(6, hold_min=5)
+        
+        # goout_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'WaitingPoint', 270)
+        # self.goto_no_status_callback(goout_json)
+        # self.wait_for_robot_arrived()
+        # # self.rvjoystick.enable()
+        
+        # # **release the lift door
+        # self.emsdlift.release_all_keys()
+        # self.emsdlift.close()
+
+        # # localization
+        # localize_json = self.rmapi.get_pos_task_json('d6734e98-f53a-4b69-8ed8-cbc42ef58e3a', 'LiftWaitingPoint', 180)
+        # self.localize(localize_json)
+        # # goback to charging station
+        # goback_json = self.rmapi.get_pos_task_json(self.status.mapPose.mapId, 'ChargingStation', 180)
+        # self.goto_no_status_callback(goback_json)
+        # self.wait_for_robot_arrived()
 
         # status_callback
         rm_task_data = RMSchema.Task(task_json)
         status_callback(rm_task_data.taskId, rm_task_data.taskType, RMEnum.TaskStatusType.Completed)
 
-        # # charging
-        self.missionpub.constrcut_charging_on(6)
+        # # # charging
+        # self.missionpub.constrcut_charging_on(6)
                     
     def li_liftout_levelling(self, task_json, status_callback):
         try:
@@ -2270,8 +2272,8 @@ class Robot:
         workflow:
         1. call lift to 6th floor
         2. move out. release door. localize to 6th floor.
-        3. goto ChargingStation.
-        4. start charging. 
+        #3. goto ChargingStation.
+        #4. start charging. 
         '''
 
         print(f'[thread_li_liftout_return] go to 6th floor and then out...')
