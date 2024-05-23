@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # os.chdir(previous_directory)
 
     # Sleep for 30 seconds for Pi to connect to MiR network...
-    time.sleep(10)
+    time.sleep(60)
 
     # Logging...
 
