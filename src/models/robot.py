@@ -129,6 +129,7 @@ class Robot:
         
         ## delivery related
         self.nw_goto_done = False
+        self.delivery_not_finish = True
 
         ## lift related
         self.last_goto_json = None
@@ -1716,6 +1717,9 @@ class Robot:
             thread.setDaemon(True)
             thread.start()
 
+            # delivery
+            self.delivery_not_finish = False
+
             return True
         except:
             return False
@@ -2333,6 +2337,8 @@ class Robot:
     ### Delivery
     def delivery_mission_publisher(self):
 
+        self.delivery_not_finish = True
+
         a_delivery_mission = self.get_delivery_mission_detail()
 
         # charging off
@@ -2370,18 +2376,20 @@ class Robot:
         done = self.wait_for_job_done(duration_min=30)  # wait for job is done
         if not done: return False  # stop assigning delivery mission
 
-        # go back charging
-        self.missionpub.constrcut_go_back_charging(6,180)
-        self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
+        # # go back charging
+        # self.missionpub.constrcut_go_back_charging(6,180)
+        # self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Active_BackToChargingStation.value, self.a_delivery_mission.ID)
+        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        # if not done: return False  # stop assigning delivery mission
 
-        # charging
-        self.missionpub.constrcut_charging_on(6)
-        done = self.wait_for_job_done(duration_min=15)  # wait for job is done
-        if not done: return False  # stop assigning delivery mission
+        # # charging
+        # self.missionpub.constrcut_charging_on(6)
+        # done = self.wait_for_job_done(duration_min=15)  # wait for job is done
+        # if not done: return False  # stop assigning delivery mission
 
         # finish. status -> Idle and wait for next mission...
+        while(self.delivery_not_finish):
+            time.sleep(1)
         self.nwdb.update_delivery_status(NWEnum.DeliveryStatus.Null.value, self.a_delivery_mission.ID)
         self.nwdb.update_single_value('ui.display.status','ui_flag',0,'robot_id',self.robot_nw_id)
         self.delivery_clear_positions(self.a_delivery_mission)

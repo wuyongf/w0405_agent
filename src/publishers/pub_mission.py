@@ -36,12 +36,12 @@ class MissionPublisher:
         lift_map_rm_guid = self.dict_map_guid[999]
         
         g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
-        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+        localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 89)
         
         if(current_floor_id == 0):
-            lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+            lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=85, current_floor=current_floor_id, target_floor= target_floor_id)
         else:
-            lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+            lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=85, current_floor=current_floor_id, target_floor= target_floor_id)
         
         if(target_floor_id == 0):
             lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
@@ -64,12 +64,12 @@ class MissionPublisher:
             lift_map_rm_guid = self.dict_map_guid[999]
             
             g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
-            localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 90)
+            localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 89)
             
             if(current_floor_id == 0):
-                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=85, current_floor=current_floor_id, target_floor= target_floor_id)
             else:
-                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=90, current_floor=current_floor_id, target_floor= target_floor_id)
+                lift_in = self.rmapi.new_task_nw_lift_in(lift_map_rm_guid, 'Transit', layout_heading=85, current_floor=current_floor_id, target_floor= target_floor_id)
             
             if(target_floor_id == 0):
                 lift_out = self.rmapi.new_task_nw_lift_out(lift_map_rm_guid, 'WaitingPoint-G', layout_heading= 90)
@@ -78,6 +78,9 @@ class MissionPublisher:
             post_localization = self.rmapi.new_task_localize(target_map_rm_guid, 'LiftWaitingPoint', layout_heading= 180)
 
             d1 = self.rmapi.new_task_delivery_goto(target_map_rm_guid, delivery_pos_name, layout_heading= 0)
+
+            unloading = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'DELIVERY-UNLOADING-PACKAGE'),
+                                       '3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
         
             charging_map_rm_guid = self.dict_map_guid[6]
             charging_layout_rm_guid =  self.rmapi.get_layout_guid(charging_map_rm_guid)
@@ -95,6 +98,7 @@ class MissionPublisher:
             tasks.append(lift_out)
             tasks.append(post_localization)
             tasks.append(d1)
+            tasks.append(unloading)
 
             tasks = tasks + x5
             tasks.append(x6)

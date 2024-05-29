@@ -84,5 +84,6 @@ if __name__ == "__main__":
     pub = NWMQTTPub(config)
     pub.start()
 
-    pub.fans_off('all')
+    pub.rotate_camera(0)
+    # pub.fans_off('all')
     time.sleep(2)
