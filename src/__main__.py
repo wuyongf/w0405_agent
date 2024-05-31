@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # os.chdir(previous_directory)
 
     # Sleep for 30 seconds for Pi to connect to MiR network...
-    # time.sleep(90)
+    time.sleep(90)
 
     # Logging...
 
@@ -77,8 +77,8 @@ if __name__ == '__main__':
 
     print('init localization')
     
-    # from src.publishers.pub_mission import MissionPublisher
-    # pub = MissionPublisher(skill_config_dir, robot.rmapi)
-    # pub.const_Charging_off(6)
-    # time.sleep(10)
-    # pub.const_bootup_localization(current_floor_id=6)
+    from src.publishers.pub_mission import MissionPublisher
+    pub = MissionPublisher(skill_config_dir, robot.rmapi)
+    pub.const_Charging_off(6)
+    time.sleep(10)
+    pub.const_bootup_localization(current_floor_id=6)
