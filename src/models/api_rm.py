@@ -183,7 +183,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_id,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": [{"paramKey": "temp", "paramValue": 0}]
@@ -215,7 +215,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
@@ -268,7 +268,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             # "params": goto_params2(layoutMarkerName)
@@ -301,7 +301,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, layout_heading)
@@ -333,7 +333,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, layout_heading)
@@ -357,7 +357,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "executionType": 1, # 1: series 2: parallel
             "params": custom_params(target_floor, hold_min)
         }
@@ -379,7 +379,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "executionType": 1, # 1: series 2: parallel
             "params": custom_params(current_floor)
         }
@@ -413,7 +413,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading,current_floor,target_floor)
@@ -448,7 +448,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             # "params": goto_params2(layoutMarkerName)
@@ -483,7 +483,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading,current_floor)
@@ -517,7 +517,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading, target_floor)
@@ -549,7 +549,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": goto_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading)
@@ -584,7 +584,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": position_params(map_rm_guid, layoutMarkerName, map_x, map_y, map_heading,current_floor,target_floor)
@@ -616,7 +616,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_guid,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             # "params": goto_params2(layoutMarkerName)
@@ -641,7 +641,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_id,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": goto_params(map_id, pos_name, x, y, heading)
@@ -665,7 +665,7 @@ class RMAPI(api.AuthenticatedAPI):
         task = {
             "skillId": skill_id,
             "layoutId": layout_id,
-            "order": order,
+            # "order": order,
             "layoutMakerId": layoutMarkerId,
             "executionType": 1, # 1: series 2: parallel
             "params": goto_params(map_id, pos_name, x, y, heading)
