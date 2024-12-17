@@ -51,13 +51,24 @@ class RGBCamRecorder:
     def cap_rgb_img(self, image_name):
         # Command to capture a single frame from the video input and save it as an image
         image_filename = os.path.join(self.cap_save_dir, image_name)
+        # command = [
+        #     'ffmpeg',
+        #     '-f', 'v4l2',                         # Specify the input format (video4linux2 for webcams)
+        #     '-i', f'/dev/video{self.device_index}',  # Input device (change to your device)
+        #     '-frames:v', '1',                     # Number of frames to capture (1 for a single frame)
+        #     '-pix_fmt', 'yuvj420p',  # Pixel format (required for compatibility)
+        #     image_filename                           # Output image file path
+        # ]
         command = [
-            'ffmpeg',
-            '-f', 'v4l2',                         # Specify the input format (video4linux2 for webcams)
-            '-i', f'/dev/video{self.device_index}',  # Input device (change to your device)
-            '-frames:v', '1',                     # Number of frames to capture (1 for a single frame)
-            image_filename                           # Output image file path
-        ]
+        'ffmpeg',
+        '-f', 'v4l2',                         # Specify input format
+        '-input_format', 'mjpeg',             # Use MJPG for higher frame rates
+        '-video_size', '640x480',           # Set resolution
+        '-i', f'/dev/video{self.device_index}',  # Specify video input device
+        '-frames:v', '1',                     # Capture one frame
+        '-q:v', '2',                          # Set image quality (lower is better)
+        image_filename                        # Output file path
+    ]
         # Run the FFmpeg command to capture and save the image
         subprocess.run(command)
 

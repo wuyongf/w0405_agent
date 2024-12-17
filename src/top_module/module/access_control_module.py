@@ -16,7 +16,7 @@ class AccessControl():
         self.modb = modb
         self.servo_motor = ServoMotor.ServoMotor(port_config)
         self.ultra = UltraSound.ultra(port_config)
-        self.servo_duration = 0.4
+        self.servo_duration = 0.5
         self.door_status = MoEnum.AccessControlStatus.Closed
         self.init_distance = []
         self.stop_event = threading.Event()

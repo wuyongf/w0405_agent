@@ -46,21 +46,28 @@ class TopModuleDBHandler(db.AzureDB):
         return self.Select(statement)
 
     def StreamIaqData(self, table, key, value):
-        # Check the current row count
-        count_statement = f'SELECT COUNT(*) FROM {self.database}.`{table}` WHERE robot_id = {self.robot_id};'
-        # print(count_statement)
-        current_count = self.Select(count_statement)
+        try:
+            # Check the current row count
+            count_statement = f'SELECT COUNT(*) FROM {self.database}.`{table}` WHERE robot_id = {self.robot_id};'
+            # print(count_statement)
+            current_count = self.Select(count_statement)
 
-        if current_count < 150:
-            statement = f'INSERT INTO {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
-            # print(f'[db_top_module.StreamIaqData]: {statement}')
-            self.Insert(statement)
-        else:
-            delete_statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
-            # print(f'Deleting oldest row: {delete_statement}')
-            self.Delete(delete_statement)
-            
-        time.sleep(1)
+            if current_count is None:
+                print("The Select query returned None, check the query or the database connection.")
+
+            if current_count < 150:
+                statement = f'INSERT INTO {self.database}.`{table}` ({", ".join(map(str, key))}, created_date, robot_id) VALUES ({", ".join(map(str, value))}, "{self.now()}", {self.robot_id});'
+                # print(f'[db_top_module.StreamIaqData]: {statement}')
+                self.Insert(statement)
+            else:
+                delete_statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'
+                # print(f'Deleting oldest row: {delete_statement}')
+                self.Delete(delete_statement)
+        except Exception as e:
+            print(f"Error in StreamIaqData: {e}")
+
+        finally: 
+            time.sleep(1)
 
     def DeleteLastStreamIaqData(self):
         statement = f'delete from {self.database}.`sensor.iaq.stream` WHERE robot_id = {self.robot_id} ORDER BY ID ASC LIMIT 1 ;'

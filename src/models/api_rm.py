@@ -11,8 +11,9 @@ class RMAPI(api.AuthenticatedAPI):
     def __init__(self, config, skill_config_dir):
         self.config = config
         self.base_url = self.config.get('RM','base_url')
+        token = self.__login()
         self.headers = {
-            "Authorization": self.__login(),
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
             }
         super().__init__(base_url=self.base_url, headers=self.headers)
@@ -783,8 +784,9 @@ class RMAPI(api.AuthenticatedAPI):
                 return item
     
     def get_layout_map_list(self, layoutIds, mapIds):
-        # https://docs.robotmanager.com/reference/find-makers-by-layout
-
+        # https://docs.robotmanager.com/reference/list-layout-map
+        print(f'layoutIds: {layoutIds}')
+        print(f'mapIds: {mapIds}')
         payload = {}
         # payload["layoutIds"] = ['0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d']
         # payload["mapIds"] = [f'd6734e98-f53a-4b69-8ed8-cbc42ef58e3a']
@@ -1118,9 +1120,9 @@ if __name__ == '__main__':
 
     # res = rmapi.get_layout_marker_detail('0d39ed9d-c5b7-41d8-92ec-2cac45e6b85d', 'DEMO1')
     # print(res)
-
-    res = rmapi.get_pos_task_json('1f7f78ab-5a3b-467b-9179-f7508a99ad6e', 'Levelling-G', 90)
-    print(res)
+    
+    # res = rmapi.get_pos_task_json('1f7f78ab-5a3b-467b-9179-f7508a99ad6e', 'Levelling-G', 90)
+    # print(res)
     # rmapi.update_rm_mission()
 
     # res = rmapi.list_rm_missions()
@@ -1244,8 +1246,8 @@ if __name__ == '__main__':
     
     
 
-    # res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
-    # print(res)
+    res = rmapi.get_layout_map_list(layoutIds='3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece', mapIds='c5f360ec-f4be-4978-a281-0a569dab1174')
+    print(res)
     # c5f360ec-f4be-4978-a281-0a569dab1174
     # res = rmapi.get_layout_guid('3bc4db02-7bb4-4bbc-9e0c-8e0c1ddc8ece')
     # print(res)

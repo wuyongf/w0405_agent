@@ -16,30 +16,9 @@ import src.models.enums.nw as NWEnum
 import src.models.robot as Robot
 # import src.models.mir_robot as Robot
 
-def run_robot_agent():
-
-    # Change to the desired directory
-    directory = "~/dev/robot-agent-v2.0/"
-    os.chdir(os.path.expanduser(directory))
-
-    # Run the shell script
-    script_path = "./run-agent.sh"
-    subprocess.run(["bash", script_path])
-
 if __name__ == '__main__':
 
-    # # Store the current directory
-    # previous_directory = os.getc-wd()
-    # # Create a thread and start it
-    # thread = threading.Thread(target=run_robot_agent)
-    # thread.start()
-    # # Change back to the previous directory
-    # os.chdir(previous_directory)
-
-    # Sleep for 30 seconds for Pi to connect to MiR network...
-    time.sleep(90)
-
-    # Logging...
+    # time.sleep(90)
 
     # # Loading config files
     config = umethods.load_config('../conf/config.properties')
@@ -75,10 +54,9 @@ if __name__ == '__main__':
     print('main finished')
     time.sleep(5)
 
-    print('init localization')
-    
-    from src.publishers.pub_mission import MissionPublisher
-    pub = MissionPublisher(skill_config_dir, robot.rmapi)
-    pub.const_Charging_off(6)
-    time.sleep(10)
-    pub.const_bootup_localization(current_floor_id=6)
+    # print('init localization')
+    # from src.publishers.pub_mission import MissionPublisher
+    # pub = MissionPublisher(skill_config_dir, robot.rmapi)
+    # pub.const_Charging_off(6)
+    # time.sleep(10)
+    # pub.const_bootup_localization(current_floor_id=6)

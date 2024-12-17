@@ -167,7 +167,9 @@ class MissionPublisher:
         rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
         iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
         iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        mission_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'END'), layout_rm_guid)
 
+        ### [WATER LEAKAGE]
         water_leak_start = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-START'), layout_rm_guid)
         water_leak_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-END'), layout_rm_guid)
         water_leak_analysis = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-ANALYSIS'), layout_rm_guid)
@@ -175,28 +177,95 @@ class MissionPublisher:
         goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
         localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
 
-        # q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 180)
-        # q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
-        # q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
-        # q10 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
-        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q13", layout_heading= 180)
         q14 = self.rmapi.new_task_goto(map_rm_guid, "Q14", layout_heading= 270)
-        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q12", layout_heading= 270)
-        q0 = self.rmapi.new_task_goto(map_rm_guid, "Q0", layout_heading= 90)
+        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q13", layout_heading= 270)
+        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q12", layout_heading= 180)
+        q1 = self.rmapi.new_task_goto(map_rm_guid, "Q1", layout_heading= 90)
+        q3 = self.rmapi.new_task_goto(map_rm_guid, "Q3", layout_heading= 0)
+        q4 = self.rmapi.new_task_goto(map_rm_guid, "Q4", layout_heading= 270)
+        q10_180 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 180)
+        q9 = self.rmapi.new_task_goto(map_rm_guid, "Q9", layout_heading= 0)
+        q10_270 = self.rmapi.new_task_goto(map_rm_guid, "Q10", layout_heading= 270)
+
+        # localization = self.rmapi.new_task_localize(layout_rm_guid, 'WaitingPoint', layout_heading= 87)
+
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
         
         tasks = []
+        tasks.append(rv_charging_off)
+        # tasks.append(localization) # ?? need localize ??
+        # led on ?
         tasks.append(iaq_on)
-        tasks.append(water_leak_start)
+        tasks.append(q14)
+        tasks.append(q13)
+        tasks.append(q12)
+        tasks.append(q1)
+        tasks.append(q3)
+        tasks.append(q4)
+        tasks.append(q10_180)
+        tasks.append(q9)
+        tasks.append(q10_270)
+        tasks.append(goto_dock)
+        tasks.append(iaq_off)
+        tasks.append(mission_end)
+        tasks.append(rv_charging_on)
 
+        return tasks
+    
+    def patrol_6f_V2(self, current_floor_id):
+        
+        map_rm_guid = self.dict_map_guid[current_floor_id]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        iaq_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-ON'), layout_rm_guid)
+        iaq_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'IAQ-OFF'), layout_rm_guid)
+        mission_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'END'), layout_rm_guid)
+
+        ### [WATER LEAKAGE]
+        water_leak_start = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-START'), layout_rm_guid)
+        water_leak_end = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-END'), layout_rm_guid)
+        water_leak_analysis = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'WATER-LEAKAGE-DETECT-ANALYSIS'), layout_rm_guid)
+
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        localize = self.rmapi.new_task_localize(map_rm_guid, 'ChargingStation', layout_heading=180)
+
+        q14 = self.rmapi.new_task_goto(map_rm_guid, "Q14", layout_heading= 0)
+        q13 = self.rmapi.new_task_goto(map_rm_guid, "Q13", layout_heading= 90)
+        q12 = self.rmapi.new_task_goto(map_rm_guid, "Q12", layout_heading= 90)
+        w1 = self.rmapi.new_task_goto(map_rm_guid, "Q14", layout_heading= 270)
+        w2 = self.rmapi.new_task_goto(map_rm_guid, "Q13", layout_heading= 270)
+        w3 = self.rmapi.new_task_goto(map_rm_guid, "Q12", layout_heading= 180)
+
+        # localization = self.rmapi.new_task_localize(layout_rm_guid, 'WaitingPoint', layout_heading= 87)
+
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+        
+        tasks = []
+        tasks.append(rv_charging_off)
+        # tasks.append(localization) # ?? need localize ??
+        # led on ?
+        tasks.append(iaq_on)
+        tasks.append(w1)
+        tasks.append(w2)
+        tasks.append(w3)
+        tasks.append(q12)
         tasks.append(q13)
         tasks.append(q14)
-        tasks.append(q12)
-        tasks.append(q0)
-        tasks.append(q13)
-
-        tasks.append(water_leak_end)
+        tasks.append(goto_dock)
         tasks.append(iaq_off)
-        tasks.append(water_leak_analysis)
+        tasks.append(mission_end)
+        tasks.append(rv_charging_on)
+
         return tasks
 
     def patrol_4f(self, current_floor_id):
@@ -455,10 +524,10 @@ class MissionPublisher:
 
     def construct_patrol(self):
         tasks = []
-        x1 = self.patrol_6f(6)
+        x1 = self.patrol_6f_V2(6)
         tasks = x1
 
-        mission_name = '6F-Patrol-Rev01'
+        mission_name = '6F Corridor'
         map_rm_guid = self.dict_map_guid[6]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
@@ -862,7 +931,8 @@ if __name__ == '__main__':
     ###[back to ChargingStation]
 
     ###[patrol]
-    pub.constrcut_patrol_4n6()
+    # pub.constrcut_patrol_4n6()
+    pub.construct_patrol()
     
     # ###[workflow evidence]
     # # pub.const_li(67007)

@@ -87,8 +87,9 @@ class NWDoorAgent:
 
                 try:
                     print(f'[door_handler.detail_check] try to open the door...')
-
+                    # self.robot.mo_access_control.set_flip_loop_flag(True)
                     res = self.robot.mo_access_control.try_open_door()
+                    
                     # door_is_open = self.robot.open_door()
                     door_is_open = res
                 except:

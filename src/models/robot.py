@@ -69,14 +69,14 @@ class Robot:
         # BUG: 2024.02.21: bug fixed. audio interrupt with rgbcam. need to set default audio input in ubuntu.
         self.audio_handler = AudioAgent(config, ai_config)
         self.blob_handler  = AzureBlobHandler(config)
-        self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
+        # self.rgbcam_front_handler = RGBCamAgent(config, device_index=int(config.get('Device', 'fornt_rgbcam_index')))
         self.rgbcam_rear_handler  = RGBCamAgent(config, device_index=int(config.get('Device', 'rear_rgbcam_index')))
         self.thermalcam_handler = ThermalCamAgent(config)      
         self.folder_path_handler = FolderPathHandler(config)
         
         ## Notification
-        self.event_handler = EventHandler("localhost", self.status_summary)
-        self.event_handler.start()
+        # self.event_handler = EventHandler("localhost", self.status_summary)
+        # self.event_handler.start()
 
         self.config = config
         self.port_config = port_config
@@ -1023,10 +1023,12 @@ class Robot:
             # [2] stop IAQ sensor
             self.mo_iaq.set_task_mode(False)
 
-            # [UI-BIM-INFO]
+            # [UI-BIM-INFOBar - Content]
             self.nwdb.update_ui_mission_detailed_info(detailed_info=4,robot_nw_id=self.robot_nw_id)
 
             self.is_iaq_on = False
+
+            self.mission_end()
             return True
         except:
             return False
@@ -1037,8 +1039,8 @@ class Robot:
             # thread.setDaemon(True)
             # thread.start()
             
-            # # [Robot-MissionStaus]
-            # self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
+            # [UI-BIM-INFOBar - show or not]
+            self.nwdb.update_robot_mission_status(NWEnum.RobotMissionStatus.NULL)
 
             return True
         except:
@@ -1135,8 +1137,8 @@ class Robot:
             self.lift_vibration_on(task_json)
 
             ### [video_front]
-            self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
-            self.rgbcam_front_handler.start_recording()
+            # self.rgbcam_front_handler.construct_paths(self.lnd_mission_id, NWEnum.InspectionType.LiftInspection, NWEnum.CameraPosition.Front)
+            # self.rgbcam_front_handler.start_recording()
             time.sleep(2)
 
             ### [video_rear]
@@ -1161,7 +1163,7 @@ class Robot:
             self.raw_video_rear_file_dir = self.rgbcam_rear_handler.stop_and_save_recording()
 
             ### [video_front]
-            self.raw_video_front_file_dir = self.rgbcam_front_handler.stop_and_save_recording()
+            # self.raw_video_front_file_dir = self.rgbcam_front_handler.stop_and_save_recording()
 
             ### [audio]
             self.raw_audio_file_dir = self.audio_handler.stop_and_save_recording()
@@ -1270,9 +1272,9 @@ class Robot:
 
     def water_leakage_detect_start(self, task_json):
         try:
-           
+            print(f'wld_mission start')
             ### add mission_id to nwdb
-            rm_mission_guid = self.rmapi.get_mission_id(task_json)
+            rm_mission_guid = "rm_mission_guid"#self.rmapi.get_mission_id(task_json)
             self.nwdb.insert_new_mission_id(self.robot_nw_id, rm_mission_guid, NWEnum.MissionType.WaterLeakage)
             self.wld_mission_id = self.nwdb.get_latest_mission_id()
             print(f'wld_mission_id: {self.wld_mission_id}')
@@ -2976,6 +2978,50 @@ class Robot:
         except:
             return False
         
+import pygame
+import sys
+
+def trigger_water_leak(robot: Robot):
+    # Initialize Pygame
+    pygame.init()
+
+    # Set up a display (needed for Pygame event handling)
+    screen = pygame.display.set_mode((400, 300))
+    pygame.display.set_caption("Water Leakage Detection Control")
+
+    print("Press 'S' to start water leakage detection.")
+    print("Press 'E' to end water leakage detection.")
+    print("Press 'A' to analyze water leakage detection results.")
+    print("Press 'Q' to quit the program.")
+
+    while True:
+        for event in pygame.event.get():
+            # Check if the event is QUIT (close the window)
+            if event.type == pygame.QUIT:
+                print("Exiting program...")
+                pygame.quit()
+                sys.exit()
+
+            # Check for key press events
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:  # 'S' key for start
+                    print("Starting water leakage detection...")
+                    task_json = {}  # Replace with actual task_json
+                    robot.water_leakage_detect_start(task_json)
+
+                elif event.key == pygame.K_e:  # 'E' key for end
+                    print("Ending water leakage detection...")
+                    robot.water_leakage_detect_end()
+
+                elif event.key == pygame.K_a:  # 'A' key for analyze
+                    print("Analyzing water leakage detection results...")
+                    robot.water_leakage_detect_analysis()
+
+                elif event.key == pygame.K_q:  # 'Q' key to quit
+                    print("Exiting program...")
+                    pygame.quit()
+                    sys.exit()
+
 if __name__ == '__main__':
     config = umethods.load_config('../../conf/config.properties')
     port_config = umethods.load_config('../../conf/port_config.properties')
@@ -2984,9 +3030,14 @@ if __name__ == '__main__':
 
     robot = Robot(config, port_config, skill_config_path, ai_config)
 
-    ckpt_json = robot.rmapi.get_pos_task_json(robot.status.mapPose.mapId, 'DEMO2', 90)
-    robot.goto_no_status_callback(ckpt_json)
-    robot.wait_for_robot_arrived()
+
+    trigger_water_leak(robot)
+
+
+
+    # ckpt_json = robot.rmapi.get_pos_task_json(robot.status.mapPose.mapId, 'DEMO2', 90)
+    # robot.goto_no_status_callback(ckpt_json)
+    # robot.wait_for_robot_arrived()
 
     print(f'donedonedone')
 
