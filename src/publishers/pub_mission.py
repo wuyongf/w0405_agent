@@ -744,21 +744,21 @@ class MissionPublisher:
     
     ### 2024.04.26
     def const_li_data_collection(self, current_floor_id,
-                li_audio_target_floor, lo_audio_final_floor):
+                li_audio_target_floor, lo_audio_final_floor, repeat_time):
         
         tasks = self.task_li_data_collection(current_floor_id,
-                li_audio_target_floor, lo_audio_final_floor)
+                li_audio_target_floor, lo_audio_final_floor, repeat_time)
 
         job_name = f'[Deafult] Data Collection {li_audio_target_floor}to{lo_audio_final_floor}'
         map_rm_guid = self.dict_map_guid[current_floor_id]
         layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
         robot_rm_guid  = '2658a873-a0a6-4c3f-967f-d179c4073272'
-        self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
+        # self.rmapi.new_job(robot_rm_guid, layout_rm_guid, tasks, job_name)
         self.rmapi.new_mission(robot_rm_guid, layout_rm_guid, job_name, tasks)
         pass
 
     def task_li_data_collection(self, current_floor_id,
-                li_audio_target_floor, lo_audio_final_floor):
+                li_audio_target_floor, lo_audio_final_floor, repeat_time = 1):
         '''
         1. localize robot to 6th floor map first [RM-WEB]
         2. robot moves to LiftWaitingPoint, change to lift-map
@@ -780,7 +780,7 @@ class MissionPublisher:
         # target_map_rm_guid = self.dict_map_guid[target_floor_id]
         sixth_map_rm_guid = self.dict_map_guid[6]
         lift_map_rm_guid = self.dict_map_guid[999]
-        
+
         g1 = self.rmapi.new_task_goto(current_map_rm_guid, "LiftWaitingPoint", layout_heading= 0)
         localization = self.rmapi.new_task_localize(lift_map_rm_guid, 'WaitingPoint', layout_heading= 87)
         
@@ -806,12 +806,23 @@ class MissionPublisher:
         # reference: liftout_levelling
         liftout_return = self.rmapi.nt_li_liftout_return(lift_map_rm_guid, 'WaitingPoint', layout_heading= 270)
 
+        map_rm_guid = self.dict_map_guid[6]
+        layout_rm_guid =  self.rmapi.get_layout_guid(map_rm_guid)
+        goto_dock = self.rmapi.new_task_goto(map_rm_guid, "ChargingStation", layout_heading= 180)
+        rv_charging_on = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-ON'), layout_rm_guid)
+        rv_charging_off = self.rmapi.new_task(self.skill_config.get('RM-Skill', 'RV-CHARGING-OFF'), layout_rm_guid)
+
+
         tasks = []
+        tasks.append(rv_charging_off)
         tasks.append(g1)
         tasks.append(localization)
-        tasks.append(liftin_audio)
-        tasks.append(liftout_audio)
+        for _ in range(repeat_time):
+            tasks.append(liftin_audio)
+            tasks.append(liftout_audio)
         tasks.append(liftout_return)
+        tasks.append(goto_dock)
+        tasks.append(rv_charging_on)
         return tasks
 
 
@@ -932,7 +943,6 @@ if __name__ == '__main__':
 
     ###[patrol]
     # pub.constrcut_patrol_4n6()
-    pub.construct_patrol()
     
     # ###[workflow evidence]
     # # pub.const_li(67007)
@@ -945,8 +955,8 @@ if __name__ == '__main__':
     # Lift Inspection - Data Collection
     #####################################################################
     # # [patrol1] from 7 to 0
-    # pub.const_li_data_collection(current_floor_id=6,
-    #              li_audio_target_floor=7, lo_audio_final_floor=0)
+    pub.const_li_data_collection(current_floor_id=6,
+                 li_audio_target_floor=7, lo_audio_final_floor=0, repeat_time=3)
 
     # # # [patrol2] from 0 to 7
     # pub.const_li_data_collection(current_floor_id=6,

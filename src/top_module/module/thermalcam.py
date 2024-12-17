@@ -264,7 +264,7 @@ class ThermalCam:
 
 if __name__ == '__main__':
     camera = ThermalCam(debug=False)
-    camera.set_save_folder("/home/nw/Desktop/Images")
+    camera.set_save_folder("/home/yf/Desktop/Images")
 
     camera.show_images()
 

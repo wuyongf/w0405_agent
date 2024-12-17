@@ -292,6 +292,7 @@ if __name__ == "__main__":
     config = umethods.load_config('../../conf/config.properties')
 
     lift = EMSDLift(config)
+    
     lift.start()
 
     # hold_min = 5

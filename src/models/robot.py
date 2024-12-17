@@ -2118,7 +2118,7 @@ class Robot:
         # [sensor] stop recording: mic + rgbcam + gyro
         self.lift_noise_detect_end()
 
-        # hold lift door for 5s
+        # hold lift door for 5min
         self.emsdlift.open(10 * 60 * 5)
 
         # # **release the lift door
